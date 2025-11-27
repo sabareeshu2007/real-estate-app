@@ -3,112 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro | Modern Real Estate</title>
+    <title>EstatePro - Secure Login</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
+        /* --- PROFESSIONAL CSS --- */
         :root {
-            --primary: #2563eb; /* Modern Blue */
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text-main: #1e293b;
-            --text-light: #64748b;
+            --primary-color: #4f46e5; /* Modern Indigo */
+            --primary-hover: #4338ca;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --text-main: #111827;
+            --text-muted: #6b7280;
         }
 
-        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text-main); }
-        
-        /* Navigation */
-        nav { background: var(--surface); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        nav h3 { margin: 0; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; }
-        
-        .nav-btn {
-            background: transparent; border: 1px solid var(--primary); color: var(--primary);
-            padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: 600;
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            margin: 0;
+            height: 100vh;
+            display: flex; /* Centers everything */
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
         }
-        .nav-btn:hover { background: var(--primary); color: white; }
 
-        /* Layout */
-        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
-        .card { background: var(--surface); padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 20px; }
+        /* The "Card" Container */
+        .login-card {
+            background: var(--glass-bg);
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        /* Typography */
+        h2 { margin-top: 0; font-weight: 800; font-size: 24px; color: var(--text-main); }
+        p { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
+
+        /* Toggles (Owner vs Tenant) */
+        .toggle-container {
+            background: #f3f4f6;
+            padding: 4px;
+            border-radius: 8px;
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Inputs */
+        .input-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 5px; }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box; /* Keeps padding inside */
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Main Button */
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        /* Helper Classes */
         .hidden { display: none; }
-
-        /* Forms */
-        h2 { margin-top: 0; font-size: 1.5rem; }
-        input { width: 100%; padding: 12px; margin: 8px 0 20px 0; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
         
-        button.primary-btn { 
-            background: var(--primary); color: white; border: none; padding: 14px; 
-            width: 100%; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 1rem; 
+        /* Dashboard Styling (Simple clean look) */
+        #dashboard-view { 
+            display: none; 
+            width: 90%; 
+            max-width: 1000px; 
+            height: 90vh; 
+            background: white; 
+            border-radius: 16px; 
+            padding: 20px; 
+            box-shadow: var(--shadow);
+            overflow-y: auto;
         }
-        button.primary-btn:hover { background: #1d4ed8; }
-
-        /* Table */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; color: var(--text-light); font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding: 10px; }
-        td { padding: 15px 10px; border-bottom: 1px solid #f1f5f9; }
-        .status-badge { background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
-
-        /* Map */
-        #map { height: 450px; width: 100%; border-radius: 12px; margin-top: 15px; }
+        
+        /* Map Styling */
+        #map { height: 400px; width: 100%; border-radius: 12px; margin-top: 15px; border: 2px solid #eee; }
+        
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; color: var(--text-muted); font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        td { padding: 15px 0; border-bottom: 1px solid #f9fafb; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <h3>EstatePro.</h3>
-        <div>
-            <button class="nav-btn" onclick="showLogin('owner')">Owner Portal</button>
-            <button class="nav-btn" onclick="showLogin('tenant')">Tenant Search</button>
+    <div id="login-view" class="login-card">
+        <div style="margin-bottom: 20px;">
+            <div style="background: #e0e7ff; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
+                <span style="font-size: 24px;">🏠</span>
+            </div>
+            <h2>Welcome Back</h2>
+            <p>Enter your details to access your real estate portal.</p>
         </div>
-    </nav>
 
-    <div id="auth-section" class="container">
-        <div class="card" style="max-width: 400px; margin: auto;">
-            <h2 id="auth-title">Welcome Back</h2>
-            <p style="color:var(--text-light); margin-bottom: 20px;">Please login to access your account.</p>
-            <input type="email" id="email-input" placeholder="name@company.com">
-            <input type="password" id="pass-input" placeholder="Password">
-            <button class="primary-btn" onclick="handleLogin()">Sign In</button>
+        <div class="toggle-container">
+            <button id="btn-owner" class="toggle-btn active" onclick="switchMode('owner')">Owner</button>
+            <button id="btn-tenant" class="toggle-btn" onclick="switchMode('tenant')">Tenant</button>
         </div>
+
+        <div class="input-group">
+            <label>Email Address</label>
+            <input type="email" id="email-input" placeholder="name@company.com">
+        </div>
+        
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="pass-input" placeholder="••••••••">
+        </div>
+
+        <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+        
+        <p style="margin-top: 20px; font-size: 12px;">
+            Secure connection via Render & MongoDB
+        </p>
     </div>
 
-    <div id="owner-section" class="container hidden">
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2>My Properties</h2>
-                <span id="owner-display-email" style="color:var(--text-light)"></span>
-            </div>
-            
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="prop-address" placeholder="Enter new property address..." style="margin:0;">
-                <button class="primary-btn" style="width:auto;" onclick="submitListing()">+ Add Listing</button>
-            </div>
+    <div id="dashboard-view">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+            <h2 style="margin:0">RealEstatePro <span style="font-weight:400; color:#999; font-size:16px;">| Dashboard</span></h2>
+            <button onclick="logout()" style="border:1px solid #ddd; background:white; padding:8px 16px; border-radius:6px; cursor:pointer;">Logout</button>
         </div>
 
-        <div class="card">
-            <div style="display:flex; justify-content:space-between;">
-                <h3>Portfolio Status</h3>
-                <button onclick="loadProperties()" style="background:none; border:none; color:var(--primary); cursor:pointer;">Refresh List</button>
+        <div id="owner-content" class="hidden">
+            <div style="background:#f9fafb; padding:20px; border-radius:12px; margin-bottom:30px;">
+                <h3 style="margin-top:0">List New Property</h3>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="prop-address" placeholder="Enter property address..." style="margin-bottom:0;">
+                    <button class="btn-primary" style="width:auto; margin-top:0;" onclick="submitListing()">Add Listing</button>
+                </div>
             </div>
+
+            <h3>Your Portfolio</h3>
+            <button onclick="loadProperties()" style="background:none; border:none; color:var(--primary-color); cursor:pointer; font-size:12px;">🔄 Refresh Data</button>
             <table>
                 <thead>
-                    <tr><th>Property Address</th><th>Status</th><th>Last AI Check</th></tr>
+                    <tr><th>Address</th><th>Status</th><th>AI Check</th></tr>
                 </thead>
                 <tbody id="property-list"></tbody>
             </table>
         </div>
-    </div>
 
-    <div id="tenant-section" class="container hidden">
-        <div class="card">
-            <h2>Find your next home</h2>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="area-search" placeholder="Search by city (e.g. London)" style="margin:0;">
-                <button class="primary-btn" style="width:25%;" onclick="searchLocation()">Search Map</button>
+        <div id="tenant-content" class="hidden">
+            <h3 style="margin-top:0">Find Your Next Home</h3>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <input type="text" id="area-search" placeholder="City or Area (e.g. London)" style="margin-bottom:0;">
+                <button class="btn-primary" style="width:auto; margin-top:0;" onclick="searchLocation()">Search Map</button>
             </div>
             <div id="map"></div>
         </div>
@@ -116,25 +207,36 @@
 
     <script>
         // --- CONFIGURATION ---
-        // NOTE: When we deploy, we will change this URL!
+        // REPLACE WITH YOUR RENDER URL
         const API_URL = 'https://real-estate-app-925m.onrender.com/api'; 
         
         let currentUserType = 'owner';
         let currentUserEmail = '';
         let map;
 
-        function showLogin(type) {
+        // --- UI LOGIC ---
+        function switchMode(type) {
             currentUserType = type;
-            document.getElementById('auth-title').innerText = type === 'owner' ? 'Owner Portal' : 'Tenant Login';
-            document.getElementById('auth-section').classList.remove('hidden');
-            document.getElementById('owner-section').classList.add('hidden');
-            document.getElementById('tenant-section').classList.add('hidden');
+            // Update buttons
+            document.getElementById('btn-owner').className = type === 'owner' ? 'toggle-btn active' : 'toggle-btn';
+            document.getElementById('btn-tenant').className = type === 'tenant' ? 'toggle-btn active' : 'toggle-btn';
         }
 
+        function logout() {
+            location.reload(); // Simple logout
+        }
+
+        // --- AUTH LOGIC ---
         async function handleLogin() {
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
-            if(!email || !password) return alert("Please fill in all fields.");
+            
+            if(!email || !password) return alert("Please fill in all fields");
+
+            // Change button text to show loading
+            const btn = document.querySelector('.btn-primary');
+            const originalText = btn.innerText;
+            btn.innerText = "Verifying...";
 
             try {
                 const res = await fetch(`${API_URL}/login`, {
@@ -146,36 +248,45 @@
 
                 if(data.success) {
                     currentUserEmail = email;
-                    document.getElementById('auth-section').classList.add('hidden');
+                    // Hide Login, Show Dashboard
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('dashboard-view').style.display = 'block';
+                    
                     if(currentUserType === 'owner') {
-                        document.getElementById('owner-section').classList.remove('hidden');
-                        document.getElementById('owner-display-email').innerText = email;
+                        document.getElementById('owner-content').classList.remove('hidden');
                         loadProperties();
                     } else {
-                        document.getElementById('tenant-section').classList.remove('hidden');
+                        document.getElementById('tenant-content').classList.remove('hidden');
                         initMap();
                     }
-                } else { alert("Login failed: " + data.message); }
-            } catch(e) { console.error(e); alert("Could not connect to server."); }
+                } else {
+                    alert("Login Failed: " + data.message);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Connection Error. Is the backend running?");
+            } finally {
+                btn.innerText = originalText;
+            }
         }
 
+        // --- OWNER FUNCTIONS ---
         async function submitListing() {
             const address = document.getElementById('prop-address').value;
-            if(!currentUserEmail) return alert("Session expired. Please login again.");
-
+            if(!address) return;
             try {
                 const res = await fetch(`${API_URL}/list-property`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ ownerEmail: currentUserEmail, address: address })
+                    body: JSON.stringify({ ownerEmail: currentUserEmail, address })
                 });
                 const data = await res.json();
                 if(data.success) {
+                    alert("Property Listed!");
                     document.getElementById('prop-address').value = '';
                     loadProperties();
-                    alert("Listing successful! Verification email sent.");
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) { alert("Error listing property"); }
         }
 
         async function loadProperties() {
@@ -184,20 +295,18 @@
                 const data = await res.json();
                 const tbody = document.getElementById('property-list');
                 tbody.innerHTML = '';
-                
                 data.properties.forEach(prop => {
-                    const lastCheck = prop.lastChecked ? new Date(prop.lastChecked).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Pending';
-                    const row = `<tr>
-                        <td style="font-weight:600;">${prop.address}</td>
-                        <td><span class="status-badge">${prop.status}</span></td>
-                        <td style="color:var(--text-light)">${lastCheck}</td>
+                    const time = prop.lastChecked ? new Date(prop.lastChecked).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Pending';
+                    tbody.innerHTML += `<tr>
+                        <td style="font-weight:600">${prop.address}</td>
+                        <td><span style="background:#def7ec; color:#03543f; padding:2px 8px; border-radius:10px; font-size:12px;">${prop.status}</span></td>
+                        <td style="color:#6b7280">${time}</td>
                     </tr>`;
-                    tbody.innerHTML += row;
                 });
             } catch(e) { console.error(e); }
         }
 
-        // Map Logic
+        // --- MAP FUNCTIONS ---
         function initMap() {
             if(!map) {
                 map = L.map('map').setView([20, 0], 2);
@@ -213,7 +322,7 @@
             if(data.length > 0) {
                 const { lat, lon } = data[0];
                 map.setView([lat, lon], 14);
-                L.marker([lat, lon]).addTo(map).bindPopup(`<b>${query}</b><br>Available Properties`).openPopup();
+                L.marker([lat, lon]).addTo(map).bindPopup(query).openPopup();
             } else { alert("Location not found"); }
         }
     </script>
