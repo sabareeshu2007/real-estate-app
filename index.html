@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EstatePro | Modern Real Estate</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #2563eb; /* Modern Blue */
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-light: #64748b;
+        }
+
+        body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text-main); }
+        
+        /* Navigation */
+        nav { background: var(--surface); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        nav h3 { margin: 0; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; }
+        
+        .nav-btn {
+            background: transparent; border: 1px solid var(--primary); color: var(--primary);
+            padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: 600;
+        }
+        .nav-btn:hover { background: var(--primary); color: white; }
+
+        /* Layout */
+        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .card { background: var(--surface); padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 20px; }
+        .hidden { display: none; }
+
+        /* Forms */
+        h2 { margin-top: 0; font-size: 1.5rem; }
+        input { width: 100%; padding: 12px; margin: 8px 0 20px 0; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        button.primary-btn { 
+            background: var(--primary); color: white; border: none; padding: 14px; 
+            width: 100%; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 1rem; 
+        }
+        button.primary-btn:hover { background: #1d4ed8; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; color: var(--text-light); font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding: 10px; }
+        td { padding: 15px 10px; border-bottom: 1px solid #f1f5f9; }
+        .status-badge { background: #fef3c7; color: #d97706; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+
+        /* Map */
+        #map { height: 450px; width: 100%; border-radius: 12px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h3>EstatePro.</h3>
+        <div>
+            <button class="nav-btn" onclick="showLogin('owner')">Owner Portal</button>
+            <button class="nav-btn" onclick="showLogin('tenant')">Tenant Search</button>
+        </div>
+    </nav>
+
+    <div id="auth-section" class="container">
+        <div class="card" style="max-width: 400px; margin: auto;">
+            <h2 id="auth-title">Welcome Back</h2>
+            <p style="color:var(--text-light); margin-bottom: 20px;">Please login to access your account.</p>
+            <input type="email" id="email-input" placeholder="name@company.com">
+            <input type="password" id="pass-input" placeholder="Password">
+            <button class="primary-btn" onclick="handleLogin()">Sign In</button>
+        </div>
+    </div>
+
+    <div id="owner-section" class="container hidden">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2>My Properties</h2>
+                <span id="owner-display-email" style="color:var(--text-light)"></span>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="prop-address" placeholder="Enter new property address..." style="margin:0;">
+                <button class="primary-btn" style="width:auto;" onclick="submitListing()">+ Add Listing</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between;">
+                <h3>Portfolio Status</h3>
+                <button onclick="loadProperties()" style="background:none; border:none; color:var(--primary); cursor:pointer;">Refresh List</button>
+            </div>
+            <table>
+                <thead>
+                    <tr><th>Property Address</th><th>Status</th><th>Last AI Check</th></tr>
+                </thead>
+                <tbody id="property-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tenant-section" class="container hidden">
+        <div class="card">
+            <h2>Find your next home</h2>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="area-search" placeholder="Search by city (e.g. London)" style="margin:0;">
+                <button class="primary-btn" style="width:25%;" onclick="searchLocation()">Search Map</button>
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // NOTE: When we deploy, we will change this URL!
+        const API_URL = 'http://localhost:3000/api'; 
+        
+        let currentUserType = 'owner';
+        let currentUserEmail = '';
+        let map;
+
+        function showLogin(type) {
+            currentUserType = type;
+            document.getElementById('auth-title').innerText = type === 'owner' ? 'Owner Portal' : 'Tenant Login';
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('owner-section').classList.add('hidden');
+            document.getElementById('tenant-section').classList.add('hidden');
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('pass-input').value;
+            if(!email || !password) return alert("Please fill in all fields.");
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, password, userType: currentUserType })
+                });
+                const data = await res.json();
+
+                if(data.success) {
+                    currentUserEmail = email;
+                    document.getElementById('auth-section').classList.add('hidden');
+                    if(currentUserType === 'owner') {
+                        document.getElementById('owner-section').classList.remove('hidden');
+                        document.getElementById('owner-display-email').innerText = email;
+                        loadProperties();
+                    } else {
+                        document.getElementById('tenant-section').classList.remove('hidden');
+                        initMap();
+                    }
+                } else { alert("Login failed: " + data.message); }
+            } catch(e) { console.error(e); alert("Could not connect to server."); }
+        }
+
+        async function submitListing() {
+            const address = document.getElementById('prop-address').value;
+            if(!currentUserEmail) return alert("Session expired. Please login again.");
+
+            try {
+                const res = await fetch(`${API_URL}/list-property`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ownerEmail: currentUserEmail, address: address })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('prop-address').value = '';
+                    loadProperties();
+                    alert("Listing successful! Verification email sent.");
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadProperties() {
+            try {
+                const res = await fetch(`${API_URL}/properties?email=${currentUserEmail}`);
+                const data = await res.json();
+                const tbody = document.getElementById('property-list');
+                tbody.innerHTML = '';
+                
+                data.properties.forEach(prop => {
+                    const lastCheck = prop.lastChecked ? new Date(prop.lastChecked).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Pending';
+                    const row = `<tr>
+                        <td style="font-weight:600;">${prop.address}</td>
+                        <td><span class="status-badge">${prop.status}</span></td>
+                        <td style="color:var(--text-light)">${lastCheck}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        // Map Logic
+        function initMap() {
+            if(!map) {
+                map = L.map('map').setView([20, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            }
+            setTimeout(() => map.invalidateSize(), 100);
+        }
+
+        async function searchLocation() {
+            const query = document.getElementById('area-search').value;
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
+            const data = await res.json();
+            if(data.length > 0) {
+                const { lat, lon } = data[0];
+                map.setView([lat, lon], 14);
+                L.marker([lat, lon]).addTo(map).bindPopup(`<b>${query}</b><br>Available Properties`).openPopup();
+            } else { alert("Location not found"); }
+        }
+    </script>
+</body>
+</html>
