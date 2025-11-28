@@ -213,14 +213,24 @@ async function sendWelcomeEmail(toEmail, address) {
 // ADD THIS TO SERVER.JS (Before app.listen)
 
 // Get Properties Route (To show them on the dashboard)
+// --- REPLACE THE OLD /api/search-properties ROUTE WITH THIS ---
+
 app.get('/api/search-properties', async (req, res) => {
-    const { city } = req.query;
+    const { query } = req.query; // We will send 'query' instead of 'city'
     try {
-        // Case-insensitive search for the city
-        // If city is empty, it returns nothing (or remove filter to return all)
-        const query = city ? { city: { $regex: new RegExp(city, "i") } } : {};
+        if (!query) return res.json({ success: true, properties: [] });
+
+        // SMART SEARCH: Look inside City OR Area OR Street
+        const searchRegex = new RegExp(query, "i"); // "i" means case-insensitive
         
-        const properties = await Property.find(query);
+        const properties = await Property.find({
+            $or: [
+                { city: searchRegex },
+                { area: searchRegex },
+                { street: searchRegex }
+            ]
+        });
+        
         res.json({ success: true, properties });
     } catch (error) {
         res.status(500).json({ error: error.message });

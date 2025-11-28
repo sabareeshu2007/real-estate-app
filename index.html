@@ -3,128 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro - Geo Location</title>
+    <title>EstatePro - Chennai Real Estate</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        /* --- CSS STYLES --- */
-        :root { --primary: #2563eb; --bg: #f3f4f6; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #1f2937; }
+        /* --- 1. PROFESSIONAL DESIGN & ANIMATIONS --- */
+        :root { --primary: #6C63FF; --secondary: #2A2A72; --bg: #f4f7f6; --success: #00b894; }
+        
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #2d3436;
+        }
+
+        /* Animation Keyframes */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* Navigation */
-        nav { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .nav-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-        .nav-btn.active { background: var(--primary); color: white; }
+        nav { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 15px 5%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        
+        .logo { font-weight: 700; font-size: 24px; color: var(--secondary); display: flex; align-items: center; gap: 10px; }
+        
+        .nav-btn { 
+            background: transparent; border: 2px solid var(--primary); color: var(--primary); 
+            padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.3s; 
+        }
+        .nav-btn:hover { background: var(--primary); color: white; transform: scale(1.05); }
 
-        /* Layout */
-        .container { max-width: 900px; margin: 30px auto; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        /* Containers */
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; animation: fadeIn 0.8s ease; }
+        .card { 
+            background: white; padding: 40px; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px; 
+        }
         .hidden { display: none; }
 
-        /* Form Grid */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        /* Forms */
+        h2 { color: var(--secondary); margin-top: 0; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .full-width { grid-column: span 2; }
-        
-        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #4b5563; }
-        input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
-        
-        button.primary { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        button.primary:hover { background: #1d4ed8; }
+
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #636e72; }
+        input { 
+            width: 100%; padding: 12px 15px; border: 1px solid #dfe6e9; border-radius: 10px; 
+            font-size: 14px; background: #f9f9f9; transition: 0.3s;
+        }
+        input:focus { outline: none; border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.1); }
+
+        button.primary { 
+            background: linear-gradient(45deg, var(--secondary), var(--primary)); 
+            color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; 
+            cursor: pointer; font-weight: 600; font-size: 16px; margin-top: 20px; 
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3); transition: 0.3s;
+        }
+        button.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(108, 99, 255, 0.4); }
+
+        /* Dashboard Table */
+        .table-container { overflow-x: auto; } /* Allows scroll on mobile */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; min-width: 600px; }
+        th { text-align: left; background: #f1f2f6; padding: 12px; border-radius: 8px 8px 0 0; color: #7f8fa6; font-size: 12px; text-transform: uppercase;}
+        td { padding: 15px 12px; border-bottom: 1px solid #f1f2f6; }
+        .status-badge { 
+            padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; 
+            background: #fff3cd; color: #856404; 
+        }
 
         /* Maps */
-        .map-box { height: 300px; width: 100%; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 10px; }
-        .info-box { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 14px; text-align: center;}
+        .map-wrapper { position: relative; }
+        .map-search-overlay {
+            position: absolute; top: 10px; left: 50px; z-index: 500;
+            background: white; padding: 5px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex; gap: 5px;
+        }
+        .map-box { height: 400px; width: 100%; border-radius: 15px; border: 2px solid #fff; box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
+
+        /* --- 2. MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; } /* Stack inputs */
+            .full-width { grid-column: span 1; }
+            nav { padding: 15px; }
+            .logo span { display: none; } /* Hide text on small screens */
+            .card { padding: 20px; }
+            .map-search-overlay { left: 10px; right: 10px; display: flex; }
+            .map-search-overlay input { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
     <nav>
-        <h3 style="margin:0;">EstatePro 📍</h3>
+        <div class="logo">🏠 <span>EstatePro Chennai</span></div>
         <div id="nav-buttons">
-            <button class="nav-btn" onclick="showLogin('owner')">Owner Portal</button>
-            <button class="nav-btn" onclick="showLogin('tenant')">Tenant Search</button>
+            <button class="nav-btn" onclick="showLogin('owner')">Owner Login</button>
+            <button class="nav-btn" onclick="showLogin('tenant')">Find Home</button>
         </div>
         <button id="logout-btn" class="nav-btn hidden" onclick="location.reload()">Logout</button>
     </nav>
 
     <div id="auth-section" class="container">
-        <div class="card" style="max-width:400px; margin:auto;">
-            <h2 id="auth-title">Login</h2>
-            <input type="email" id="email-input" placeholder="Email">
-            <br><br>
+        <div class="card" style="max-width:450px; margin:50px auto; text-align:center;">
+            <h2 id="auth-title">Welcome Back</h2>
+            <p style="color:#b2bec3;">Secure Login to manage properties</p>
+            <input type="email" id="email-input" placeholder="Email Address" style="margin-bottom:15px;">
             <input type="password" id="pass-input" placeholder="Password">
-            <br><br>
-            <button class="primary" onclick="handleLogin()">Sign In</button>
+            <button class="primary" onclick="handleLogin()">Sign In / Register</button>
         </div>
     </div>
 
     <div id="owner-section" class="container hidden">
+        
         <div class="card">
-            <h2>List Your Property</h2>
-            <p style="color:#666; font-size:14px;">Please fill in the details below and pin the location on the map.</p>
+            <h2>📊 My Listings & Process</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr><th>Property</th><th>Location</th><th>Status</th><th>AI Check</th></tr>
+                    </thead>
+                    <tbody id="my-listings-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📍 List New Property</h2>
+            <p>Fill details and pin exact location on map.</p>
             
-            <h4>1. Personal Details</h4>
             <div class="form-grid">
                 <div><label>First Name</label><input type="text" id="fname"></div>
-                <div><label>Last Name</label><input type="text" id="lname"></div>
-                <div class="full-width"><label>Phone Number</label><input type="tel" id="phone"></div>
+                <div><label>Phone Number</label><input type="tel" id="phone"></div>
+                <div class="full-width"><label>Full Address (House No, Street, Area)</label><input type="text" id="address_full"></div>
+                <div><label>Area / Neighborhood</label><input type="text" id="area"></div>
+                <div><label>City</label><input type="text" id="city" value="Chennai"></div>
             </div>
 
-            <h4>2. Address Details</h4>
-            <div class="form-grid">
-                <div><label>House No / Flat</label><input type="text" id="house"></div>
-                <div><label>Street Name</label><input type="text" id="street"></div>
-                <div class="full-width"><label>Area / Neighborhood</label><input type="text" id="area"></div>
-                <div><label>City</label><input type="text" id="city"></div>
-                <div><label>State</label><input type="text" id="state"></div>
-                <div class="full-width"><label>Country</label><input type="text" id="country"></div>
+            <h4 style="margin-top:20px;">Pin Location</h4>
+            <div class="map-wrapper">
+                <div class="map-search-overlay">
+                    <input type="text" id="owner-map-search" placeholder="Search Area (e.g. Anna Nagar)">
+                    <button onclick="searchOwnerMap()" style="background:var(--primary); color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">🔍</button>
+                </div>
+                <div id="owner-map" class="map-box"></div>
             </div>
-
-            <h4>3. Pin Exact Location</h4>
-            <p style="font-size:12px; color:orange;">⚠ Click on the map to set the location pin.</p>
-            <div id="owner-map" class="map-box"></div>
             
-            <div id="coords-display" class="info-box hidden">
-                Selected Location: <span id="lat-val">0</span>, <span id="lng-val">0</span>
-            </div>
-            <br>
-            <button class="primary" onclick="submitListing()">Submit Listing</button>
+            <p id="coords-display" class="hidden" style="text-align:center; color:green; font-weight:bold; margin-top:10px;">✅ Location Pinned!</p>
+            <button class="primary" onclick="submitListing()">Submit for Verification</button>
         </div>
     </div>
 
     <div id="tenant-section" class="container hidden">
         <div class="card">
-            <h2>Find a Home</h2>
+            <h2>Find your Home in Chennai</h2>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="search-city" placeholder="Enter City (e.g. New York, Chennai)">
-                <button class="primary" style="width:auto;" onclick="searchProperties()">Search</button>
+                <input type="text" id="search-query" placeholder="Search by Area, Street or City (e.g. T Nagar)">
+                <button class="primary" style="width:auto; margin-top:0;" onclick="searchProperties()">Search</button>
             </div>
         </div>
-        
-        <div class="card">
+        <div class="card" style="padding:10px;">
             <div id="tenant-map" class="map-box" style="height: 500px;"></div>
         </div>
     </div>
 
     <script>
         // --- CONFIGURATION ---
-        // REPLACE WITH YOUR RENDER URL (or http://localhost:3000/api if testing locally)
-        const API_URL = 'https://real-estate-app-925m.onrender.com/api'; 
+        const API_URL = 'https://real-estate-backend-xyz.onrender.com/api'; // REPLACE WITH YOUR RENDER URL
         
         let currentUserType = '';
         let currentUserEmail = '';
         let ownerMap, tenantMap;
-        let selectedLat = null; 
-        let selectedLng = null;
-        let ownerMarker = null;
+        let selectedLat = null, selectedLng = null, ownerMarker = null;
 
         // --- AUTH ---
         function showLogin(type) {
             currentUserType = type;
-            document.getElementById('auth-title').innerText = type + ' Login';
+            document.getElementById('auth-title').innerText = type === 'owner' ? 'Owner Portal' : 'Find Homes';
             document.getElementById('auth-section').classList.remove('hidden');
             document.getElementById('owner-section').classList.add('hidden');
             document.getElementById('tenant-section').classList.add('hidden');
@@ -151,63 +219,64 @@
 
                     if(currentUserType === 'owner') {
                         document.getElementById('owner-section').classList.remove('hidden');
-                        initOwnerMap(); // Load the map for pinning
+                        initOwnerMap();
+                        loadMyListings(); // Load the process table
                     } else {
                         document.getElementById('tenant-section').classList.remove('hidden');
-                        initTenantMap(); // Load the search map
+                        initTenantMap();
                     }
                 } else { alert(data.message); }
             } catch(e) { console.error(e); alert("Login Error"); }
         }
 
-        // --- OWNER LOGIC (PIN THE MAP) ---
+        // --- OWNER FUNCTIONS ---
+        
+        // 1. Init Map focused on CHENNAI
         function initOwnerMap() {
-            // Default center (can be anywhere)
-            ownerMap = L.map('owner-map').setView([20.5937, 78.9629], 4); 
+            if(ownerMap) return; // Prevent re-loading
+            // Coords for Chennai: 13.0827, 80.2707
+            ownerMap = L.map('owner-map').setView([13.0827, 80.2707], 12); 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(ownerMap);
 
-            // Add Click Event Listener
             ownerMap.on('click', function(e) {
                 selectedLat = e.latlng.lat;
                 selectedLng = e.latlng.lng;
-
-                // Remove old marker if exists
                 if (ownerMarker) ownerMap.removeLayer(ownerMarker);
-
-                // Add new marker
                 ownerMarker = L.marker([selectedLat, selectedLng]).addTo(ownerMap);
-
-                // Show coordinates
                 document.getElementById('coords-display').classList.remove('hidden');
-                document.getElementById('lat-val').innerText = selectedLat.toFixed(4);
-                document.getElementById('lng-val').innerText = selectedLng.toFixed(4);
             });
-            
-            // Fix map size glitch
-            setTimeout(() => ownerMap.invalidateSize(), 100);
+            setTimeout(() => ownerMap.invalidateSize(), 500);
         }
+
+        // 2. Search Box for Owner Map
+        async function searchOwnerMap() {
+            const query = document.getElementById('owner-map-search').value;
+            if(!query) return;
+            // Use Nominatim to find location
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}, Chennai`);
+            const data = await res.json();
+            if(data.length > 0) {
+                const { lat, lon } = data[0];
+                ownerMap.setView([lat, lon], 14); // Fly to location
+            } else { alert("Location not found"); }
+        }
+
+        // 3. Submit Listing
         async function submitListing() {
-            // 1. Get Values
             const form = {
                 ownerEmail: currentUserEmail,
                 firstName: document.getElementById('fname').value,
-                lastName: document.getElementById('lname').value,
                 phone: document.getElementById('phone').value,
-                houseNo: document.getElementById('house').value,
-                street: document.getElementById('street').value,
+                houseNo: document.getElementById('address_full').value, // Simplified for brevity
+                street: document.getElementById('address_full').value, 
                 area: document.getElementById('area').value,
                 city: document.getElementById('city').value,
-                state: document.getElementById('state').value,
-                country: document.getElementById('country').value,
                 lat: selectedLat,
                 lng: selectedLng
             };
 
-            // 2. Validation
-            if(!form.firstName || !form.phone || !form.city) return alert("Please fill basic details");
-            if(!form.lat) return alert("Please click on the map to pin the location!");
+            if(!form.firstName || !form.area || !form.lat) return alert("Please fill details & Pin Map");
 
-            // 3. Send to Server
             try {
                 const res = await fetch(`${API_URL}/list-property`, {
                     method: 'POST',
@@ -215,83 +284,74 @@
                     body: JSON.stringify(form)
                 });
                 const data = await res.json();
-                
                 if(data.success) {
-                    alert("✅ Details Submitted Successfully!\n\nOur sales team will contact you within 48 hours.");
-                    
-                    // --- THE FIX IS HERE ---
-                    // Instead of location.reload(), we just clear the boxes:
+                    alert("Listing Submitted! Sales team will contact you.");
+                    // Clear form
                     document.getElementById('fname').value = '';
-                    document.getElementById('lname').value = '';
-                    document.getElementById('phone').value = '';
-                    document.getElementById('house').value = '';
-                    document.getElementById('street').value = '';
+                    document.getElementById('address_full').value = '';
                     document.getElementById('area').value = '';
-                    document.getElementById('city').value = '';
-                    document.getElementById('state').value = '';
-                    document.getElementById('country').value = '';
-                    
-                    // Remove the pin from the map
-                    if (ownerMarker) {
-                        ownerMap.removeLayer(ownerMarker);
-                        ownerMarker = null;
-                    }
-                    document.getElementById('coords-display').classList.add('hidden');
+                    loadMyListings(); // Refresh the status table
                 }
-            } catch(e) { alert("Error submitting listing"); }
+            } catch(e) { alert("Error"); }
         }
 
-        // --- TENANT LOGIC (SEARCH & DISPLAY) ---
+        // 4. Load "Process" / Status Table
+        async function loadMyListings() {
+            try {
+                const res = await fetch(`${API_URL}/my-properties?email=${currentUserEmail}`);
+                const data = await res.json();
+                const tbody = document.getElementById('my-listings-body');
+                tbody.innerHTML = '';
+                
+                data.properties.forEach(prop => {
+                    const lastCheck = prop.lastChecked ? new Date(prop.lastChecked).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Pending';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${prop.area}</b><br><small>${prop.street}</small></td>
+                            <td>${prop.city}</td>
+                            <td><span class="status-badge">${prop.status}</span></td>
+                            <td>${lastCheck}</td>
+                        </tr>
+                    `;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        // --- TENANT FUNCTIONS ---
         function initTenantMap() {
-            tenantMap = L.map('tenant-map').setView([20, 0], 2);
+            if(tenantMap) return;
+            tenantMap = L.map('tenant-map').setView([13.0827, 80.2707], 11); // Chennai
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(tenantMap);
-            setTimeout(() => tenantMap.invalidateSize(), 100);
+            setTimeout(() => tenantMap.invalidateSize(), 500);
         }
 
         async function searchProperties() {
-            const city = document.getElementById('search-city').value;
-            if(!city) return alert("Enter a city name");
+            const query = document.getElementById('search-query').value;
+            if(!query) return alert("Enter Area or City");
 
-            // 1. Move Map to City (Using Nominatim Geocoding)
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${city}`);
+            // 1. Move Map to Location
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}, Chennai`);
             const geoData = await geoRes.json();
-
             if(geoData.length > 0) {
-                const lat = geoData[0].lat;
-                const lon = geoData[0].lon;
-                tenantMap.setView([lat, lon], 12);
-            } else {
-                alert("City not found on map, but checking database...");
+                tenantMap.setView([geoData[0].lat, geoData[0].lon], 13);
             }
 
-            // 2. Fetch Properties from OUR Database
+            // 2. Fetch from DB (Using updated search logic)
             try {
-                const res = await fetch(`${API_URL}/search-properties?city=${city}`);
+                const res = await fetch(`${API_URL}/search-properties?query=${query}`); // Changed 'city' to 'query'
                 const data = await res.json();
 
-                // Clear existing pins
-                tenantMap.eachLayer((layer) => {
-                    if(layer instanceof L.Marker) tenantMap.removeLayer(layer);
-                });
+                // Clear old pins
+                tenantMap.eachLayer((layer) => { if(layer instanceof L.Marker) tenantMap.removeLayer(layer); });
 
                 if(data.properties.length > 0) {
-                    // 3. Plot Each Property
                     data.properties.forEach(prop => {
                         if(prop.lat && prop.lng) {
                             L.marker([prop.lat, prop.lng]).addTo(tenantMap)
-                             .bindPopup(`
-                                <b>${prop.houseNo}, ${prop.street}</b><br>
-                                ${prop.area}<br>
-                                Owner: ${prop.firstName}<br>
-                                Phone: ${prop.phone}
-                             `);
+                             .bindPopup(`<b>${prop.area}</b><br>Phone: ${prop.phone}`);
                         }
                     });
-                    alert(`Found ${data.properties.length} properties in ${city}!`);
-                } else {
-                    alert("No properties listed in this city yet.");
-                }
-
+                } else { alert("No listings found in this specific area yet."); }
             } catch(e) { console.error(e); }
         }
     </script>
