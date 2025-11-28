@@ -186,7 +186,6 @@
             // Fix map size glitch
             setTimeout(() => ownerMap.invalidateSize(), 100);
         }
-
         async function submitListing() {
             // 1. Get Values
             const form = {
@@ -218,8 +217,26 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    alert("✅ Details Submitted Successfully!\n\nOur sales team will contact you within 48 hours to verify documents.");
-                    location.reload(); // Refresh page
+                    alert("✅ Details Submitted Successfully!\n\nOur sales team will contact you within 48 hours.");
+                    
+                    // --- THE FIX IS HERE ---
+                    // Instead of location.reload(), we just clear the boxes:
+                    document.getElementById('fname').value = '';
+                    document.getElementById('lname').value = '';
+                    document.getElementById('phone').value = '';
+                    document.getElementById('house').value = '';
+                    document.getElementById('street').value = '';
+                    document.getElementById('area').value = '';
+                    document.getElementById('city').value = '';
+                    document.getElementById('state').value = '';
+                    document.getElementById('country').value = '';
+                    
+                    // Remove the pin from the map
+                    if (ownerMarker) {
+                        ownerMap.removeLayer(ownerMarker);
+                        ownerMarker = null;
+                    }
+                    document.getElementById('coords-display').classList.add('hidden');
                 }
             } catch(e) { alert("Error submitting listing"); }
         }
