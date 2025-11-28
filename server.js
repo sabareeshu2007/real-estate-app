@@ -31,14 +31,61 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', UserSchema);
 
+// --- UPDATED DATABASE MODEL ---
 const PropertySchema = new mongoose.Schema({
     ownerEmail: String,
-    address: String,
-    status: String,
-    createdAt: { type: Date, default: Date.now }, // We track WHEN it was created
-    lastChecked: { type: Date, default: Date.now } // We track when AI last called
+    // 1. Personal Details
+    firstName: String,
+    lastName: String,
+    phone: String,
+    // 2. Address Details
+    houseNo: String,
+    street: String,
+    area: String,
+    city: String,
+    state: String,
+    country: String,
+    // 3. Map Coordinates
+    lat: Number,
+    lng: Number,
+    // System
+    status: { type: String, default: 'Pending Verification' },
+    createdAt: { type: Date, default: Date.now },
+    lastChecked: { type: Date, default: Date.now }
 });
 const Property = mongoose.model('Property', PropertySchema);
+
+// --- UPDATED API ROUTES ---
+
+// 1. List Property (Owner submits detailed form)
+app.post('/api/list-property', async (req, res) => {
+    try {
+        console.log("Received Listing:", req.body.city);
+        const newProperty = new Property(req.body); // Save all fields sent from frontend
+        await newProperty.save();
+        
+        // (Optional: Email logic goes here)
+        
+        res.json({ success: true, message: "Property Listed Successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 2. Search Properties (Tenant searches by City)
+app.get('/api/search-properties', async (req, res) => {
+    const { city } = req.query;
+    try {
+        // Case-insensitive search for the city
+        // If city is empty, it returns nothing (or remove filter to return all)
+        const query = city ? { city: { $regex: new RegExp(city, "i") } } : {};
+        
+        const properties = await Property.find(query);
+        res.json({ success: true, properties });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // ---------------------------------------------------------
 // 3. EMAIL FUNCTION (The "Postman")
@@ -166,8 +213,23 @@ async function sendWelcomeEmail(toEmail, address) {
 // ADD THIS TO SERVER.JS (Before app.listen)
 
 // Get Properties Route (To show them on the dashboard)
-app.get('/api/properties', async (req, res) => {
-    const { email } = req.query; // We get the email from the URL
+app.get('/api/search-properties', async (req, res) => {
+    const { city } = req.query;
+    try {
+        // Case-insensitive search for the city
+        // If city is empty, it returns nothing (or remove filter to return all)
+        const query = city ? { city: { $regex: new RegExp(city, "i") } } : {};
+        
+        const properties = await Property.find(query);
+        res.json({ success: true, properties });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 3. Get Owner Properties (For Dashboard)
+app.get('/api/my-properties', async (req, res) => {
+    const { email } = req.query;
     try {
         const props = await Property.find({ ownerEmail: email });
         res.json({ success: true, properties: props });

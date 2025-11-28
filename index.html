@@ -3,240 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro - Secure Login</title>
+    <title>EstatePro - Geo Location</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        /* --- PROFESSIONAL CSS --- */
-        :root {
-            --primary-color: #4f46e5; /* Modern Indigo */
-            --primary-hover: #4338ca;
-            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            --glass-bg: rgba(255, 255, 255, 0.95);
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            --text-main: #111827;
-            --text-muted: #6b7280;
-        }
+        /* --- CSS STYLES --- */
+        :root { --primary: #2563eb; --bg: #f3f4f6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #1f2937; }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-gradient);
-            margin: 0;
-            height: 100vh;
-            display: flex; /* Centers everything */
-            align-items: center;
-            justify-content: center;
-            color: var(--text-main);
-        }
+        /* Navigation */
+        nav { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .nav-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        .nav-btn.active { background: var(--primary); color: white; }
 
-        /* The "Card" Container */
-        .login-card {
-            background: var(--glass-bg);
-            width: 100%;
-            max-width: 400px;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            text-align: center;
-        }
-
-        /* Typography */
-        h2 { margin-top: 0; font-weight: 800; font-size: 24px; color: var(--text-main); }
-        p { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
-
-        /* Toggles (Owner vs Tenant) */
-        .toggle-container {
-            background: #f3f4f6;
-            padding: 4px;
-            border-radius: 8px;
-            display: flex;
-            margin-bottom: 20px;
-        }
-        
-        .toggle-btn {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            border-radius: 6px;
-            font-weight: 600;
-            color: var(--text-muted);
-            transition: all 0.2s;
-        }
-
-        .toggle-btn.active {
-            background: white;
-            color: var(--primary-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        /* Inputs */
-        .input-group { text-align: left; margin-bottom: 15px; }
-        label { display: block; font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 5px; }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            box-sizing: border-box; /* Keeps padding inside */
-            transition: border 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        /* Main Button */
-        .btn-primary {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.2s;
-        }
-
-        .btn-primary:hover { background: var(--primary-hover); }
-
-        /* Helper Classes */
+        /* Layout */
+        .container { max-width: 900px; margin: 30px auto; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .hidden { display: none; }
+
+        /* Form Grid */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .full-width { grid-column: span 2; }
         
-        /* Dashboard Styling (Simple clean look) */
-        #dashboard-view { 
-            display: none; 
-            width: 90%; 
-            max-width: 1000px; 
-            height: 90vh; 
-            background: white; 
-            border-radius: 16px; 
-            padding: 20px; 
-            box-shadow: var(--shadow);
-            overflow-y: auto;
-        }
+        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #4b5563; }
+        input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
         
-        /* Map Styling */
-        #map { height: 400px; width: 100%; border-radius: 12px; margin-top: 15px; border: 2px solid #eee; }
-        
-        /* Table Styling */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; color: var(--text-muted); font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 10px;}
-        td { padding: 15px 0; border-bottom: 1px solid #f9fafb; font-size: 14px; }
+        button.primary { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        button.primary:hover { background: #1d4ed8; }
+
+        /* Maps */
+        .map-box { height: 300px; width: 100%; border-radius: 8px; border: 2px solid #e5e7eb; margin-top: 10px; }
+        .info-box { background: #eff6ff; color: #1e40af; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 14px; text-align: center;}
     </style>
 </head>
 <body>
 
-    <div id="login-view" class="login-card">
-        <div style="margin-bottom: 20px;">
-            <div style="background: #e0e7ff; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto;">
-                <span style="font-size: 24px;">🏠</span>
-            </div>
-            <h2>Welcome Back</h2>
-            <p>Enter your details to access your real estate portal.</p>
+    <nav>
+        <h3 style="margin:0;">EstatePro 📍</h3>
+        <div id="nav-buttons">
+            <button class="nav-btn" onclick="showLogin('owner')">Owner Portal</button>
+            <button class="nav-btn" onclick="showLogin('tenant')">Tenant Search</button>
         </div>
+        <button id="logout-btn" class="nav-btn hidden" onclick="location.reload()">Logout</button>
+    </nav>
 
-        <div class="toggle-container">
-            <button id="btn-owner" class="toggle-btn active" onclick="switchMode('owner')">Owner</button>
-            <button id="btn-tenant" class="toggle-btn" onclick="switchMode('tenant')">Tenant</button>
+    <div id="auth-section" class="container">
+        <div class="card" style="max-width:400px; margin:auto;">
+            <h2 id="auth-title">Login</h2>
+            <input type="email" id="email-input" placeholder="Email">
+            <br><br>
+            <input type="password" id="pass-input" placeholder="Password">
+            <br><br>
+            <button class="primary" onclick="handleLogin()">Sign In</button>
         </div>
-
-        <div class="input-group">
-            <label>Email Address</label>
-            <input type="email" id="email-input" placeholder="name@company.com">
-        </div>
-        
-        <div class="input-group">
-            <label>Password</label>
-            <input type="password" id="pass-input" placeholder="••••••••">
-        </div>
-
-        <button class="btn-primary" onclick="handleLogin()">Sign In</button>
-        
-        <p style="margin-top: 20px; font-size: 12px;">
-            Secure connection via Render & MongoDB
-        </p>
     </div>
 
-    <div id="dashboard-view">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-            <h2 style="margin:0">RealEstatePro <span style="font-weight:400; color:#999; font-size:16px;">| Dashboard</span></h2>
-            <button onclick="logout()" style="border:1px solid #ddd; background:white; padding:8px 16px; border-radius:6px; cursor:pointer;">Logout</button>
-        </div>
-
-        <div id="owner-content" class="hidden">
-            <div style="background:#f9fafb; padding:20px; border-radius:12px; margin-bottom:30px;">
-                <h3 style="margin-top:0">List New Property</h3>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="prop-address" placeholder="Enter property address..." style="margin-bottom:0;">
-                    <button class="btn-primary" style="width:auto; margin-top:0;" onclick="submitListing()">Add Listing</button>
-                </div>
+    <div id="owner-section" class="container hidden">
+        <div class="card">
+            <h2>List Your Property</h2>
+            <p style="color:#666; font-size:14px;">Please fill in the details below and pin the location on the map.</p>
+            
+            <h4>1. Personal Details</h4>
+            <div class="form-grid">
+                <div><label>First Name</label><input type="text" id="fname"></div>
+                <div><label>Last Name</label><input type="text" id="lname"></div>
+                <div class="full-width"><label>Phone Number</label><input type="tel" id="phone"></div>
             </div>
 
-            <h3>Your Portfolio</h3>
-            <button onclick="loadProperties()" style="background:none; border:none; color:var(--primary-color); cursor:pointer; font-size:12px;">🔄 Refresh Data</button>
-            <table>
-                <thead>
-                    <tr><th>Address</th><th>Status</th><th>AI Check</th></tr>
-                </thead>
-                <tbody id="property-list"></tbody>
-            </table>
-        </div>
-
-        <div id="tenant-content" class="hidden">
-            <h3 style="margin-top:0">Find Your Next Home</h3>
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="text" id="area-search" placeholder="City or Area (e.g. London)" style="margin-bottom:0;">
-                <button class="btn-primary" style="width:auto; margin-top:0;" onclick="searchLocation()">Search Map</button>
+            <h4>2. Address Details</h4>
+            <div class="form-grid">
+                <div><label>House No / Flat</label><input type="text" id="house"></div>
+                <div><label>Street Name</label><input type="text" id="street"></div>
+                <div class="full-width"><label>Area / Neighborhood</label><input type="text" id="area"></div>
+                <div><label>City</label><input type="text" id="city"></div>
+                <div><label>State</label><input type="text" id="state"></div>
+                <div class="full-width"><label>Country</label><input type="text" id="country"></div>
             </div>
-            <div id="map"></div>
+
+            <h4>3. Pin Exact Location</h4>
+            <p style="font-size:12px; color:orange;">⚠ Click on the map to set the location pin.</p>
+            <div id="owner-map" class="map-box"></div>
+            
+            <div id="coords-display" class="info-box hidden">
+                Selected Location: <span id="lat-val">0</span>, <span id="lng-val">0</span>
+            </div>
+            <br>
+            <button class="primary" onclick="submitListing()">Submit Listing</button>
+        </div>
+    </div>
+
+    <div id="tenant-section" class="container hidden">
+        <div class="card">
+            <h2>Find a Home</h2>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="search-city" placeholder="Enter City (e.g. New York, Chennai)">
+                <button class="primary" style="width:auto;" onclick="searchProperties()">Search</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div id="tenant-map" class="map-box" style="height: 500px;"></div>
         </div>
     </div>
 
     <script>
         // --- CONFIGURATION ---
-        // REPLACE WITH YOUR RENDER URL
-        const API_URL = 'https://real-estate-app-925m.onrender.com/api'; 
+        // REPLACE WITH YOUR RENDER URL (or http://localhost:3000/api if testing locally)
+        const API_URL = 'https://real-estate-backend-xyz.onrender.com/api'; 
         
-        let currentUserType = 'owner';
+        let currentUserType = '';
         let currentUserEmail = '';
-        let map;
+        let ownerMap, tenantMap;
+        let selectedLat = null; 
+        let selectedLng = null;
+        let ownerMarker = null;
 
-        // --- UI LOGIC ---
-        function switchMode(type) {
+        // --- AUTH ---
+        function showLogin(type) {
             currentUserType = type;
-            // Update buttons
-            document.getElementById('btn-owner').className = type === 'owner' ? 'toggle-btn active' : 'toggle-btn';
-            document.getElementById('btn-tenant').className = type === 'tenant' ? 'toggle-btn active' : 'toggle-btn';
+            document.getElementById('auth-title').innerText = type + ' Login';
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('owner-section').classList.add('hidden');
+            document.getElementById('tenant-section').classList.add('hidden');
         }
 
-        function logout() {
-            location.reload(); // Simple logout
-        }
-
-        // --- AUTH LOGIC ---
         async function handleLogin() {
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
-            
-            if(!email || !password) return alert("Please fill in all fields");
-
-            // Change button text to show loading
-            const btn = document.querySelector('.btn-primary');
-            const originalText = btn.innerText;
-            btn.innerText = "Verifying...";
+            if(!email || !password) return alert("Fill all fields");
 
             try {
                 const res = await fetch(`${API_URL}/login`, {
@@ -245,85 +142,140 @@
                     body: JSON.stringify({ email, password, userType: currentUserType })
                 });
                 const data = await res.json();
-
+                
                 if(data.success) {
                     currentUserEmail = email;
-                    // Hide Login, Show Dashboard
-                    document.getElementById('login-view').style.display = 'none';
-                    document.getElementById('dashboard-view').style.display = 'block';
-                    
+                    document.getElementById('auth-section').classList.add('hidden');
+                    document.getElementById('nav-buttons').classList.add('hidden');
+                    document.getElementById('logout-btn').classList.remove('hidden');
+
                     if(currentUserType === 'owner') {
-                        document.getElementById('owner-content').classList.remove('hidden');
-                        loadProperties();
+                        document.getElementById('owner-section').classList.remove('hidden');
+                        initOwnerMap(); // Load the map for pinning
                     } else {
-                        document.getElementById('tenant-content').classList.remove('hidden');
-                        initMap();
+                        document.getElementById('tenant-section').classList.remove('hidden');
+                        initTenantMap(); // Load the search map
                     }
-                } else {
-                    alert("Login Failed: " + data.message);
-                }
-            } catch(e) {
-                console.error(e);
-                alert("Connection Error. Is the backend running?");
-            } finally {
-                btn.innerText = originalText;
-            }
+                } else { alert(data.message); }
+            } catch(e) { console.error(e); alert("Login Error"); }
         }
 
-        // --- OWNER FUNCTIONS ---
+        // --- OWNER LOGIC (PIN THE MAP) ---
+        function initOwnerMap() {
+            // Default center (can be anywhere)
+            ownerMap = L.map('owner-map').setView([20.5937, 78.9629], 4); 
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(ownerMap);
+
+            // Add Click Event Listener
+            ownerMap.on('click', function(e) {
+                selectedLat = e.latlng.lat;
+                selectedLng = e.latlng.lng;
+
+                // Remove old marker if exists
+                if (ownerMarker) ownerMap.removeLayer(ownerMarker);
+
+                // Add new marker
+                ownerMarker = L.marker([selectedLat, selectedLng]).addTo(ownerMap);
+
+                // Show coordinates
+                document.getElementById('coords-display').classList.remove('hidden');
+                document.getElementById('lat-val').innerText = selectedLat.toFixed(4);
+                document.getElementById('lng-val').innerText = selectedLng.toFixed(4);
+            });
+            
+            // Fix map size glitch
+            setTimeout(() => ownerMap.invalidateSize(), 100);
+        }
+
         async function submitListing() {
-            const address = document.getElementById('prop-address').value;
-            if(!address) return;
+            // 1. Get Values
+            const form = {
+                ownerEmail: currentUserEmail,
+                firstName: document.getElementById('fname').value,
+                lastName: document.getElementById('lname').value,
+                phone: document.getElementById('phone').value,
+                houseNo: document.getElementById('house').value,
+                street: document.getElementById('street').value,
+                area: document.getElementById('area').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                country: document.getElementById('country').value,
+                lat: selectedLat,
+                lng: selectedLng
+            };
+
+            // 2. Validation
+            if(!form.firstName || !form.phone || !form.city) return alert("Please fill basic details");
+            if(!form.lat) return alert("Please click on the map to pin the location!");
+
+            // 3. Send to Server
             try {
                 const res = await fetch(`${API_URL}/list-property`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ ownerEmail: currentUserEmail, address })
+                    body: JSON.stringify(form)
                 });
                 const data = await res.json();
+                
                 if(data.success) {
-                    alert("Property Listed!");
-                    document.getElementById('prop-address').value = '';
-                    loadProperties();
+                    alert("✅ Details Submitted Successfully!\n\nOur sales team will contact you within 48 hours to verify documents.");
+                    location.reload(); // Refresh page
                 }
-            } catch(e) { alert("Error listing property"); }
+            } catch(e) { alert("Error submitting listing"); }
         }
 
-        async function loadProperties() {
-            try {
-                const res = await fetch(`${API_URL}/properties?email=${currentUserEmail}`);
-                const data = await res.json();
-                const tbody = document.getElementById('property-list');
-                tbody.innerHTML = '';
-                data.properties.forEach(prop => {
-                    const time = prop.lastChecked ? new Date(prop.lastChecked).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Pending';
-                    tbody.innerHTML += `<tr>
-                        <td style="font-weight:600">${prop.address}</td>
-                        <td><span style="background:#def7ec; color:#03543f; padding:2px 8px; border-radius:10px; font-size:12px;">${prop.status}</span></td>
-                        <td style="color:#6b7280">${time}</td>
-                    </tr>`;
-                });
-            } catch(e) { console.error(e); }
+        // --- TENANT LOGIC (SEARCH & DISPLAY) ---
+        function initTenantMap() {
+            tenantMap = L.map('tenant-map').setView([20, 0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(tenantMap);
+            setTimeout(() => tenantMap.invalidateSize(), 100);
         }
 
-        // --- MAP FUNCTIONS ---
-        function initMap() {
-            if(!map) {
-                map = L.map('map').setView([20, 0], 2);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        async function searchProperties() {
+            const city = document.getElementById('search-city').value;
+            if(!city) return alert("Enter a city name");
+
+            // 1. Move Map to City (Using Nominatim Geocoding)
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${city}`);
+            const geoData = await geoRes.json();
+
+            if(geoData.length > 0) {
+                const lat = geoData[0].lat;
+                const lon = geoData[0].lon;
+                tenantMap.setView([lat, lon], 12);
+            } else {
+                alert("City not found on map, but checking database...");
             }
-            setTimeout(() => map.invalidateSize(), 100);
-        }
 
-        async function searchLocation() {
-            const query = document.getElementById('area-search').value;
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`);
-            const data = await res.json();
-            if(data.length > 0) {
-                const { lat, lon } = data[0];
-                map.setView([lat, lon], 14);
-                L.marker([lat, lon]).addTo(map).bindPopup(query).openPopup();
-            } else { alert("Location not found"); }
+            // 2. Fetch Properties from OUR Database
+            try {
+                const res = await fetch(`${API_URL}/search-properties?city=${city}`);
+                const data = await res.json();
+
+                // Clear existing pins
+                tenantMap.eachLayer((layer) => {
+                    if(layer instanceof L.Marker) tenantMap.removeLayer(layer);
+                });
+
+                if(data.properties.length > 0) {
+                    // 3. Plot Each Property
+                    data.properties.forEach(prop => {
+                        if(prop.lat && prop.lng) {
+                            L.marker([prop.lat, prop.lng]).addTo(tenantMap)
+                             .bindPopup(`
+                                <b>${prop.houseNo}, ${prop.street}</b><br>
+                                ${prop.area}<br>
+                                Owner: ${prop.firstName}<br>
+                                Phone: ${prop.phone}
+                             `);
+                        }
+                    });
+                    alert(`Found ${data.properties.length} properties in ${city}!`);
+                } else {
+                    alert("No properties listed in this city yet.");
+                }
+
+            } catch(e) { console.error(e); }
         }
     </script>
 </body>
