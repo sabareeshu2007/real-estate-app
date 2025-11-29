@@ -113,7 +113,7 @@
             <button class="nav-btn" onclick="showLogin('owner')">Owner Login</button>
             <button class="nav-btn" onclick="showLogin('tenant')">Find Home</button>
         </div>
-        <button id="logout-btn" class="nav-btn hidden" onclick="location.reload()">Logout</button>
+        <button id="logout-btn" class="nav-btn hidden" onclick="handleLogout()">Logout</button>
     </nav>
 
     <div id="auth-section" class="container">
@@ -212,10 +212,10 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    currentUserEmail = email;
-                    document.getElementById('auth-section').classList.add('hidden');
-                    document.getElementById('nav-buttons').classList.add('hidden');
-                    document.getElementById('logout-btn').classList.remove('hidden');
+                    // SAVE THE SESSION
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userType', currentUserType);
 
                     if(currentUserType === 'owner') {
                         document.getElementById('owner-section').classList.remove('hidden');
@@ -353,6 +353,41 @@
                     });
                 } else { alert("No listings found in this specific area yet."); }
             } catch(e) { console.error(e); }
+        }
+        function checkSession() {
+            const token = localStorage.getItem('token');
+            const savedEmail = localStorage.getItem('userEmail');
+            const savedType = localStorage.getItem('userType');
+
+            if (token && savedEmail) {
+                console.log("Found active session for:", savedEmail);
+                
+                // Restore global variables
+                currentUserEmail = savedEmail;
+                currentUserType = savedType;
+
+                // Skip Login Screen
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('nav-buttons').classList.add('hidden');
+                document.getElementById('logout-btn').classList.remove('hidden');
+
+                // Show Correct Dashboard
+                if (currentUserType === 'owner') {
+                    document.getElementById('owner-section').classList.remove('hidden');
+                    initOwnerMap();
+                    loadMyListings();
+                } else {
+                    document.getElementById('tenant-section').classList.remove('hidden');
+                    initTenantMap();
+                }
+            }
+        }
+        // CALL IT IMMEDIATELY
+        checkSession();
+        // Add this Javascript function
+        function handleLogout() {
+            localStorage.clear(); // Wipes the storage
+            location.reload();    // Refreshes to show login screen
         }
     </script>
 </body>
