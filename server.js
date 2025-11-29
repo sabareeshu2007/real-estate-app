@@ -1,5 +1,5 @@
 // server.js - Advanced Version with Automation
-
+const bcrypt = require('bcryptjs');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -150,18 +150,40 @@ cron.schedule('* * * * *', async () => {
 // ---------------------------------------------------------
 app.post('/api/login', async (req, res) => {
     const { email, password, userType } = req.body;
-    // (Same login logic as before...)
+
     try {
         let user = await User.findOne({ email });
+
         if (user) {
-            if (user.password === password) res.json({ success: true, message: "Login Successful", user });
-            else res.json({ success: false, message: "Wrong password" });
+            // USER EXISTS: Check Password Security
+            // We compare the plain password with the encrypted hash
+            const isMatch = await bcrypt.compare(password, user.password);
+
+            if (isMatch) {
+                res.json({ success: true, message: "Login Successful", user });
+            } else {
+                res.json({ success: false, message: "Invalid Credentials" });
+            }
         } else {
-            const newUser = new User({ email, password, userType });
+            // USER DOES NOT EXIST: Create New (Securely)
+
+            // 1. Encrypt the password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            // 2. Save user with the HASHED password (not the real one)
+            const newUser = new User({ 
+                email, 
+                password: hashedPassword, // <--- Secure!
+                userType 
+            });
+
             await newUser.save();
-            res.json({ success: true, message: "New Account Created", user: newUser });
+            res.json({ success: true, message: "New Secure Account Created", user: newUser });
         }
-    } catch (error) { res.status(500).json({ success: false, error: error.message }); }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 app.post('/api/list-property', async (req, res) => {
