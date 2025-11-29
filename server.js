@@ -1,4 +1,6 @@
 // server.js - Advanced Version with Automation
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = 'my_super_secure_secret_key_123'; // In a real startup, hide this in a .env file
 const bcrypt = require('bcryptjs');
 const express = require('express');
 const mongoose = require('mongoose');
@@ -158,10 +160,23 @@ app.post('/api/login', async (req, res) => {
             // USER EXISTS: Check Password Security
             // We compare the plain password with the encrypted hash
             const isMatch = await bcrypt.compare(password, user.password);
-
             if (isMatch) {
-                res.json({ success: true, message: "Login Successful", user });
-            } else {
+    // 1. Create the Token (The digital badge)
+    // It contains the user's ID and Email, and expires in 7 days
+                const token = jwt.sign(
+                    { userId: user._id, email: user.email, type: user.userType }, 
+                    JWT_SECRET, 
+                    { expiresIn: '7d' } 
+                );
+
+                // 2. Send the Token to the user
+                res.json({ 
+                    success: true, 
+                    message: "Login Successful", 
+                    token: token,   // <--- Sending the ticket
+                    user: { email: user.email, userType: user.userType } 
+                });
+            }else {
                 res.json({ success: false, message: "Invalid Credentials" });
             }
         } else {
@@ -178,13 +193,21 @@ app.post('/api/login', async (req, res) => {
                 userType 
             });
 
+            // ... inside the ELSE block (Create New User)
             await newUser.save();
-            res.json({ success: true, message: "New Secure Account Created", user: newUser });
+
+            const token = jwt.sign(
+                { userId: newUser._id, email: newUser.email, type: userType }, 
+                JWT_SECRET, 
+                { expiresIn: '7d' } 
+            );
+
+            res.json({ success: true, message: "Account Created", token, user: newUser });
         }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+                } catch (error) {
+                    res.status(500).json({ success: false, error: error.message });
+                }
+    });
 
 app.post('/api/list-property', async (req, res) => {
     const { ownerEmail, address } = req.body;
