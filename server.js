@@ -36,6 +36,7 @@ const PropertySchema = new mongoose.Schema({
     houseNo: String, street: String, area: String,
     city: String, state: String, country: String,
     lat: Number, lng: Number,
+    imageUrl: String,
     status: { type: String, default: 'Pending Verification' },
     createdAt: { type: Date, default: Date.now },
     lastChecked: { type: Date, default: Date.now }

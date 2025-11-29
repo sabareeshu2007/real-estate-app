@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro - Full</title>
+    <title>EstatePro - With Images</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -13,35 +13,29 @@
         :root { --primary: #6C63FF; --secondary: #2A2A72; --bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
         body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; min-height: 100vh; }
         
-        /* Navigation */
-        nav { background: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        nav { background: rgba(255,255,255,0.95); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .logo { font-weight: 700; font-size: 20px; color: var(--secondary); }
-        .nav-btn { border: 1px solid var(--primary); color: var(--primary); padding: 8px 20px; border-radius: 20px; background: white; cursor: pointer; }
+        .nav-btn { border: 2px solid var(--primary); color: var(--primary); padding: 8px 20px; border-radius: 30px; background: transparent; cursor: pointer; font-weight: 600; }
         
-        /* Containers */
-        .container { max-width: 900px; margin: 40px auto; padding: 20px; }
+        .container { max-width: 1000px; margin: 40px auto; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px; }
         .hidden { display: none !important; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px; }
 
-        /* Auth Styles */
-        .auth-card { max-width: 400px; margin: 50px auto; text-align: center; }
-        .toggle-group { display: flex; background: #f1f2f6; padding: 5px; border-radius: 10px; margin-bottom: 20px; }
-        .toggle-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-weight: 600; color: #636e72; }
-        .toggle-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .switch-link { margin-top: 15px; font-size: 13px; cursor: pointer; color: var(--primary); text-decoration: underline; }
-
-        /* Inputs & Buttons */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 10px; box-sizing: border-box; }
+        button.primary { background: linear-gradient(45deg, var(--secondary), var(--primary)); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: 10px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 8px; box-sizing: border-box; }
         label { font-size: 12px; font-weight: 600; color: #636e72; }
-        button.primary { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        
+        .map-box { height: 350px; width: 100%; border-radius: 15px; border: 2px solid white; margin-top: 10px; }
+        
+        /* Popup Image Style */
+        .popup-img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
 
-        /* Maps & Tables */
-        .map-box { height: 350px; width: 100%; border-radius: 15px; border: 2px solid #eee; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; background: #f1f2f6; padding: 10px; font-size: 12px; }
-        td { padding: 10px; border-bottom: 1px solid #f1f2f6; font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
         .status-badge { background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
     </style>
 </head>
@@ -49,70 +43,54 @@
 
     <nav>
         <div class="logo">🏠 EstatePro</div>
+        <div id="nav-buttons">
+            <button class="nav-btn" onclick="showLogin('owner')">Owner Portal</button>
+            <button class="nav-btn" onclick="showLogin('tenant')">Find Home</button>
+        </div>
         <button id="logout-btn" class="nav-btn hidden" onclick="handleLogout()">Logout</button>
     </nav>
 
     <div id="auth-section" class="container">
-        <div class="card auth-card">
-            <h2 id="auth-title">Welcome Back</h2>
-            
-            <div class="toggle-group">
-                <button id="btn-owner" class="toggle-btn active" onclick="setPortal('owner')">Owner Portal</button>
-                <button id="btn-tenant" class="toggle-btn" onclick="setPortal('tenant')">Find Home</button>
-            </div>
-
-            <div id="signup-fields" class="hidden">
-                <input type="text" id="reg-fname" placeholder="First Name">
-                <input type="text" id="reg-lname" placeholder="Last Name">
-                <input type="tel" id="reg-phone" placeholder="Phone Number">
-            </div>
-
+        <div class="card" style="max-width:400px; margin:50px auto; text-align:center;">
+            <h2 id="auth-title">Welcome</h2>
             <input type="email" id="email-input" placeholder="Email Address">
             <input type="password" id="pass-input" placeholder="Password">
-            
-            <button class="primary" id="submit-btn" onclick="handleAuth()">Login</button>
-
-            <div class="switch-link" onclick="toggleAuthMode()">
-                <p id="switch-text">New here? Create Account</p>
-            </div>
+            <button class="primary" onclick="handleLogin()">Continue</button>
         </div>
     </div>
 
     <div id="owner-section" class="container hidden">
         <div class="card">
             <h2>📊 My Listings</h2>
-            <table>
-                <thead><tr><th>Property</th><th>Location</th><th>Status</th><th>AI Check</th></tr></thead>
-                <tbody id="my-listings-body"></tbody>
-            </table>
-            <button class="nav-btn" style="margin-top:10px; font-size:12px;" onclick="loadMyListings()">Refresh</button>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>Photo</th><th>Property</th><th>Status</th><th>AI Check</th></tr></thead>
+                    <tbody id="my-listings-body"></tbody>
+                </table>
+            </div>
+            <button class="nav-btn" style="margin-top:10px; font-size:12px;" onclick="loadMyListings()">Refresh Status</button>
         </div>
 
         <div class="card">
             <h2>📍 List New Property</h2>
-            
-            <h4>1. Contact Details</h4>
             <div class="form-grid">
                 <div><label>First Name</label><input type="text" id="fname"></div>
-                <div><label>Last Name</label><input type="text" id="lname"></div>
-                <div class="full-width"><label>Phone</label><input type="tel" id="phone"></div>
-            </div>
-
-            <h4>2. Address Details</h4>
-            <div class="form-grid">
-                <div><label>House No</label><input type="text" id="house"></div>
-                <div><label>Street Name</label><input type="text" id="street"></div>
-                <div class="full-width"><label>Area / Neighborhood</label><input type="text" id="area"></div>
+                <div><label>Phone</label><input type="tel" id="phone"></div>
+                <div class="full-width"><label>Address (House, Street)</label><input type="text" id="house"></div>
+                <div><label>Area / Neighborhood</label><input type="text" id="area"></div>
                 <div><label>City</label><input type="text" id="city" value="Chennai"></div>
-                <div><label>State</label><input type="text" id="state"></div>
-                <div class="full-width"><label>Country</label><input type="text" id="country"></div>
+                
+                <div class="full-width">
+                    <label>Property Photo</label>
+                    <input type="file" id="prop-image" accept="image/*">
+                </div>
             </div>
 
-            <h4>3. Pin Location</h4>
+            <h4 style="margin-top:20px;">Pin Location</h4>
             <div id="owner-map" class="map-box"></div>
             <p id="coords-display" style="text-align:center; color:green; display:none;">✅ Location Pinned!</p>
 
-            <button class="primary" onclick="submitListing()">Submit Listing</button>
+            <button class="primary" id="submit-btn" onclick="submitListing()">Submit Listing</button>
         </div>
     </div>
 
@@ -120,7 +98,7 @@
         <div class="card">
             <h2>Find Homes</h2>
             <div style="display:flex; gap:10px;">
-                <input type="text" id="search-query" placeholder="Search Area (e.g. T Nagar)">
+                <input type="text" id="search-query" placeholder="Search Area or Street">
                 <button class="primary" style="width:auto; margin-top:0;" onclick="searchProperties()">Search</button>
             </div>
         </div>
@@ -130,62 +108,47 @@
     </div>
 
     <script>
-        // --- CONFIG ---
-        // REPLACE WITH YOUR RENDER URL
-        const API_URL = 'https://real-estate-app-925m.onrender.com/api'; 
+        // --- CONFIGURATION ---
+        const API_URL = 'https://real-estate-app-925m.onrender.com/api'; // REPLACE WITH RENDER URL
         
-        let currentPortal = 'owner';
-        let isLoginMode = true; 
+        // --- CLOUDINARY CONFIG (REPLACE THESE!) ---
+        const CLOUD_NAME = 'dfsotxfxg'; 
+        const UPLOAD_PRESET = 'estate'; 
+
+        let currentUserType = 'owner';
         let ownerMap, tenantMap, selectedLat, selectedLng, ownerMarker;
 
         // --- AUTH ---
-        function setPortal(type) {
-            currentPortal = type;
-            document.getElementById('btn-owner').className = type === 'owner' ? 'toggle-btn active' : 'toggle-btn';
-            document.getElementById('btn-tenant').className = type === 'tenant' ? 'toggle-btn active' : 'toggle-btn';
+        function showLogin(type) {
+            currentUserType = type;
+            document.getElementById('auth-title').innerText = type + ' Login';
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('owner-section').classList.add('hidden');
+            document.getElementById('tenant-section').classList.add('hidden');
         }
 
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('auth-title').innerText = isLoginMode ? "Welcome Back" : "Create Account";
-            document.getElementById('submit-btn').innerText = isLoginMode ? "Login" : "Sign Up";
-            document.getElementById('switch-text').innerText = isLoginMode ? "New here? Create Account" : "Already have account? Login";
-            
-            const fields = document.getElementById('signup-fields');
-            isLoginMode ? fields.classList.add('hidden') : fields.classList.remove('hidden');
-        }
-
-        async function handleAuth() {
+        async function handleLogin() {
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
-            const endpoint = isLoginMode ? '/login' : '/register';
-            
-            let payload = { email, password, userType: currentPortal };
-            if (!isLoginMode) {
-                payload.firstName = document.getElementById('reg-fname').value;
-                payload.lastName = document.getElementById('reg-lname').value;
-                payload.phone = document.getElementById('reg-phone').value;
-                if(!payload.firstName) return alert("Fill Name!");
-            }
-
             try {
-                const res = await fetch(`${API_URL}${endpoint}`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, password, userType: currentUserType })
                 });
                 const data = await res.json();
-                if (data.success) {
+                if(data.success) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('email', email);
-                    localStorage.setItem('type', currentPortal);
+                    localStorage.setItem('type', currentUserType);
                     checkSession();
                 } else { alert(data.message); }
-            } catch (e) { alert("Connection Error"); }
+            } catch(e) { alert("Connection Error"); }
         }
 
-        // --- SESSION ---
         function checkSession() {
             if(localStorage.getItem('token')) {
                 document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('nav-buttons').classList.add('hidden');
                 document.getElementById('logout-btn').classList.remove('hidden');
                 if(localStorage.getItem('type') === 'owner') {
                     document.getElementById('owner-section').classList.remove('hidden');
@@ -198,6 +161,30 @@
             }
         }
         function handleLogout() { localStorage.clear(); location.reload(); }
+
+        // --- UPLOAD IMAGE FUNCTION ---
+        async function uploadImage() {
+            const fileInput = document.getElementById('prop-image');
+            if(fileInput.files.length === 0) return null;
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
+
+            try {
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                return data.secure_url; // This is the link to the image!
+            } catch(e) { 
+                console.error(e);
+                alert("Image Upload Failed");
+                return null;
+            }
+        }
 
         // --- OWNER FUNCTIONS ---
         function initOwnerMap() {
@@ -214,31 +201,40 @@
         }
 
         async function submitListing() {
+            // 1. Change Button Text
+            const btn = document.getElementById('submit-btn');
+            btn.innerText = "Uploading Image...";
+            btn.disabled = true;
+
+            // 2. Upload Image
+            const imgUrl = await uploadImage();
+            
+            // 3. Prepare Form
             const form = {
                 ownerEmail: localStorage.getItem('email'),
                 firstName: document.getElementById('fname').value,
-                lastName: document.getElementById('lname').value,
                 phone: document.getElementById('phone').value,
                 houseNo: document.getElementById('house').value,
-                street: document.getElementById('street').value,
+                street: document.getElementById('house').value,
                 area: document.getElementById('area').value,
                 city: document.getElementById('city').value,
-                state: document.getElementById('state').value,
-                country: document.getElementById('country').value,
-                lat: selectedLat, lng: selectedLng
+                lat: selectedLat, lng: selectedLng,
+                imageUrl: imgUrl // <--- Add the image link
             };
 
-            if(!form.firstName || !form.area || !form.lat) return alert("Fill Details & Pin Map!");
-
+            if(!form.firstName || !form.area || !form.lat) {
+                btn.innerText = "Submit Listing";
+                btn.disabled = false;
+                return alert("Fill details & Pin Map!");
+            }
+            
+            // 4. Submit to Backend
             await fetch(`${API_URL}/list-property`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
             });
-            alert("Success! Verification in 48hrs.");
             
-            // Clear Form
-            document.querySelectorAll('#owner-section input').forEach(i => i.value = '');
-            if(ownerMarker) ownerMap.removeLayer(ownerMarker);
-            loadMyListings();
+            alert("Success!");
+            location.reload();
         }
 
         async function loadMyListings() {
@@ -247,9 +243,10 @@
             const tbody = document.getElementById('my-listings-body');
             tbody.innerHTML = '';
             data.properties.forEach(p => {
+                const imgDisplay = p.imageUrl ? `<img src="${p.imageUrl}" width="50" style="border-radius:5px;">` : 'No Img';
                 tbody.innerHTML += `<tr>
-                    <td><b>${p.area}</b><br><small>${p.street}</small></td>
-                    <td>${p.city}</td>
+                    <td>${imgDisplay}</td>
+                    <td><b>${p.area}</b></td>
                     <td><span class="status-badge">${p.status}</span></td>
                     <td>${p.lastChecked ? new Date(p.lastChecked).toLocaleTimeString() : 'Pending'}</td>
                 </tr>`;
@@ -268,15 +265,22 @@
             const q = document.getElementById('search-query').value;
             const res = await fetch(`${API_URL}/search-properties?query=${q}`);
             const data = await res.json();
-            
-            // Clear old markers
             tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
-
+            
             if(data.properties.length > 0) {
-                 tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 13);
+                 tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
                  data.properties.forEach(p => {
+                     // SHOW IMAGE IN POPUP
+                     const imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="popup-img">` : '';
+                     
                      L.marker([p.lat, p.lng]).addTo(tenantMap)
-                      .bindPopup(`<b>${p.area}</b><br>${p.street}<br>Owner: ${p.firstName}<br>📞 ${p.phone}`);
+                      .bindPopup(`
+                        ${imgHtml}
+                        <b>${p.area}</b><br>
+                        ${p.street}<br>
+                        Owner: ${p.firstName}<br>
+                        📞 ${p.phone}
+                      `);
                  });
             } else { alert("No listings found."); }
         }
