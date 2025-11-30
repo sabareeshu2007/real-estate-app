@@ -253,29 +253,57 @@
 
         async function searchProperties() {
             const q = document.getElementById('search-query').value;
+            // Fetch data
             const res = await fetch(`${API_URL}/search-properties?query=${q}`);
             const data = await res.json();
-            tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
             
-            if(data.properties.length > 0) {
-                 tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                 data.properties.forEach(p => {
-                     const imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="popup-img">` : '';
-                     
-                     // STREET VIEW LINK:
-                     const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+            // 1. Clear OLD markers safely
+            if(tenantMap) {
+                tenantMap.eachLayer(layer => { 
+                    if(layer instanceof L.Marker) tenantMap.removeLayer(layer); 
+                });
+            }
 
-                     L.marker([p.lat, p.lng]).addTo(tenantMap)
-                      .bindPopup(`
-                        ${imgHtml}
-                        <b>${p.area}</b><br>
-                        ${p.street}<br>
-                        Owner: ${p.firstName}<br>
-                        📞 ${p.phone} <br>
-                        <a href="${svLink}" target="_blank" class="street-view-btn">📍 Open Street View</a>
-                      `);
+            if(data.properties.length > 0) {
+                 // 2. Center map on the first valid result
+                 const validProp = data.properties.find(p => p.lat && p.lng);
+                 if(validProp) {
+                     tenantMap.setView([validProp.lat, validProp.lng], 14);
+                 }
+
+                 let count = 0;
+
+                 data.properties.forEach(p => {
+                     // 3. SAFETY CHECK: Only draw if coordinates exist (Fixes crash)
+                     if(p.lat && p.lng) {
+                         count++;
+                         
+                         const imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="popup-img">` : '';
+                         
+                         // 4. FIX: Correct Google Maps Link Syntax
+                         const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+
+                         // 5. Add Marker & Popup
+                         L.marker([p.lat, p.lng]).addTo(tenantMap)
+                          .bindPopup(`
+                            <div style="min-width:200px;">
+                                ${imgHtml}
+                                <b>${p.area}</b><br>
+                                ${p.street || 'Street not available'}<br>
+                                <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
+                                👤 ${p.firstName || 'Owner'}<br>
+                                📞 <a href="tel:${p.phone}">${p.phone}</a><br>
+                                <a href="${googleMapsLink}" target="_blank" class="street-view-btn" style="background:#4285F4; color:white; padding:5px 10px; text-decoration:none; display:block; margin-top:5px; text-align:center; border-radius:4px;">📍 Open in Google Maps</a>
+                            </div>
+                          `);
+                     }
                  });
-            } else { alert("No listings found."); }
+                 
+                 if(count === 0) alert("Properties found, but none have map locations pinned yet.");
+                 
+            } else { 
+                alert("No listings found matching that name."); 
+            }
         }
 
         checkSession();
