@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro - With Images</title>
+    <title>EstatePro - Street View</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -29,9 +29,15 @@
         label { font-size: 12px; font-weight: 600; color: #636e72; }
         
         .map-box { height: 350px; width: 100%; border-radius: 15px; border: 2px solid white; margin-top: 10px; }
-        
-        /* Popup Image Style */
         .popup-img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+
+        /* Street View Button Style */
+        .street-view-btn {
+            display: inline-block; background: #4285F4; color: white; 
+            padding: 6px 12px; border-radius: 4px; text-decoration: none; 
+            font-size: 12px; font-weight: bold; margin-top: 8px; width: 100%; text-align: center;
+        }
+        .street-view-btn:hover { background: #3367D6; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; background: #f1f2f6; padding: 10px; font-size: 12px; }
@@ -79,7 +85,6 @@
                 <div class="full-width"><label>Address (House, Street)</label><input type="text" id="house"></div>
                 <div><label>Area / Neighborhood</label><input type="text" id="area"></div>
                 <div><label>City</label><input type="text" id="city" value="Chennai"></div>
-                
                 <div class="full-width">
                     <label>Property Photo</label>
                     <input type="file" id="prop-image" accept="image/*">
@@ -111,9 +116,9 @@
         // --- CONFIGURATION ---
         const API_URL = 'https://real-estate-app-925m.onrender.com/api'; // REPLACE WITH RENDER URL
         
-        // --- CLOUDINARY CONFIG (REPLACE THESE!) ---
-        const CLOUD_NAME = 'dfsotxfxg'; 
-        const UPLOAD_PRESET = 'estate'; 
+        // --- CLOUDINARY CONFIG (REPLACE THESE) ---
+        const CLOUD_NAME = 'YOUR_CLOUD_NAME'; 
+        const UPLOAD_PRESET = 'YOUR_UPLOAD_PRESET'; 
 
         let currentUserType = 'owner';
         let ownerMap, tenantMap, selectedLat, selectedLng, ownerMarker;
@@ -162,31 +167,23 @@
         }
         function handleLogout() { localStorage.clear(); location.reload(); }
 
-        // --- UPLOAD IMAGE FUNCTION ---
         async function uploadImage() {
             const fileInput = document.getElementById('prop-image');
             if(fileInput.files.length === 0) return null;
-
             const file = fileInput.files[0];
             const formData = new FormData();
             formData.append('file', file);
             formData.append('upload_preset', UPLOAD_PRESET);
-
             try {
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                    method: 'POST',
-                    body: formData
+                    method: 'POST', body: formData
                 });
                 const data = await res.json();
-                return data.secure_url; // This is the link to the image!
-            } catch(e) { 
-                console.error(e);
-                alert("Image Upload Failed");
-                return null;
-            }
+                return data.secure_url;
+            } catch(e) { console.error(e); return null; }
         }
 
-        // --- OWNER FUNCTIONS ---
+        // --- OWNER ---
         function initOwnerMap() {
             if(ownerMap) return;
             ownerMap = L.map('owner-map').setView([13.0827, 80.2707], 12);
@@ -201,15 +198,11 @@
         }
 
         async function submitListing() {
-            // 1. Change Button Text
             const btn = document.getElementById('submit-btn');
-            btn.innerText = "Uploading Image...";
-            btn.disabled = true;
+            btn.innerText = "Uploading..."; btn.disabled = true;
 
-            // 2. Upload Image
             const imgUrl = await uploadImage();
             
-            // 3. Prepare Form
             const form = {
                 ownerEmail: localStorage.getItem('email'),
                 firstName: document.getElementById('fname').value,
@@ -219,20 +212,17 @@
                 area: document.getElementById('area').value,
                 city: document.getElementById('city').value,
                 lat: selectedLat, lng: selectedLng,
-                imageUrl: imgUrl // <--- Add the image link
+                imageUrl: imgUrl
             };
 
             if(!form.firstName || !form.area || !form.lat) {
-                btn.innerText = "Submit Listing";
-                btn.disabled = false;
+                btn.innerText = "Submit"; btn.disabled = false;
                 return alert("Fill details & Pin Map!");
             }
             
-            // 4. Submit to Backend
             await fetch(`${API_URL}/list-property`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
             });
-            
             alert("Success!");
             location.reload();
         }
@@ -253,7 +243,7 @@
             });
         }
 
-        // --- TENANT FUNCTIONS ---
+        // --- TENANT (WITH STREET VIEW) ---
         function initTenantMap() {
             if(tenantMap) return;
             tenantMap = L.map('tenant-map').setView([13.0827, 80.2707], 12);
@@ -270,16 +260,19 @@
             if(data.properties.length > 0) {
                  tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
                  data.properties.forEach(p => {
-                     // SHOW IMAGE IN POPUP
                      const imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="popup-img">` : '';
                      
+                     // STREET VIEW LINK:
+                     const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+
                      L.marker([p.lat, p.lng]).addTo(tenantMap)
                       .bindPopup(`
                         ${imgHtml}
                         <b>${p.area}</b><br>
                         ${p.street}<br>
                         Owner: ${p.firstName}<br>
-                        📞 ${p.phone}
+                        📞 ${p.phone} <br>
+                        <a href="${svLink}" target="_blank" class="street-view-btn">📍 Open Street View</a>
                       `);
                  });
             } else { alert("No listings found."); }
