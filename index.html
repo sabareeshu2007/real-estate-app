@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro - Street View</title>
+    <title>EstatePro - Management</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        :root { --primary: #6C63FF; --secondary: #2A2A72; --bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        :root { --primary: #6C63FF; --secondary: #2A2A72; --bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --danger: #ff4757; --warning: #ffa502; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; min-height: 100vh; }
         
         nav { background: rgba(255,255,255,0.95); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -21,28 +21,21 @@
         .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px; }
         .hidden { display: none !important; }
 
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 10px; box-sizing: border-box; }
-        button.primary { background: linear-gradient(45deg, var(--secondary), var(--primary)); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: 10px; }
-        
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 10px; box-sizing: border-box; }
         label { font-size: 12px; font-weight: 600; color: #636e72; }
         
+        button.primary { background: linear-gradient(45deg, var(--secondary), var(--primary)); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: 10px; }
+        
+        /* Action Buttons */
+        .btn-edit { background: var(--warning); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-right: 5px; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+
         .map-box { height: 350px; width: 100%; border-radius: 15px; border: 2px solid white; margin-top: 10px; }
-        .popup-img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
-
-        /* Street View Button Style */
-        .street-view-btn {
-            display: inline-block; background: #4285F4; color: white; 
-            padding: 6px 12px; border-radius: 4px; text-decoration: none; 
-            font-size: 12px; font-weight: bold; margin-top: 8px; width: 100%; text-align: center;
-        }
-        .street-view-btn:hover { background: #3367D6; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; background: #f1f2f6; padding: 10px; font-size: 12px; }
         td { padding: 12px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
-        .status-badge { background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -67,26 +60,27 @@
 
     <div id="owner-section" class="container hidden">
         <div class="card">
-            <h2>📊 My Listings</h2>
+            <h2>📊 Manage Listings</h2>
             <div style="overflow-x:auto;">
                 <table>
-                    <thead><tr><th>Photo</th><th>Property</th><th>Status</th><th>AI Check</th></tr></thead>
+                    <thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody id="my-listings-body"></tbody>
                 </table>
             </div>
-            <button class="nav-btn" style="margin-top:10px; font-size:12px;" onclick="loadMyListings()">Refresh Status</button>
+            <button class="nav-btn" style="margin-top:10px; font-size:12px;" onclick="loadMyListings()">Refresh List</button>
         </div>
 
-        <div class="card">
-            <h2>📍 List New Property</h2>
+        <div class="card" id="listing-form-card">
+            <h2 id="form-title">📍 List New Property</h2>
+            
             <div class="form-grid">
                 <div><label>First Name</label><input type="text" id="fname"></div>
                 <div><label>Phone</label><input type="tel" id="phone"></div>
                 <div class="full-width"><label>Address (House, Street)</label><input type="text" id="house"></div>
-                <div><label>Area / Neighborhood</label><input type="text" id="area"></div>
+                <div><label>Area</label><input type="text" id="area"></div>
                 <div><label>City</label><input type="text" id="city" value="Chennai"></div>
                 <div class="full-width">
-                    <label>Property Photo</label>
+                    <label>Property Photo (Optional)</label>
                     <input type="file" id="prop-image" accept="image/*">
                 </div>
             </div>
@@ -96,6 +90,7 @@
             <p id="coords-display" style="text-align:center; color:green; display:none;">✅ Location Pinned!</p>
 
             <button class="primary" id="submit-btn" onclick="submitListing()">Submit Listing</button>
+            <button class="nav-btn hidden" id="cancel-edit-btn" onclick="cancelEdit()" style="width:100%; margin-top:10px; border:1px solid #ccc; color:#666;">Cancel Edit</button>
         </div>
     </div>
 
@@ -113,15 +108,17 @@
     </div>
 
     <script>
-        // --- CONFIGURATION ---
-        const API_URL = 'https://real-estate-app-925m.onrender.com/api'; // REPLACE WITH RENDER URL
-        
-        // --- CLOUDINARY CONFIG (REPLACE THESE) ---
-        const CLOUD_NAME = 'YOUR_CLOUD_NAME'; 
-        const UPLOAD_PRESET = 'YOUR_UPLOAD_PRESET'; 
+        // --- CONFIG ---
+        const API_URL = 'https://real-estate-backend-xyz.onrender.com/api'; // REPLACE WITH RENDER URL
+        const CLOUD_NAME = 'YOUR_CLOUD_NAME';      // REPLACE
+        const UPLOAD_PRESET = 'YOUR_UPLOAD_PRESET'; // REPLACE
 
         let currentUserType = 'owner';
         let ownerMap, tenantMap, selectedLat, selectedLng, ownerMarker;
+        
+        // Edit Mode Variables
+        let isEditing = false;
+        let editingId = null;
 
         // --- AUTH ---
         function showLogin(type) {
@@ -167,23 +164,21 @@
         }
         function handleLogout() { localStorage.clear(); location.reload(); }
 
+        // --- IMAGE UPLOAD ---
         async function uploadImage() {
             const fileInput = document.getElementById('prop-image');
             if(fileInput.files.length === 0) return null;
-            const file = fileInput.files[0];
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', fileInput.files[0]);
             formData.append('upload_preset', UPLOAD_PRESET);
             try {
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                    method: 'POST', body: formData
-                });
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
                 return data.secure_url;
             } catch(e) { console.error(e); return null; }
         }
 
-        // --- OWNER ---
+        // --- OWNER FUNCTIONS ---
         function initOwnerMap() {
             if(ownerMap) return;
             ownerMap = L.map('owner-map').setView([13.0827, 80.2707], 12);
@@ -199,9 +194,11 @@
 
         async function submitListing() {
             const btn = document.getElementById('submit-btn');
-            btn.innerText = "Uploading..."; btn.disabled = true;
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
 
-            const imgUrl = await uploadImage();
+            let imgUrl = await uploadImage();
             
             const form = {
                 ownerEmail: localStorage.getItem('email'),
@@ -211,20 +208,75 @@
                 street: document.getElementById('house').value,
                 area: document.getElementById('area').value,
                 city: document.getElementById('city').value,
-                lat: selectedLat, lng: selectedLng,
-                imageUrl: imgUrl
+                lat: selectedLat, lng: selectedLng
             };
+            if(imgUrl) form.imageUrl = imgUrl; // Only add if new image uploaded
 
             if(!form.firstName || !form.area || !form.lat) {
-                btn.innerText = "Submit"; btn.disabled = false;
+                btn.innerText = originalText; btn.disabled = false;
                 return alert("Fill details & Pin Map!");
             }
+
+            // CHECK: Are we Editing or Creating?
+            let endpoint = '/list-property';
+            let method = 'POST';
             
-            await fetch(`${API_URL}/list-property`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
+            if (isEditing) {
+                endpoint = `/update-property/${editingId}`;
+                method = 'PUT';
+            }
+
+            await fetch(`${API_URL}${endpoint}`, {
+                method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
             });
-            alert("Success!");
-            location.reload();
+            
+            alert(isEditing ? "Updated Successfully!" : "Listed Successfully!");
+            cancelEdit(); // Reset form
+            loadMyListings();
+        }
+
+        // --- EDIT & DELETE LOGIC ---
+        async function deleteProperty(id) {
+            if(confirm("Are you sure you want to delete this listing?")) {
+                await fetch(`${API_URL}/delete-property/${id}`, { method: 'DELETE' });
+                loadMyListings();
+            }
+        }
+
+        function editProperty(id, fname, phone, house, area, city, lat, lng) {
+            // 1. Fill Form
+            document.getElementById('fname').value = fname;
+            document.getElementById('phone').value = phone;
+            document.getElementById('house').value = house;
+            document.getElementById('area').value = area;
+            document.getElementById('city').value = city;
+            
+            // 2. Set Map
+            selectedLat = lat; selectedLng = lng;
+            if(ownerMarker) ownerMap.removeLayer(ownerMarker);
+            ownerMarker = L.marker([lat, lng]).addTo(ownerMap);
+            ownerMap.setView([lat, lng], 14);
+
+            // 3. Set Edit Mode
+            isEditing = true;
+            editingId = id;
+            document.getElementById('form-title').innerText = "✏️ Edit Property";
+            document.getElementById('submit-btn').innerText = "Update Listing";
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            
+            // 4. Scroll to form
+            document.getElementById('listing-form-card').scrollIntoView({behavior: "smooth"});
+        }
+
+        function cancelEdit() {
+            isEditing = false;
+            editingId = null;
+            document.querySelectorAll('#owner-section input').forEach(i => i.value = '');
+            document.getElementById('form-title').innerText = "📍 List New Property";
+            document.getElementById('submit-btn').innerText = "Submit Listing";
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            document.getElementById('submit-btn').disabled = false;
+            if(ownerMarker) ownerMap.removeLayer(ownerMarker);
         }
 
         async function loadMyListings() {
@@ -233,17 +285,21 @@
             const tbody = document.getElementById('my-listings-body');
             tbody.innerHTML = '';
             data.properties.forEach(p => {
-                const imgDisplay = p.imageUrl ? `<img src="${p.imageUrl}" width="50" style="border-radius:5px;">` : 'No Img';
+                // Pass all data to the edit function safely
+                const editCall = `editProperty('${p._id}', '${p.firstName}', '${p.phone}', '${p.street}', '${p.area}', '${p.city}', ${p.lat}, ${p.lng})`;
+                
                 tbody.innerHTML += `<tr>
-                    <td>${imgDisplay}</td>
-                    <td><b>${p.area}</b></td>
+                    <td><b>${p.area}</b><br><small>${p.street}</small></td>
                     <td><span class="status-badge">${p.status}</span></td>
-                    <td>${p.lastChecked ? new Date(p.lastChecked).toLocaleTimeString() : 'Pending'}</td>
+                    <td>
+                        <button class="btn-edit" onclick="${editCall}">Edit</button>
+                        <button class="btn-delete" onclick="deleteProperty('${p._id}')">Delete</button>
+                    </td>
                 </tr>`;
             });
         }
 
-        // --- TENANT (WITH STREET VIEW) ---
+        // --- TENANT FUNCTIONS ---
         function initTenantMap() {
             if(tenantMap) return;
             tenantMap = L.map('tenant-map').setView([13.0827, 80.2707], 12);
@@ -253,57 +309,17 @@
 
         async function searchProperties() {
             const q = document.getElementById('search-query').value;
-            // Fetch data
             const res = await fetch(`${API_URL}/search-properties?query=${q}`);
             const data = await res.json();
-            
-            // 1. Clear OLD markers safely
-            if(tenantMap) {
-                tenantMap.eachLayer(layer => { 
-                    if(layer instanceof L.Marker) tenantMap.removeLayer(layer); 
-                });
-            }
-
+            tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
             if(data.properties.length > 0) {
-                 // 2. Center map on the first valid result
-                 const validProp = data.properties.find(p => p.lat && p.lng);
-                 if(validProp) {
-                     tenantMap.setView([validProp.lat, validProp.lng], 14);
-                 }
-
-                 let count = 0;
-
+                 tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
                  data.properties.forEach(p => {
-                     // 3. SAFETY CHECK: Only draw if coordinates exist (Fixes crash)
-                     if(p.lat && p.lng) {
-                         count++;
-                         
-                         const imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="popup-img">` : '';
-                         
-                         // 4. FIX: Correct Google Maps Link Syntax
-                         const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
-
-                         // 5. Add Marker & Popup
-                         L.marker([p.lat, p.lng]).addTo(tenantMap)
-                          .bindPopup(`
-                            <div style="min-width:200px;">
-                                ${imgHtml}
-                                <b>${p.area}</b><br>
-                                ${p.street || 'Street not available'}<br>
-                                <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
-                                👤 ${p.firstName || 'Owner'}<br>
-                                📞 <a href="tel:${p.phone}">${p.phone}</a><br>
-                                <a href="${googleMapsLink}" target="_blank" class="street-view-btn" style="background:#4285F4; color:white; padding:5px 10px; text-decoration:none; display:block; margin-top:5px; text-align:center; border-radius:4px;">📍 Open in Google Maps</a>
-                            </div>
-                          `);
-                     }
+                     const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%; height:100px; object-fit:cover; border-radius:5px;">` : '';
+                     L.marker([p.lat, p.lng]).addTo(tenantMap)
+                      .bindPopup(`${img}<b>${p.area}</b><br>${p.street}<br>Owner: ${p.firstName}<br>📞 ${p.phone}`);
                  });
-                 
-                 if(count === 0) alert("Properties found, but none have map locations pinned yet.");
-                 
-            } else { 
-                alert("No listings found matching that name."); 
-            }
+            } else { alert("No listings found."); }
         }
 
         checkSession();

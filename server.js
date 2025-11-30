@@ -107,6 +107,26 @@ app.get('/api/search-properties', async (req, res) => {
         res.json({ success: true, properties });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+// --- ADD THESE NEW ROUTES BEFORE app.listen ---
+
+// 6. DELETE PROPERTY
+app.delete('/api/delete-property/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Property.findByIdAndDelete(id);
+        res.json({ success: true, message: "Property Deleted" });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 7. UPDATE PROPERTY
+app.put('/api/update-property/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        // Update the property with the new data sent in req.body
+        await Property.findByIdAndUpdate(id, req.body);
+        res.json({ success: true, message: "Property Updated" });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
