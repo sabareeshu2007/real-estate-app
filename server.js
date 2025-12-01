@@ -31,12 +31,32 @@ const User = mongoose.model('User', UserSchema);
 
 const PropertySchema = new mongoose.Schema({
     ownerEmail: String,
-    // Full Address Details
-    firstName: String, lastName: String, phone: String,
-    houseNo: String, street: String, area: String,
-    city: String, state: String, country: String,
-    lat: Number, lng: Number,
+    
+    // Contact & Address
+    firstName: String, 
+    phone: String,
+    houseNo: String, 
+    street: String, 
+    area: String,
+    city: String, 
+    state: String, 
+    country: String,
+    
+    // Map Coords
+    lat: Number, 
+    lng: Number,
+    
+    // NEW DETAILS (Matching Property Page)
+    price: Number,          // e.g. 7500000
+    bedrooms: Number,       // e.g. 3
+    bathrooms: Number,      // e.g. 2
+    sqft: Number,          // e.g. 1500
+    furnishing: String,     // e.g. "Semi-Furnished"
+    description: String,    // Long text
+    amenities: [String],    // Array like ["Lift", "Gym"]
+    
     imageUrl: String,
+    
     status: { type: String, default: 'Pending Verification' },
     createdAt: { type: Date, default: Date.now },
     lastChecked: { type: Date, default: Date.now }
