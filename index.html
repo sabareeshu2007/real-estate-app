@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro - Property Details</title>
+    <title>EstatePro - Complete Platform</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -17,9 +17,11 @@
         
         /* NAVIGATION */
         nav { background: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
-        .logo { font-size: 24px; font-weight: 700; color: var(--primary); cursor: pointer; }
-        .nav-links a { margin-left: 20px; text-decoration: none; color: #636e72; font-weight: 500; cursor: pointer; }
-        .btn-login { background: var(--primary); color: white !important; padding: 8px 20px; border-radius: 20px; }
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .nav-links { display: flex; align-items: center; gap: 20px; }
+        .nav-links a { text-decoration: none; color: #636e72; font-weight: 500; cursor: pointer; }
+        .btn-login { background: var(--primary); color: white !important; padding: 8px 20px; border-radius: 20px; transition:0.3s; }
+        .btn-login:hover { background: #0769b5; }
 
         /* UTILS */
         .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
@@ -30,50 +32,49 @@
         .btn-whatsapp { background: #25D366; color: white; margin-top: 10px; }
         .btn-outline { border: 1px solid var(--primary); color: var(--primary); background: white; margin-top: 10px; }
         
+        /* --- HOME PAGE STYLES --- */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover; background-position: center; height: 500px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white;
+        }
+        .search-bar { background: white; padding: 10px; border-radius: 50px; display: flex; gap: 10px; width: 90%; max-width: 700px; }
+        .search-bar input { border: none; padding: 12px; outline: none; flex: 1; border-radius: 5px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 30px; }
+        .prop-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; }
+        .prop-card:hover { transform: translateY(-5px); }
+        .prop-img { height: 200px; width: 100%; object-fit: cover; }
+        .prop-info { padding: 20px; }
+
         /* --- PROPERTY PAGE STYLES --- */
-        
-        /* Gallery */
         .gallery-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; height: 400px; margin-bottom: 20px; }
         .main-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; background: #ddd; }
         .side-imgs { display: flex; flex-direction: column; gap: 10px; }
         .sub-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; background: #eee; }
-
-        /* Layout Grid */
         .details-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
-        
-        /* Highlights */
         .highlights { display: flex; gap: 20px; margin: 20px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 20px 0; }
         .highlight-item { text-align: center; flex: 1; border-right: 1px solid #eee; }
-        .highlight-item:last-child { border: none; }
-        .highlight-item i { font-size: 24px; color: var(--primary); margin-bottom: 5px; }
-        
-        /* Amenities */
         .amenities-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
         .amenity { background: #f1f2f6; padding: 8px; border-radius: 5px; font-size: 13px; display: flex; align-items: center; gap: 5px; }
-
-        /* Price Card (Sticky) */
         .price-card { position: sticky; top: 100px; border: 1px solid #eee; }
-        .price-tag { font-size: 28px; font-weight: 700; color: #2d3436; margin-bottom: 5px; }
-
-        /* EMI Calculator */
         .emi-box { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 20px; }
-        .emi-result { font-size: 20px; font-weight: 700; color: var(--primary); text-align: center; margin-top: 10px; }
 
-        /* Maps */
-        .mini-map { height: 250px; width: 100%; border-radius: 10px; margin-top: 20px; }
-
-        /* Mobile */
-        @media (max-width: 768px) {
-            .gallery-grid { grid-template-columns: 1fr; height: 250px; }
-            .side-imgs { display: none; }
-            .details-layout { grid-template-columns: 1fr; }
-            .highlights { flex-wrap: wrap; }
-        }
-        
-        /* Existing Styles for Dashboard/Maps */
+        /* --- DASHBOARD STYLES --- */
         input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 8px; }
-        .map-box { height: 400px; width: 100%; border-radius: 15px; }
+        .map-box { height: 350px; width: 100%; border-radius: 15px; border: 2px solid #eee; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; } th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } .full-width { grid-column: span 2; }
+        
+        /* Edit/Delete Buttons */
+        .action-btn { padding: 5px 10px; border-radius: 5px; cursor: pointer; border: none; color: white; font-size: 12px; margin-right: 5px; }
+        .btn-edit { background: #f39c12; }
+        .btn-del { background: #e74c3c; }
+
+        @media (max-width: 768px) { 
+            .gallery-grid { grid-template-columns: 1fr; height: 250px; } .side-imgs { display: none; } 
+            .details-layout, .form-grid { grid-template-columns: 1fr; } 
+            .full-width { grid-column: span 1; }
+        }
     </style>
 </head>
 <body>
@@ -82,16 +83,27 @@
         <div class="logo" onclick="goHome()">🏠 EstatePro</div>
         <div class="nav-links">
             <a onclick="goHome()">Home</a>
-            <a onclick="showAuth('owner')">List Property</a>
+            <a onclick="showAuth('owner')">Owner</a>
             <a onclick="showAuth('tenant')" class="btn-login">Login</a>
         </div>
         <button id="logout-btn" class="hidden" style="margin-left:20px; background:none; border:none; color:red; cursor:pointer;" onclick="handleLogout()">Logout</button>
     </nav>
 
     <div id="home-page">
-        <div style="background:linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); height:500px; background-size:cover; background-position:center; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; text-align:center;">
-            <h1 style="font-size:48px; margin-bottom:10px;">Find Your Place</h1>
-            <button onclick="showAuth('tenant')" class="btn btn-primary" style="width:200px; margin-top:20px;">Start Searching</button>
+        <header class="hero">
+            <h1>Find Your Dream Home</h1>
+            <p>Search properties for buy & rent in Chennai</p>
+            <div class="search-bar">
+                <input type="text" id="home-search-input" placeholder="Search Area (e.g. Anna Nagar)">
+                <button class="btn-primary" style="width:100px;" onclick="triggerTenantSearch()">Search</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <h2 style="text-align:center; margin-top:40px;">Featured Properties</h2>
+            <div class="grid-container" id="featured-list">
+                <p style="text-align:center; width:100%;">Loading...</p>
+            </div>
         </div>
     </div>
 
@@ -102,22 +114,28 @@
             <input type="email" id="email-input" placeholder="Email">
             <input type="password" id="pass-input" placeholder="Password">
             <button class="btn btn-primary" onclick="handleLogin()">Login / Register</button>
+            <p style="margin-top:10px; cursor:pointer; color:#666;" onclick="goHome()">← Back to Home</p>
         </div>
 
         <div id="owner-section" class="hidden">
             <div class="card">
-                <h2>My Listings</h2>
-                <table><tbody id="my-listings-body"></tbody></table>
+                <h2>📊 My Listings</h2>
+                <table><thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead><tbody id="my-listings-body"></tbody></table>
                 <button class="btn btn-outline" onclick="loadMyListings()">Refresh</button>
             </div>
-            <div class="card">
-                <h2>List New Property</h2>
-                <input type="text" id="fname" placeholder="Name"><input type="tel" id="phone" placeholder="Phone">
-                <input type="text" id="area" placeholder="Area"><input type="text" id="city" value="Chennai">
-                <input type="text" id="house" placeholder="Full Address">
-                <label>Photo:</label><input type="file" id="prop-image">
+            <div class="card" id="listing-form-card">
+                <h2 id="form-title">📍 List New Property</h2>
+                <div class="form-grid">
+                    <input type="text" id="fname" placeholder="First Name">
+                    <input type="tel" id="phone" placeholder="Phone">
+                    <input type="text" id="area" placeholder="Area">
+                    <input type="text" id="city" value="Chennai">
+                    <div class="full-width"><input type="text" id="house" placeholder="Full Address"></div>
+                    <div class="full-width"><label>Photo:</label> <input type="file" id="prop-image"></div>
+                </div>
                 <div id="owner-map" class="map-box"></div>
-                <button class="btn btn-primary" id="submit-btn" onclick="submitListing()" style="margin-top:10px;">Submit</button>
+                <button class="btn btn-primary" id="submit-btn" onclick="submitListing()" style="margin-top:15px;">Submit Listing</button>
+                <button class="btn btn-outline hidden" id="cancel-edit-btn" onclick="cancelEdit()">Cancel Edit</button>
             </div>
         </div>
 
@@ -135,75 +153,48 @@
 
     <div id="property-page" class="hidden">
         <div class="container">
-            <button onclick="closePropertyPage()" style="background:none; border:none; color:#666; cursor:pointer; margin-bottom:10px;">← Back to Search</button>
+            <button onclick="closePropertyPage()" style="background:none; border:none; color:#666; cursor:pointer; margin-bottom:10px;">← Back to Map</button>
             
             <div class="gallery-grid">
                 <img id="detail-img-main" src="" class="main-img">
                 <div class="side-imgs">
                     <img src="https://via.placeholder.com/400x300/eee?text=Kitchen" class="sub-img">
-                    <img src="https://via.placeholder.com/400x300/eee?text=Living+Room" class="sub-img">
+                    <img src="https://via.placeholder.com/400x300/eee?text=Bedroom" class="sub-img">
                 </div>
             </div>
 
             <div class="details-layout">
                 <div class="main-content">
-                    <h1 id="detail-title" style="margin:0;">3BHK Apartment</h1>
-                    <p id="detail-address" style="color:#666;">📍 Anna Nagar, Chennai</p>
+                    <h1 id="detail-title" style="margin:0;">Property Title</h1>
+                    <p id="detail-address" style="color:#666;">Address</p>
                     
                     <div class="highlights">
-                        <div class="highlight-item"><i class="fas fa-ruler-combined"></i><br>1500 sqft</div>
                         <div class="highlight-item"><i class="fas fa-bed"></i><br>3 Beds</div>
                         <div class="highlight-item"><i class="fas fa-bath"></i><br>2 Baths</div>
+                        <div class="highlight-item"><i class="fas fa-ruler-combined"></i><br>1200 sqft</div>
                         <div class="highlight-item"><i class="fas fa-couch"></i><br>Furnished</div>
                     </div>
-
-                    <h3>Description</h3>
-                    <p style="color:#555; line-height:1.6;">
-                        Beautiful property located in a prime area. Close to schools, hospitals, and metro stations. 
-                        Perfect for families looking for a peaceful yet connected neighborhood.
-                    </p>
-
                     <h3>Amenities</h3>
                     <div class="amenities-grid">
-                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> Lift</div>
-                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> Power Backup</div>
-                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> CCTV</div>
-                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> Gym</div>
-                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> Parking</div>
+                        <div class="amenity">✅ Lift</div><div class="amenity">✅ Security</div><div class="amenity">✅ Parking</div>
                     </div>
-
-                    <h3>Location Map</h3>
-                    <div id="detail-map" class="mini-map"></div>
+                    <h3>Location</h3>
+                    <div id="detail-map" class="map-box" style="height:250px;"></div>
                     <a id="street-view-btn" href="#" target="_blank" class="btn btn-outline">👀 Open 360° Street View</a>
-
+                    
                     <div class="emi-box">
                         <h3>EMI Calculator</h3>
-                        <input type="number" id="loan-amount" placeholder="Loan Amount (e.g. 5000000)" oninput="calculateEMI()">
+                        <input type="number" id="loan-amount" placeholder="Loan Amount" oninput="calculateEMI()">
                         <div class="emi-result">Monthly EMI: <span id="emi-val">₹ 0</span></div>
                     </div>
                 </div>
 
                 <div class="sidebar">
                     <div class="card price-card">
-                        <div class="price-tag">₹ <span id="detail-price">75 Lakhs</span></div>
-                        <p style="font-size:12px; color:#999;">EMI starts at ₹40k</p>
-                        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-                        
-                        <h4>Owner Details</h4>
-                        <p style="font-weight:600;" id="detail-owner">John Doe</p>
-                        
-                        <a id="btn-call" href="#" class="btn btn-primary"><i class="fas fa-phone"></i> Call Now</a>
-                        <a id="btn-whatsapp" href="#" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-                        <button class="btn btn-outline">Request Visit</button>
-                    </div>
-                    
-                    <div class="card">
-                        <h4>Nearby Essentials</h4>
-                        <ul style="padding-left:20px; color:#555;">
-                            <li>🏫 School: 0.5 km</li>
-                            <li>🏥 Hospital: 1.2 km</li>
-                            <li>🚆 Metro: 2.0 km</li>
-                        </ul>
+                        <div style="font-size:28px; font-weight:700;">₹ <span id="detail-price">75 Lakhs</span></div>
+                        <p>Owner: <span id="detail-owner" style="font-weight:600;">Name</span></p>
+                        <a id="btn-call" href="#" class="btn btn-primary">Call Now</a>
+                        <a id="btn-whatsapp" href="#" target="_blank" class="btn btn-whatsapp">WhatsApp</a>
                     </div>
                 </div>
             </div>
@@ -219,12 +210,14 @@
         let currentUserType = 'owner';
         let ownerMap, tenantMap, detailMap; 
         let selectedLat, selectedLng, ownerMarker;
+        let isEditing = false, editingId = null;
 
         // --- NAVIGATION ---
         function goHome() {
             document.getElementById('home-page').classList.remove('hidden');
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('property-page').classList.add('hidden');
+            loadFeaturedProperties();
         }
 
         function showAuth(type) {
@@ -236,12 +229,39 @@
             document.getElementById('tenant-section').classList.add('hidden');
         }
 
+        function triggerTenantSearch() {
+            const query = document.getElementById('home-search-input').value;
+            showAuth('tenant');
+            if(query) localStorage.setItem('pendingSearch', query);
+        }
+
         function closePropertyPage() {
             document.getElementById('property-page').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
         }
 
-        // --- AUTH & UPLOAD (Standard) ---
+        // --- FETCH HOME DATA ---
+        async function loadFeaturedProperties() {
+            try {
+                const res = await fetch(`${API_URL}/featured-properties`);
+                const data = await res.json();
+                const container = document.getElementById('featured-list');
+                container.innerHTML = '';
+                data.properties.forEach(p => {
+                    const img = p.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
+                    container.innerHTML += `
+                        <div class="prop-card" onclick="showAuth('tenant')">
+                            <img src="${img}" class="prop-img">
+                            <div class="prop-info">
+                                <div style="font-weight:700; color:#0984e3;">₹ On Request</div>
+                                <div>📍 ${p.area}, ${p.city}</div>
+                            </div>
+                        </div>`;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        // --- AUTH ---
         async function handleLogin() {
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
@@ -266,6 +286,8 @@
                 document.getElementById('app-section').classList.remove('hidden');
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('logout-btn').classList.remove('hidden');
+                document.querySelector('.nav-links').classList.add('hidden');
+
                 if(localStorage.getItem('type') === 'owner') {
                     document.getElementById('owner-section').classList.remove('hidden');
                     initOwnerMap();
@@ -273,12 +295,19 @@
                 } else {
                     document.getElementById('tenant-section').classList.remove('hidden');
                     initTenantMap();
+                    const pending = localStorage.getItem('pendingSearch');
+                    if(pending) {
+                        document.getElementById('search-query').value = pending;
+                        setTimeout(searchProperties, 1000);
+                        localStorage.removeItem('pendingSearch');
+                    }
                 }
             } else { goHome(); }
         }
 
         function handleLogout() { localStorage.clear(); location.reload(); }
 
+        // --- UPLOAD ---
         async function uploadImage() {
             const fileInput = document.getElementById('prop-image');
             if(fileInput.files.length === 0) return null;
@@ -292,7 +321,7 @@
             } catch(e) { return null; }
         }
 
-        // --- OWNER LOGIC ---
+        // --- OWNER ---
         function initOwnerMap() {
             if(ownerMap) return;
             ownerMap = L.map('owner-map').setView([13.0827, 80.2707], 12);
@@ -309,6 +338,7 @@
             const btn = document.getElementById('submit-btn');
             btn.innerText = "Processing..."; btn.disabled = true;
             let imgUrl = await uploadImage();
+            
             const form = {
                 ownerEmail: localStorage.getItem('email'),
                 firstName: document.getElementById('fname').value,
@@ -320,26 +350,74 @@
                 lat: selectedLat, lng: selectedLng
             };
             if(imgUrl) form.imageUrl = imgUrl;
+
             if(!form.firstName || !form.area || !form.lat) {
                 btn.innerText = "Submit"; btn.disabled = false;
-                return alert("Fill Details & Pin Map!");
+                return alert("Fill details & Pin Map!");
             }
-            await fetch(`${API_URL}/list-property`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
+
+            let endpoint = isEditing ? `/update-property/${editingId}` : '/list-property';
+            let method = isEditing ? 'PUT' : 'POST';
+
+            await fetch(`${API_URL}${endpoint}`, {
+                method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
             });
+            
             alert("Success!");
-            location.reload();
+            cancelEdit();
+            loadMyListings();
+        }
+
+        // EDIT & DELETE
+        async function deleteProperty(id) {
+            if(confirm("Delete Listing?")) {
+                await fetch(`${API_URL}/delete-property/${id}`, { method: 'DELETE' });
+                loadMyListings();
+            }
+        }
+
+        function editProperty(id, fname, phone, house, area, city, lat, lng) {
+            document.getElementById('fname').value = fname;
+            document.getElementById('phone').value = phone;
+            document.getElementById('house').value = house;
+            document.getElementById('area').value = area;
+            document.getElementById('city').value = city;
+            selectedLat = lat; selectedLng = lng;
+            if(ownerMarker) ownerMap.removeLayer(ownerMarker);
+            ownerMarker = L.marker([lat, lng]).addTo(ownerMap);
+            ownerMap.setView([lat, lng], 14);
+            isEditing = true; editingId = id;
+            document.getElementById('form-title').innerText = "Edit Property";
+            document.getElementById('submit-btn').innerText = "Update";
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            document.getElementById('listing-form-card').scrollIntoView({behavior:"smooth"});
+        }
+
+        function cancelEdit() {
+            isEditing = false; editingId = null;
+            document.querySelectorAll('#listing-form-card input').forEach(i => i.value = '');
+            document.getElementById('form-title').innerText = "List New Property";
+            document.getElementById('submit-btn').innerText = "Submit";
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
         }
 
         async function loadMyListings() {
             const res = await fetch(`${API_URL}/my-properties?email=${localStorage.getItem('email')}`);
             const data = await res.json();
-            document.getElementById('my-listings-body').innerHTML = data.properties.map(p => 
-                `<tr><td>${p.area}</td><td>${p.status}</td><td>View</td></tr>`
-            ).join('');
+            const tbody = document.getElementById('my-listings-body');
+            tbody.innerHTML = '';
+            data.properties.forEach(p => {
+                const editCall = `editProperty('${p._id}', '${p.firstName}', '${p.phone}', '${p.street}', '${p.area}', '${p.city}', ${p.lat}, ${p.lng})`;
+                tbody.innerHTML += `<tr>
+                    <td><b>${p.area}</b></td>
+                    <td>${p.status}</td>
+                    <td><button class="action-btn btn-edit" onclick="${editCall}">Edit</button><button class="action-btn btn-del" onclick="deleteProperty('${p._id}')">Del</button></td>
+                </tr>`;
+            });
         }
 
-        // --- TENANT SEARCH ---
+        // --- TENANT (MAP & OPEN PAGE) ---
         function initTenantMap() {
             if(tenantMap) return;
             tenantMap = L.map('tenant-map').setView([13.0827, 80.2707], 12);
@@ -351,80 +429,55 @@
             const q = document.getElementById('search-query').value;
             const res = await fetch(`${API_URL}/search-properties?query=${q}`);
             const data = await res.json();
-            
-            // Clear old markers
             tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
-            
             if(data.properties.length > 0) {
-                 // Fly to the first result
                  tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                 
                  data.properties.forEach(p => {
-                     // 1. Prepare Image
-                     const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%; height:120px; object-fit:cover; border-radius:5px; margin-bottom:5px;">` : '';
-                     
-                     // 2. Prepare Google Street View Link (Free Method)
-                     const streetViewLink = `https://www.google.com/maps?layer=c&cbll=${p.lat},${p.lng}`;
-
-                     // 3. Create Popup
-                     L.marker([p.lat, p.lng]).addTo(tenantMap)
-                      .bindPopup(`
-                        ${img}
-                        <div style="font-size:14px; line-height:1.5;">
-                            <b>${p.area}</b><br>
-                            ${p.street}<br>
-                            Owner: ${p.firstName}<br>
-                            <span style="color:green">📞 ${p.phone}</span>
-                            <br>
-                            <a href="${streetViewLink}" target="_blank" 
-                               style="display:inline-block; margin-top:8px; background:#4285F4; color:white; padding:5px 10px; text-decoration:none; border-radius:4px; font-size:12px;">
-                               👀 Open Street View 360°
-                            </a>
-                        </div>
-                      `);
+                     const marker = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                     // CLICK EVENT -> OPEN PAGE
+                     marker.on('click', () => openPropertyPage(p));
                  });
             } else { alert("No listings found."); }
         }
 
-        // --- OPEN PROPERTY PAGE LOGIC ---
+        // --- PROPERTY PAGE LOGIC ---
         function openPropertyPage(prop) {
-            // 1. Switch Views
             document.getElementById('app-section').classList.add('hidden');
             document.getElementById('property-page').classList.remove('hidden');
             window.scrollTo(0,0);
 
-            // 2. Inject Data
+            // Inject Data
             document.getElementById('detail-title').innerText = `Property in ${prop.area}`;
             document.getElementById('detail-address').innerText = `📍 ${prop.houseNo}, ${prop.street}, ${prop.city}`;
             document.getElementById('detail-owner').innerText = prop.firstName;
             document.getElementById('detail-img-main').src = prop.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image';
-
-            // 3. Fake Price (Randomized for demo)
+            
+            // Random Price Generation (Mock Data)
             const randomPrice = Math.floor(Math.random() * (90 - 40 + 1) + 40);
             document.getElementById('detail-price').innerText = `${randomPrice} Lakhs`;
 
-            // 4. Contact Buttons
+            // Contact Buttons
             document.getElementById('btn-call').href = `tel:${prop.phone}`;
-            document.getElementById('btn-whatsapp').href = `https://wa.me/91${prop.phone}?text=Hi, I am interested in your property at ${prop.area}`;
+            document.getElementById('btn-whatsapp').href = `https://wa.me/91${prop.phone}?text=I am interested in your property at ${prop.area}`;
             document.getElementById('street-view-btn').href = `https://www.google.com/maps?layer=c&cbll=${prop.lat},${prop.lng}`;
 
-            // 5. Mini Map inside Page
-            if(detailMap) detailMap.remove(); // Reset map
+            // Mini Map
+            if(detailMap) detailMap.remove();
             detailMap = L.map('detail-map').setView([prop.lat, prop.lng], 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
             L.marker([prop.lat, prop.lng]).addTo(detailMap);
         }
 
-        // --- EMI CALCULATOR ---
         function calculateEMI() {
-            const principal = document.getElementById('loan-amount').value;
-            if(!principal) return;
-            const rate = 8.5 / 12 / 100; // 8.5% Interest
-            const tenure = 240; // 20 Years
-            const emi = principal * rate * (Math.pow(1 + rate, tenure) / (Math.pow(1 + rate, tenure) - 1));
+            const P = document.getElementById('loan-amount').value;
+            if(!P) return;
+            const R = 8.5/12/100; const N = 240;
+            const emi = P * R * (Math.pow(1+R, N) / (Math.pow(1+R, N)-1));
             document.getElementById('emi-val').innerText = "₹ " + Math.round(emi).toLocaleString();
         }
 
+        // Init
+        loadFeaturedProperties();
         checkSession();
     </script>
 </body>
