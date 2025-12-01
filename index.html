@@ -3,36 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro - Management</title>
+    <title>EstatePro - Find Your Dream Home</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        :root { --primary: #6C63FF; --secondary: #2A2A72; --bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); --danger: #ff4757; --warning: #ffa502; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; min-height: 100vh; }
+        :root { --primary: #0984e3; --secondary: #2d3436; --accent: #00cec9; --bg: #f5f6fa; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: var(--bg); color: var(--secondary); }
         
-        nav { background: rgba(255,255,255,0.95); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .logo { font-weight: 700; font-size: 20px; color: var(--secondary); }
-        .nav-btn { border: 2px solid var(--primary); color: var(--primary); padding: 8px 20px; border-radius: 30px; background: transparent; cursor: pointer; font-weight: 600; }
+        /* --- NAVIGATION --- */
+        nav { 
+            background: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
+        }
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { text-decoration: none; color: var(--secondary); font-weight: 500; font-size: 14px; cursor: pointer; }
+        .nav-links a:hover { color: var(--primary); }
+        .btn-login { background: var(--primary); color: white !important; padding: 8px 20px; border-radius: 20px; transition: 0.3s; }
+        .btn-login:hover { background: #0769b5; }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover; background-position: center; height: 500px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white;
+        }
+        .hero h1 { font-size: 42px; margin-bottom: 10px; }
+        .hero p { font-size: 18px; margin-bottom: 30px; }
         
-        .container { max-width: 1000px; margin: 40px auto; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .search-bar {
+            background: white; padding: 10px; border-radius: 50px; display: flex; gap: 10px; width: 90%; max-width: 700px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .search-bar input, .search-bar select { border: none; padding: 12px; outline: none; flex: 1; border-radius: 5px; }
+        .search-btn { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 40px; cursor: pointer; font-weight: 600; }
+
+        /* --- FILTERS & SECTIONS --- */
+        .section { padding: 50px 10%; }
+        .section-title { text-align: center; margin-bottom: 40px; }
+        .filters { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .filter-btn { background: white; border: 1px solid #dfe6e9; padding: 10px 25px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* --- FEATURED CARDS --- */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .prop-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s; }
+        .prop-card:hover { transform: translateY(-5px); }
+        .prop-img { height: 200px; width: 100%; object-fit: cover; background: #eee; }
+        .prop-info { padding: 20px; }
+        .prop-price { color: var(--primary); font-weight: 700; font-size: 18px; margin-bottom: 5px; }
+        .prop-loc { color: #636e72; font-size: 14px; margin-bottom: 10px; }
+        .prop-features { display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 10px; font-size: 12px; color: #636e72; }
+
+        /* --- POPULAR LOCATIONS --- */
+        .loc-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .loc-pill { background: white; border: 1px solid #ddd; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
+        .loc-pill:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* --- BLOGS --- */
+        .blog-card { background: white; padding: 20px; border-radius: 10px; border-left: 4px solid var(--primary); }
+        .blog-date { font-size: 12px; color: #999; }
+        
+        /* --- FOOTER --- */
+        footer { background: var(--secondary); color: white; padding: 40px 10%; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; }
+        footer h4 { margin-bottom: 15px; color: var(--accent); }
+        footer a { color: #b2bec3; text-decoration: none; display: block; margin-bottom: 8px; font-size: 14px; }
+        footer a:hover { color: white; }
+
+        /* --- UTILS (Hidden Sections) --- */
         .hidden { display: none !important; }
-
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .full-width { grid-column: span 2; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 10px; box-sizing: border-box; }
-        label { font-size: 12px; font-weight: 600; color: #636e72; }
+        .app-view { padding: 20px; max-width: 1000px; margin: auto; }
         
-        button.primary { background: linear-gradient(45deg, var(--secondary), var(--primary)); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: 10px; }
-        
-        /* Action Buttons */
-        .btn-edit { background: var(--warning); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-right: 5px; }
-        .btn-delete { background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
-
-        .map-box { height: 350px; width: 100%; border-radius: 15px; border: 2px solid white; margin-top: 10px; }
+        /* Your Existing Dashboard Styles */
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 8px; box-sizing: border-box; }
+        button.primary { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .map-box { height: 350px; width: 100%; border-radius: 15px; border: 2px solid #eee; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; background: #f1f2f6; padding: 10px; font-size: 12px; }
         td { padding: 12px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
@@ -41,94 +92,219 @@
 <body>
 
     <nav>
-        <div class="logo">🏠 EstatePro</div>
-        <div id="nav-buttons">
-            <button class="nav-btn" onclick="showLogin('owner')">Owner Portal</button>
-            <button class="nav-btn" onclick="showLogin('tenant')">Find Home</button>
+        <div class="logo" onclick="goHome()">🏠 EstatePro</div>
+        <div class="nav-links">
+            <a onclick="goHome()">Home</a>
+            <a onclick="scrollToSection('featured')">Buy</a>
+            <a onclick="scrollToSection('featured')">Rent</a>
+            <a onclick="showAuth('owner')" class="btn-login">Owner Login</a>
+            <a onclick="showAuth('tenant')" class="btn-login" style="background:var(--secondary)">Tenant Login</a>
         </div>
-        <button id="logout-btn" class="nav-btn hidden" onclick="handleLogout()">Logout</button>
+        <button id="logout-btn" class="hidden" style="background:none; border:none; color:red; cursor:pointer;" onclick="handleLogout()">Logout</button>
     </nav>
 
-    <div id="auth-section" class="container">
-        <div class="card" style="max-width:400px; margin:50px auto; text-align:center;">
+    <div id="home-page">
+        <header class="hero">
+            <h1>Find Your Dream Home in Chennai</h1>
+            <p>Search over 10,000 properties for buy & rent</p>
+            
+            <div class="search-bar">
+                <select style="flex:0.5;">
+                    <option>Chennai</option>
+                </select>
+                <input type="text" id="home-search-input" placeholder="Search Area (e.g. Anna Nagar)">
+                <button class="search-btn" onclick="triggerTenantSearch()">Search</button>
+            </div>
+        </header>
+
+        <section class="section">
+            <div class="filters">
+                <button class="filter-btn">🏠 Buy</button>
+                <button class="filter-btn">🔑 Rent</button>
+                <button class="filter-btn">🏢 Commercial</button>
+                <button class="filter-btn">🏗 New Projects</button>
+            </div>
+        </section>
+
+        <section id="featured" class="section" style="background: white;">
+            <h2 class="section-title">Featured Properties</h2>
+            <div class="grid-container" id="featured-list">
+                <p style="text-align:center; width:100%;">Loading latest properties...</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Popular Locations</h2>
+            <div class="loc-grid">
+                <div class="loc-pill">Vepery</div>
+                <div class="loc-pill">Anna Nagar</div>
+                <div class="loc-pill">Chintadripet</div>
+                <div class="loc-pill">Egmore</div>
+                <div class="loc-pill">T Nagar</div>
+                <div class="loc-pill">Adyar</div>
+                <div class="loc-pill">Velachery</div>
+            </div>
+        </section>
+
+        <section class="section" style="background:white;">
+            <h2 class="section-title">Latest Real Estate News</h2>
+            <div class="grid-container">
+                <div class="blog-card">
+                    <h4>Top 5 Areas to Invest in Chennai</h4>
+                    <p class="blog-date">Oct 12, 2025</p>
+                    <p>Discover the fastest growing neighborhoods...</p>
+                </div>
+                <div class="blog-card">
+                    <h4>Home Loan Rates Drop</h4>
+                    <p class="blog-date">Nov 01, 2025</p>
+                    <p>New policies make buying affordable...</p>
+                </div>
+                <div class="blog-card">
+                    <h4>Renting vs Buying?</h4>
+                    <p class="blog-date">Nov 20, 2025</p>
+                    <p>Expert advice on making the right choice...</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div>
+                <h4>EstatePro</h4>
+                <p>The #1 Real Estate platform in Chennai.</p>
+            </div>
+            <div>
+                <h4>Company</h4>
+                <a href="#">About Us</a>
+                <a href="#">Careers</a>
+                <a href="#">Contact</a>
+            </div>
+            <div>
+                <h4>Legal</h4>
+                <a href="#">Terms</a>
+                <a href="#">Privacy</a>
+            </div>
+            <div>
+                <h4>Social</h4>
+                <a href="#">Facebook</a>
+                <a href="#">Instagram</a>
+                <a href="#">Twitter</a>
+            </div>
+        </footer>
+    </div>
+
+    <div id="app-section" class="app-view hidden">
+        
+        <div id="auth-section" class="card" style="max-width:400px; margin:50px auto; text-align:center;">
             <h2 id="auth-title">Welcome</h2>
             <input type="email" id="email-input" placeholder="Email Address">
             <input type="password" id="pass-input" placeholder="Password">
-            <button class="primary" onclick="handleLogin()">Continue</button>
+            <button class="primary" onclick="handleLogin()">Login / Register</button>
+            <p style="margin-top:10px; cursor:pointer;" onclick="goHome()">← Back to Home</p>
         </div>
-    </div>
 
-    <div id="owner-section" class="container hidden">
-        <div class="card">
-            <h2>📊 Manage Listings</h2>
-            <div style="overflow-x:auto;">
-                <table>
-                    <thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="my-listings-body"></tbody>
-                </table>
+        <div id="owner-section" class="hidden">
+            <div class="card">
+                <h2>📊 My Listings</h2>
+                <div style="overflow-x:auto;">
+                    <table><thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead><tbody id="my-listings-body"></tbody></table>
+                </div>
+                <button class="primary" onclick="loadMyListings()">Refresh</button>
             </div>
-            <button class="nav-btn" style="margin-top:10px; font-size:12px;" onclick="loadMyListings()">Refresh List</button>
+            <div class="card" id="listing-form-card">
+                <h2 id="form-title">📍 List New Property</h2>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <input type="text" id="fname" placeholder="First Name">
+                    <input type="tel" id="phone" placeholder="Phone">
+                    <input type="text" id="area" placeholder="Area">
+                    <input type="text" id="city" value="Chennai">
+                    <div style="grid-column:span 2"><input type="text" id="house" placeholder="Full Address"></div>
+                    <div style="grid-column:span 2"><input type="file" id="prop-image"></div>
+                </div>
+                <div id="owner-map" class="map-box"></div>
+                <button class="primary" id="submit-btn" onclick="submitListing()" style="margin-top:15px;">Submit Listing</button>
+                <button class="primary" id="cancel-edit-btn" onclick="cancelEdit()" style="background:#999; margin-top:5px;" class="hidden">Cancel</button>
+            </div>
         </div>
 
-        <div class="card" id="listing-form-card">
-            <h2 id="form-title">📍 List New Property</h2>
-            
-            <div class="form-grid">
-                <div><label>First Name</label><input type="text" id="fname"></div>
-                <div><label>Phone</label><input type="tel" id="phone"></div>
-                <div class="full-width"><label>Address (House, Street)</label><input type="text" id="house"></div>
-                <div><label>Area</label><input type="text" id="area"></div>
-                <div><label>City</label><input type="text" id="city" value="Chennai"></div>
-                <div class="full-width">
-                    <label>Property Photo (Optional)</label>
-                    <input type="file" id="prop-image" accept="image/*">
+        <div id="tenant-section" class="hidden">
+            <div class="card">
+                <h2>Find Homes</h2>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="search-query" placeholder="Search Area or Street">
+                    <button class="primary" style="width:auto; margin-top:0;" onclick="searchProperties()">Search</button>
                 </div>
             </div>
-
-            <h4 style="margin-top:20px;">Pin Location</h4>
-            <div id="owner-map" class="map-box"></div>
-            <p id="coords-display" style="text-align:center; color:green; display:none;">✅ Location Pinned!</p>
-
-            <button class="primary" id="submit-btn" onclick="submitListing()">Submit Listing</button>
-            <button class="nav-btn hidden" id="cancel-edit-btn" onclick="cancelEdit()" style="width:100%; margin-top:10px; border:1px solid #ccc; color:#666;">Cancel Edit</button>
-        </div>
-    </div>
-
-    <div id="tenant-section" class="container hidden">
-        <div class="card">
-            <h2>Find Homes</h2>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="search-query" placeholder="Search Area or Street">
-                <button class="primary" style="width:auto; margin-top:0;" onclick="searchProperties()">Search</button>
-            </div>
-        </div>
-        <div class="card" style="padding:10px;">
-            <div id="tenant-map" class="map-box" style="height:500px;"></div>
+            <div class="card"><div id="tenant-map" class="map-box" style="height:500px;"></div></div>
         </div>
     </div>
 
     <script>
         // --- CONFIG ---
-        const API_URL = 'https://real-estate-app-925m.onrender.com/api'; // REPLACE WITH RENDER URL
+        const API_URL = 'https://real-estate-app-925m.onrender.com/api'; // REPLACE
         const CLOUD_NAME = 'dfsotxfxg';      // REPLACE
         const UPLOAD_PRESET = 'estate'; // REPLACE
 
         let currentUserType = 'owner';
         let ownerMap, tenantMap, selectedLat, selectedLng, ownerMarker;
-        
-        // Edit Mode Variables
-        let isEditing = false;
-        let editingId = null;
+        let isEditing = false, editingId = null;
 
-        // --- AUTH ---
-        function showLogin(type) {
+        // --- NAVIGATION LOGIC ---
+        function goHome() {
+            document.getElementById('home-page').classList.remove('hidden');
+            document.getElementById('app-section').classList.add('hidden');
+            loadFeaturedProperties(); // Load fresh data
+        }
+
+        function showAuth(type) {
             currentUserType = type;
-            document.getElementById('auth-title').innerText = type + ' Login';
+            document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('app-section').classList.remove('hidden');
             document.getElementById('auth-section').classList.remove('hidden');
             document.getElementById('owner-section').classList.add('hidden');
             document.getElementById('tenant-section').classList.add('hidden');
+            document.getElementById('auth-title').innerText = type === 'owner' ? 'Owner Login' : 'Tenant Login';
         }
 
+        function triggerTenantSearch() {
+            // User searched on Home Page -> Send them to Tenant Login/Dashboard
+            const query = document.getElementById('home-search-input').value;
+            showAuth('tenant');
+            // Store query to auto-search after login (Optional advanced feature)
+            if(query) localStorage.setItem('pendingSearch', query);
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({behavior: 'smooth'});
+        }
+
+        // --- FETCH FEATURED PROPERTIES ---
+        async function loadFeaturedProperties() {
+            try {
+                const res = await fetch(`${API_URL}/featured-properties`);
+                const data = await res.json();
+                const container = document.getElementById('featured-list');
+                container.innerHTML = '';
+
+                data.properties.forEach(p => {
+                    const img = p.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
+                    const html = `
+                        <div class="prop-card">
+                            <img src="${img}" class="prop-img">
+                            <div class="prop-info">
+                                <div class="prop-price">₹ On Request</div>
+                                <div class="prop-loc">📍 ${p.area}, ${p.city}</div>
+                                <div class="prop-features">
+                                    <span>3 Beds</span><span>2 Baths</span><span>1200 sqft</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        // --- APP LOGIC (Login, Maps, Etc) ---
         async function handleLogin() {
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
@@ -144,14 +320,18 @@
                     localStorage.setItem('type', currentUserType);
                     checkSession();
                 } else { alert(data.message); }
-            } catch(e) { alert("Connection Error"); }
+            } catch(e) { alert("Error"); }
         }
 
         function checkSession() {
             if(localStorage.getItem('token')) {
+                // Hide Home, Show App
+                document.getElementById('home-page').classList.add('hidden');
+                document.getElementById('app-section').classList.remove('hidden');
                 document.getElementById('auth-section').classList.add('hidden');
-                document.getElementById('nav-buttons').classList.add('hidden');
                 document.getElementById('logout-btn').classList.remove('hidden');
+                document.querySelector('.nav-links').classList.add('hidden'); // Hide Home links
+
                 if(localStorage.getItem('type') === 'owner') {
                     document.getElementById('owner-section').classList.remove('hidden');
                     initOwnerMap();
@@ -160,9 +340,15 @@
                     document.getElementById('tenant-section').classList.remove('hidden');
                     initTenantMap();
                 }
+            } else {
+                goHome(); // Show Home if not logged in
             }
         }
-        function handleLogout() { localStorage.clear(); location.reload(); }
+
+        function handleLogout() { 
+            localStorage.clear(); 
+            location.reload(); 
+        }
 
         // --- IMAGE UPLOAD ---
         async function uploadImage() {
@@ -175,10 +361,10 @@
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
                 return data.secure_url;
-            } catch(e) { console.error(e); return null; }
+            } catch(e) { return null; }
         }
 
-        // --- OWNER FUNCTIONS ---
+        // --- OWNER ---
         function initOwnerMap() {
             if(ownerMap) return;
             ownerMap = L.map('owner-map').setView([13.0827, 80.2707], 12);
@@ -187,17 +373,14 @@
                 selectedLat = e.latlng.lat; selectedLng = e.latlng.lng;
                 if(ownerMarker) ownerMap.removeLayer(ownerMarker);
                 ownerMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(ownerMap);
-                document.getElementById('coords-display').style.display = 'block';
             });
             setTimeout(() => ownerMap.invalidateSize(), 500);
         }
 
         async function submitListing() {
             const btn = document.getElementById('submit-btn');
-            const originalText = btn.innerText;
             btn.innerText = "Processing...";
             btn.disabled = true;
-
             let imgUrl = await uploadImage();
             
             const form = {
@@ -210,73 +393,55 @@
                 city: document.getElementById('city').value,
                 lat: selectedLat, lng: selectedLng
             };
-            if(imgUrl) form.imageUrl = imgUrl; // Only add if new image uploaded
+            if(imgUrl) form.imageUrl = imgUrl;
 
             if(!form.firstName || !form.area || !form.lat) {
-                btn.innerText = originalText; btn.disabled = false;
+                btn.innerText = "Submit"; btn.disabled = false;
                 return alert("Fill details & Pin Map!");
             }
 
-            // CHECK: Are we Editing or Creating?
-            let endpoint = '/list-property';
-            let method = 'POST';
-            
-            if (isEditing) {
-                endpoint = `/update-property/${editingId}`;
-                method = 'PUT';
-            }
+            let endpoint = isEditing ? `/update-property/${editingId}` : '/list-property';
+            let method = isEditing ? 'PUT' : 'POST';
 
             await fetch(`${API_URL}${endpoint}`, {
                 method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
             });
             
-            alert(isEditing ? "Updated Successfully!" : "Listed Successfully!");
-            cancelEdit(); // Reset form
+            alert("Success!");
+            cancelEdit();
             loadMyListings();
         }
 
-        // --- EDIT & DELETE LOGIC ---
+        // Edit/Delete
         async function deleteProperty(id) {
-            if(confirm("Are you sure you want to delete this listing?")) {
+            if(confirm("Delete?")) {
                 await fetch(`${API_URL}/delete-property/${id}`, { method: 'DELETE' });
                 loadMyListings();
             }
         }
-
         function editProperty(id, fname, phone, house, area, city, lat, lng) {
-            // 1. Fill Form
             document.getElementById('fname').value = fname;
             document.getElementById('phone').value = phone;
             document.getElementById('house').value = house;
             document.getElementById('area').value = area;
             document.getElementById('city').value = city;
-            
-            // 2. Set Map
             selectedLat = lat; selectedLng = lng;
             if(ownerMarker) ownerMap.removeLayer(ownerMarker);
             ownerMarker = L.marker([lat, lng]).addTo(ownerMap);
             ownerMap.setView([lat, lng], 14);
-
-            // 3. Set Edit Mode
-            isEditing = true;
-            editingId = id;
-            document.getElementById('form-title').innerText = "✏️ Edit Property";
-            document.getElementById('submit-btn').innerText = "Update Listing";
+            isEditing = true; editingId = id;
+            document.getElementById('form-title').innerText = "Edit Property";
+            document.getElementById('submit-btn').innerText = "Update";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            
-            // 4. Scroll to form
-            document.getElementById('listing-form-card').scrollIntoView({behavior: "smooth"});
+            document.getElementById('listing-form-card').scrollIntoView({behavior:"smooth"});
         }
-
         function cancelEdit() {
-            isEditing = false;
-            editingId = null;
-            document.querySelectorAll('#owner-section input').forEach(i => i.value = '');
-            document.getElementById('form-title').innerText = "📍 List New Property";
+            isEditing = false; editingId = null;
+            document.querySelectorAll('#listing-form-card input').forEach(i => i.value = '');
+            document.getElementById('form-title').innerText = "List New Property";
             document.getElementById('submit-btn').innerText = "Submit Listing";
-            document.getElementById('cancel-edit-btn').classList.add('hidden');
             document.getElementById('submit-btn').disabled = false;
-            if(ownerMarker) ownerMap.removeLayer(ownerMarker);
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
         }
 
         async function loadMyListings() {
@@ -285,21 +450,16 @@
             const tbody = document.getElementById('my-listings-body');
             tbody.innerHTML = '';
             data.properties.forEach(p => {
-                // Pass all data to the edit function safely
                 const editCall = `editProperty('${p._id}', '${p.firstName}', '${p.phone}', '${p.street}', '${p.area}', '${p.city}', ${p.lat}, ${p.lng})`;
-                
                 tbody.innerHTML += `<tr>
-                    <td><b>${p.area}</b><br><small>${p.street}</small></td>
-                    <td><span class="status-badge">${p.status}</span></td>
-                    <td>
-                        <button class="btn-edit" onclick="${editCall}">Edit</button>
-                        <button class="btn-delete" onclick="deleteProperty('${p._id}')">Delete</button>
-                    </td>
+                    <td><b>${p.area}</b></td>
+                    <td>${p.status}</td>
+                    <td><button onclick="${editCall}">Edit</button> <button onclick="deleteProperty('${p._id}')">Del</button></td>
                 </tr>`;
             });
         }
 
-        // --- TENANT FUNCTIONS ---
+        // --- TENANT ---
         function initTenantMap() {
             if(tenantMap) return;
             tenantMap = L.map('tenant-map').setView([13.0827, 80.2707], 12);
@@ -315,13 +475,15 @@
             if(data.properties.length > 0) {
                  tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
                  data.properties.forEach(p => {
-                     const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%; height:100px; object-fit:cover; border-radius:5px;">` : '';
+                     const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;">` : '';
                      L.marker([p.lat, p.lng]).addTo(tenantMap)
-                      .bindPopup(`${img}<b>${p.area}</b><br>${p.street}<br>Owner: ${p.firstName}<br>📞 ${p.phone}`);
+                      .bindPopup(`${img}<b>${p.area}</b><br>Owner: ${p.firstName}<br>📞 ${p.phone}`);
                  });
             } else { alert("No listings found."); }
         }
 
+        // Initialize (Auto-checks session)
+        loadFeaturedProperties();
         checkSession();
     </script>
 </body>

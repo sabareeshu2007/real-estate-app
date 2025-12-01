@@ -127,6 +127,14 @@ app.put('/api/update-property/:id', async (req, res) => {
         res.json({ success: true, message: "Property Updated" });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+// 8. GET FEATURED PROPERTIES (Limit 3)
+app.get('/api/featured-properties', async (req, res) => {
+    try {
+        // Sort by 'createdAt' descending (-1) to get newest first
+        const props = await Property.find().sort({ createdAt: -1 }).limit(3);
+        res.json({ success: true, properties: props });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
