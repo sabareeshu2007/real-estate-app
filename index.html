@@ -75,6 +75,32 @@
             .details-layout, .form-grid { grid-template-columns: 1fr; } 
             .full-width { grid-column: span 1; }
         }
+        /* --- BLOG & FOOTER STYLES --- */
+        .section { padding: 50px 10%; background: white; }
+        
+        .blog-card { 
+            border-left: 5px solid var(--primary); 
+            transition: 0.3s;
+        }
+        .blog-card:hover { transform: translateY(-5px); }
+        
+        footer { 
+            background: var(--secondary); 
+            color: white; 
+            padding: 50px 10%; 
+            margin-top: auto; 
+        }
+        
+        .footer-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 30px; 
+        }
+        
+        footer h4 { color: var(--accent); margin-bottom: 20px; }
+        footer a { color: #b2bec3; text-decoration: none; display: block; margin-bottom: 10px; font-size: 14px; }
+        footer a:hover { color: white; }
+        footer i { font-size: 20px; margin-right: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -105,6 +131,62 @@
                 <p style="text-align:center; width:100%;">Loading...</p>
             </div>
         </div>
+            <section class="section" style="background: #f9f9f9;">
+            <h2 style="text-align:center; margin-bottom:40px;">Latest Real Estate News</h2>
+            <div class="grid-container">
+                <div class="card blog-card">
+                    <h4>📈 Top 5 Areas to Invest</h4>
+                    <p style="font-size:12px; color:#999;">Oct 12, 2025</p>
+                    <p style="color:#666; font-size:14px;">Anna Nagar and OMR are seeing highest appreciation rates...</p>
+                    <a href="#" style="color:var(--primary); font-size:13px; font-weight:600;">Read More →</a>
+                </div>
+                <div class="card blog-card">
+                    <h4>💰 Home Loan Rates Drop</h4>
+                    <p style="font-size:12px; color:#999;">Nov 01, 2025</p>
+                    <p style="color:#666; font-size:14px;">New RBI policies make buying affordable for first-time owners...</p>
+                    <a href="#" style="color:var(--primary); font-size:13px; font-weight:600;">Read More →</a>
+                </div>
+                <div class="card blog-card">
+                    <h4>🏠 Renting vs Buying?</h4>
+                    <p style="font-size:12px; color:#999;">Nov 20, 2025</p>
+                    <p style="color:#666; font-size:14px;">Expert financial advice on making the right choice in 2025...</p>
+                    <a href="#" style="color:var(--primary); font-size:13px; font-weight:600;">Read More →</a>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-grid">
+                <div>
+                    <h2 style="color:white; display:flex; align-items:center; gap:10px;">🏠 EstatePro</h2>
+                    <p style="color:#b2bec3; font-size:14px; line-height:1.6;">
+                        The most trusted real estate platform in Chennai. We connect owners and tenants seamlessly.
+                    </p>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About Us</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Contact Support</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+                <div>
+                    <h4>Connect</h4>
+                    <div style="margin-top:10px;">
+                        <i class="fab fa-facebook"></i>
+                        <i class="fab fa-twitter"></i>
+                        <i class="fab fa-instagram"></i>
+                        <i class="fab fa-linkedin"></i>
+                    </div>
+                    <p style="margin-top:20px; font-size:12px; color:#666;">© 2025 EstatePro Inc.</p>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <div id="app-section" class="container hidden">
