@@ -471,13 +471,37 @@
             const q = document.getElementById('search-query').value;
             const res = await fetch(`${API_URL}/search-properties?query=${q}`);
             const data = await res.json();
+            
+            // Clear old markers
             tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
+            
             if(data.properties.length > 0) {
+                 // Fly to the first result
                  tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
+                 
                  data.properties.forEach(p => {
-                     const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%;">` : '';
+                     // 1. Prepare Image
+                     const img = p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%; height:120px; object-fit:cover; border-radius:5px; margin-bottom:5px;">` : '';
+                     
+                     // 2. Prepare Google Street View Link (Free Method)
+                     const streetViewLink = `https://www.google.com/maps?layer=c&cbll=${p.lat},${p.lng}`;
+
+                     // 3. Create Popup
                      L.marker([p.lat, p.lng]).addTo(tenantMap)
-                      .bindPopup(`${img}<b>${p.area}</b><br>Owner: ${p.firstName}<br>📞 ${p.phone}`);
+                      .bindPopup(`
+                        ${img}
+                        <div style="font-size:14px; line-height:1.5;">
+                            <b>${p.area}</b><br>
+                            ${p.street}<br>
+                            Owner: ${p.firstName}<br>
+                            <span style="color:green">📞 ${p.phone}</span>
+                            <br>
+                            <a href="${streetViewLink}" target="_blank" 
+                               style="display:inline-block; margin-top:8px; background:#4285F4; color:white; padding:5px 10px; text-decoration:none; border-radius:4px; font-size:12px;">
+                               👀 Open Street View 360°
+                            </a>
+                        </div>
+                      `);
                  });
             } else { alert("No listings found."); }
         }
