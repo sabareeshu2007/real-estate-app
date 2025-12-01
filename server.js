@@ -9,9 +9,9 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// --- CONFIG ---
-const JWT_SECRET = 'secure_secret_123'; 
-// PASTE YOUR MONGODB URL HERE
+// --- CONFIGURATION ---
+const JWT_SECRET = 'secret_key_123';
+// ⚠️ PASTE YOUR MONGODB CONNECTION STRING HERE
 const dbURL = 'mongodb+srv://sabareeshu2007_db_user:Sabareesh$2007@cluster0.nanwaap.mongodb.net/?appName=Cluster0';
 
 mongoose.connect(dbURL)
@@ -20,9 +20,7 @@ mongoose.connect(dbURL)
 
 // --- SCHEMAS ---
 const UserSchema = new mongoose.Schema({
-    firstName: String, 
-    lastName: String,  
-    phone: String,     
+    firstName: String, lastName: String, phone: String,
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     userType: { type: String, required: true }
@@ -31,35 +29,25 @@ const User = mongoose.model('User', UserSchema);
 
 const PropertySchema = new mongoose.Schema({
     ownerEmail: String,
-    
-    // Contact & Address
-    firstName: String, 
-    phone: String,
-    houseNo: String, 
-    street: String, 
-    area: String,
-    city: String, 
-    state: String, 
-    country: String,
-    
-    // Map Coords
-    lat: Number, 
-    lng: Number,
-    
-    // NEW DETAILS (Matching Property Page)
-    price: Number,          // e.g. 7500000
-    bedrooms: Number,       // e.g. 3
-    bathrooms: Number,      // e.g. 2
-    sqft: Number,          // e.g. 1500
-    furnishing: String,     // e.g. "Semi-Furnished"
-    description: String,    // Long text
-    amenities: [String],    // Array like ["Lift", "Gym"]
-    
+    // Contact Info
+    firstName: String, phone: String,
+    // Address Details
+    houseNo: String, street: String, area: String,
+    city: String, state: String, country: String,
+    // Property Specs
+    price: Number,
+    sqft: Number,
+    bedrooms: Number,
+    bathrooms: Number,
+    furnishing: String,
+    description: String,
+    amenities: [String], 
     imageUrl: String,
-    
+    // Map Location
+    lat: Number, lng: Number,
+    // System Status
     status: { type: String, default: 'Pending Verification' },
-    createdAt: { type: Date, default: Date.now },
-    lastChecked: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now }
 });
 const Property = mongoose.model('Property', PropertySchema);
 
@@ -70,17 +58,15 @@ app.post('/api/register', async (req, res) => {
     const { firstName, lastName, phone, email, password, userType } = req.body;
     try {
         let user = await User.findOne({ email });
-        if (user) return res.json({ success: false, message: "User exists. Login." });
+        if (user) return res.json({ success: false, message: "User already exists." });
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
+        const hashedPassword = await bcrypt.hash(password, 10);
         user = new User({ firstName, lastName, phone, email, password: hashedPassword, userType });
         await user.save();
 
-        const token = jwt.sign({ id: user._id, email: user.email, type: userType }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: user._id, email: user.email, type: userType }, JWT_SECRET);
         res.json({ success: true, message: "Account Created!", token });
-    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // 2. LOGIN
@@ -95,12 +81,12 @@ app.post('/api/login', async (req, res) => {
 
         if(user.userType !== userType) return res.json({ success: false, message: `Please login as ${user.userType}` });
 
-        const token = jwt.sign({ id: user._id, email: user.email, type: user.userType }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: user._id, email: user.email, type: user.userType }, JWT_SECRET);
         res.json({ success: true, message: "Login Successful", token });
-    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 3. LIST PROPERTY
+// 3. CREATE LISTING
 app.post('/api/list-property', async (req, res) => {
     try {
         const newProperty = new Property(req.body);
@@ -117,40 +103,36 @@ app.get('/api/my-properties', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 5. SEARCH
+// 5. DELETE PROPERTY
+app.delete('/api/delete-property/:id', async (req, res) => {
+    try {
+        await Property.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 6. UPDATE PROPERTY
+app.put('/api/update-property/:id', async (req, res) => {
+    try {
+        await Property.findByIdAndUpdate(req.params.id, req.body);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 7. SEARCH (For Tenant Map)
 app.get('/api/search-properties', async (req, res) => {
     try {
         const query = req.query.query;
         if (!query) return res.json({ success: true, properties: [] });
         const regex = new RegExp(query, "i");
-        const properties = await Property.find({ $or: [{ city: regex }, { area: regex }, { street: regex }] });
-        res.json({ success: true, properties });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-// --- ADD THESE NEW ROUTES BEFORE app.listen ---
-
-// 6. DELETE PROPERTY
-app.delete('/api/delete-property/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        await Property.findByIdAndDelete(id);
-        res.json({ success: true, message: "Property Deleted" });
+        const props = await Property.find({ $or: [{ city: regex }, { area: regex }, { street: regex }] });
+        res.json({ success: true, properties: props });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 7. UPDATE PROPERTY
-app.put('/api/update-property/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        // Update the property with the new data sent in req.body
-        await Property.findByIdAndUpdate(id, req.body);
-        res.json({ success: true, message: "Property Updated" });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-// 8. GET FEATURED PROPERTIES (Limit 3)
+// 8. FEATURED (For Home Page)
 app.get('/api/featured-properties', async (req, res) => {
     try {
-        // Sort by 'createdAt' descending (-1) to get newest first
         const props = await Property.find().sort({ createdAt: -1 }).limit(3);
         res.json({ success: true, properties: props });
     } catch (e) { res.status(500).json({ error: e.message }); }
