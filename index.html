@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EstatePro - Find Your Dream Home</title>
+    <title>EstatePro - Property Details</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -15,78 +15,65 @@
         * { box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; margin: 0; background-color: var(--bg); color: var(--secondary); }
         
-        /* --- NAVIGATION --- */
-        nav { 
-            background: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000;
-        }
-        .logo { font-size: 24px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-        .nav-links { display: flex; gap: 20px; }
-        .nav-links a { text-decoration: none; color: var(--secondary); font-weight: 500; font-size: 14px; cursor: pointer; }
-        .nav-links a:hover { color: var(--primary); }
-        .btn-login { background: var(--primary); color: white !important; padding: 8px 20px; border-radius: 20px; transition: 0.3s; }
-        .btn-login:hover { background: #0769b5; }
+        /* NAVIGATION */
+        nav { background: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary); cursor: pointer; }
+        .nav-links a { margin-left: 20px; text-decoration: none; color: #636e72; font-weight: 500; cursor: pointer; }
+        .btn-login { background: var(--primary); color: white !important; padding: 8px 20px; border-radius: 20px; }
 
-        /* --- HERO SECTION --- */
-        .hero {
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
-            background-size: cover; background-position: center; height: 500px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white;
-        }
-        .hero h1 { font-size: 42px; margin-bottom: 10px; }
-        .hero p { font-size: 18px; margin-bottom: 30px; }
-        
-        .search-bar {
-            background: white; padding: 10px; border-radius: 50px; display: flex; gap: 10px; width: 90%; max-width: 700px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-        .search-bar input, .search-bar select { border: none; padding: 12px; outline: none; flex: 1; border-radius: 5px; }
-        .search-btn { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 40px; cursor: pointer; font-weight: 600; }
-
-        /* --- FILTERS & SECTIONS --- */
-        .section { padding: 50px 10%; }
-        .section-title { text-align: center; margin-bottom: 40px; }
-        .filters { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
-        .filter-btn { background: white; border: 1px solid #dfe6e9; padding: 10px 25px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
-        .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
-
-        /* --- FEATURED CARDS --- */
-        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-        .prop-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: 0.3s; }
-        .prop-card:hover { transform: translateY(-5px); }
-        .prop-img { height: 200px; width: 100%; object-fit: cover; background: #eee; }
-        .prop-info { padding: 20px; }
-        .prop-price { color: var(--primary); font-weight: 700; font-size: 18px; margin-bottom: 5px; }
-        .prop-loc { color: #636e72; font-size: 14px; margin-bottom: 10px; }
-        .prop-features { display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 10px; font-size: 12px; color: #636e72; }
-
-        /* --- POPULAR LOCATIONS --- */
-        .loc-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-        .loc-pill { background: white; border: 1px solid #ddd; padding: 8px 20px; border-radius: 20px; cursor: pointer; }
-        .loc-pill:hover { background: var(--primary); color: white; border-color: var(--primary); }
-
-        /* --- BLOGS --- */
-        .blog-card { background: white; padding: 20px; border-radius: 10px; border-left: 4px solid var(--primary); }
-        .blog-date { font-size: 12px; color: #999; }
-        
-        /* --- FOOTER --- */
-        footer { background: var(--secondary); color: white; padding: 40px 10%; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; }
-        footer h4 { margin-bottom: 15px; color: var(--accent); }
-        footer a { color: #b2bec3; text-decoration: none; display: block; margin-bottom: 8px; font-size: 14px; }
-        footer a:hover { color: white; }
-
-        /* --- UTILS (Hidden Sections) --- */
+        /* UTILS */
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
         .hidden { display: none !important; }
-        .app-view { padding: 20px; max-width: 1000px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .btn { padding: 12px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: 0.3s; width: 100%; display: block; text-align: center; text-decoration: none;}
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-whatsapp { background: #25D366; color: white; margin-top: 10px; }
+        .btn-outline { border: 1px solid var(--primary); color: var(--primary); background: white; margin-top: 10px; }
         
-        /* Your Existing Dashboard Styles */
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 25px; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 8px; box-sizing: border-box; }
-        button.primary { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .map-box { height: 350px; width: 100%; border-radius: 15px; border: 2px solid #eee; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; background: #f1f2f6; padding: 10px; font-size: 12px; }
-        td { padding: 12px; border-bottom: 1px solid #f1f2f6; font-size: 14px; }
+        /* --- PROPERTY PAGE STYLES --- */
+        
+        /* Gallery */
+        .gallery-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; height: 400px; margin-bottom: 20px; }
+        .main-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; background: #ddd; }
+        .side-imgs { display: flex; flex-direction: column; gap: 10px; }
+        .sub-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; background: #eee; }
+
+        /* Layout Grid */
+        .details-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        
+        /* Highlights */
+        .highlights { display: flex; gap: 20px; margin: 20px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 20px 0; }
+        .highlight-item { text-align: center; flex: 1; border-right: 1px solid #eee; }
+        .highlight-item:last-child { border: none; }
+        .highlight-item i { font-size: 24px; color: var(--primary); margin-bottom: 5px; }
+        
+        /* Amenities */
+        .amenities-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
+        .amenity { background: #f1f2f6; padding: 8px; border-radius: 5px; font-size: 13px; display: flex; align-items: center; gap: 5px; }
+
+        /* Price Card (Sticky) */
+        .price-card { position: sticky; top: 100px; border: 1px solid #eee; }
+        .price-tag { font-size: 28px; font-weight: 700; color: #2d3436; margin-bottom: 5px; }
+
+        /* EMI Calculator */
+        .emi-box { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .emi-result { font-size: 20px; font-weight: 700; color: var(--primary); text-align: center; margin-top: 10px; }
+
+        /* Maps */
+        .mini-map { height: 250px; width: 100%; border-radius: 10px; margin-top: 20px; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .gallery-grid { grid-template-columns: 1fr; height: 250px; }
+            .side-imgs { display: none; }
+            .details-layout { grid-template-columns: 1fr; }
+            .highlights { flex-wrap: wrap; }
+        }
+        
+        /* Existing Styles for Dashboard/Maps */
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dfe6e9; border-radius: 8px; }
+        .map-box { height: 400px; width: 100%; border-radius: 15px; }
+        table { width: 100%; border-collapse: collapse; } th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
     </style>
 </head>
 <body>
@@ -95,146 +82,131 @@
         <div class="logo" onclick="goHome()">🏠 EstatePro</div>
         <div class="nav-links">
             <a onclick="goHome()">Home</a>
-            <a onclick="scrollToSection('featured')">Buy</a>
-            <a onclick="scrollToSection('featured')">Rent</a>
-            <a onclick="showAuth('owner')" class="btn-login">Owner Login</a>
-            <a onclick="showAuth('tenant')" class="btn-login" style="background:var(--secondary)">Tenant Login</a>
+            <a onclick="showAuth('owner')">List Property</a>
+            <a onclick="showAuth('tenant')" class="btn-login">Login</a>
         </div>
-        <button id="logout-btn" class="hidden" style="background:none; border:none; color:red; cursor:pointer;" onclick="handleLogout()">Logout</button>
+        <button id="logout-btn" class="hidden" style="margin-left:20px; background:none; border:none; color:red; cursor:pointer;" onclick="handleLogout()">Logout</button>
     </nav>
 
     <div id="home-page">
-        <header class="hero">
-            <h1>Find Your Dream Home in Chennai</h1>
-            <p>Search over 10,000 properties for buy & rent</p>
-            
-            <div class="search-bar">
-                <select style="flex:0.5;">
-                    <option>Chennai</option>
-                </select>
-                <input type="text" id="home-search-input" placeholder="Search Area (e.g. Anna Nagar)">
-                <button class="search-btn" onclick="triggerTenantSearch()">Search</button>
-            </div>
-        </header>
-
-        <section class="section">
-            <div class="filters">
-                <button class="filter-btn">🏠 Buy</button>
-                <button class="filter-btn">🔑 Rent</button>
-                <button class="filter-btn">🏢 Commercial</button>
-                <button class="filter-btn">🏗 New Projects</button>
-            </div>
-        </section>
-
-        <section id="featured" class="section" style="background: white;">
-            <h2 class="section-title">Featured Properties</h2>
-            <div class="grid-container" id="featured-list">
-                <p style="text-align:center; width:100%;">Loading latest properties...</p>
-            </div>
-        </section>
-
-        <section class="section">
-            <h2 class="section-title">Popular Locations</h2>
-            <div class="loc-grid">
-                <div class="loc-pill">Vepery</div>
-                <div class="loc-pill">Anna Nagar</div>
-                <div class="loc-pill">Chintadripet</div>
-                <div class="loc-pill">Egmore</div>
-                <div class="loc-pill">T Nagar</div>
-                <div class="loc-pill">Adyar</div>
-                <div class="loc-pill">Velachery</div>
-            </div>
-        </section>
-
-        <section class="section" style="background:white;">
-            <h2 class="section-title">Latest Real Estate News</h2>
-            <div class="grid-container">
-                <div class="blog-card">
-                    <h4>Top 5 Areas to Invest in Chennai</h4>
-                    <p class="blog-date">Oct 12, 2025</p>
-                    <p>Discover the fastest growing neighborhoods...</p>
-                </div>
-                <div class="blog-card">
-                    <h4>Home Loan Rates Drop</h4>
-                    <p class="blog-date">Nov 01, 2025</p>
-                    <p>New policies make buying affordable...</p>
-                </div>
-                <div class="blog-card">
-                    <h4>Renting vs Buying?</h4>
-                    <p class="blog-date">Nov 20, 2025</p>
-                    <p>Expert advice on making the right choice...</p>
-                </div>
-            </div>
-        </section>
-
-        <footer>
-            <div>
-                <h4>EstatePro</h4>
-                <p>The #1 Real Estate platform in Chennai.</p>
-            </div>
-            <div>
-                <h4>Company</h4>
-                <a href="#">About Us</a>
-                <a href="#">Careers</a>
-                <a href="#">Contact</a>
-            </div>
-            <div>
-                <h4>Legal</h4>
-                <a href="#">Terms</a>
-                <a href="#">Privacy</a>
-            </div>
-            <div>
-                <h4>Social</h4>
-                <a href="#">Facebook</a>
-                <a href="#">Instagram</a>
-                <a href="#">Twitter</a>
-            </div>
-        </footer>
+        <div style="background:linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); height:500px; background-size:cover; background-position:center; display:flex; flex-direction:column; justify-content:center; align-items:center; color:white; text-align:center;">
+            <h1 style="font-size:48px; margin-bottom:10px;">Find Your Place</h1>
+            <button onclick="showAuth('tenant')" class="btn btn-primary" style="width:200px; margin-top:20px;">Start Searching</button>
+        </div>
     </div>
 
-    <div id="app-section" class="app-view hidden">
+    <div id="app-section" class="container hidden">
         
         <div id="auth-section" class="card" style="max-width:400px; margin:50px auto; text-align:center;">
-            <h2 id="auth-title">Welcome</h2>
-            <input type="email" id="email-input" placeholder="Email Address">
+            <h2>Welcome</h2>
+            <input type="email" id="email-input" placeholder="Email">
             <input type="password" id="pass-input" placeholder="Password">
-            <button class="primary" onclick="handleLogin()">Login / Register</button>
-            <p style="margin-top:10px; cursor:pointer;" onclick="goHome()">← Back to Home</p>
+            <button class="btn btn-primary" onclick="handleLogin()">Login / Register</button>
         </div>
 
         <div id="owner-section" class="hidden">
             <div class="card">
-                <h2>📊 My Listings</h2>
-                <div style="overflow-x:auto;">
-                    <table><thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead><tbody id="my-listings-body"></tbody></table>
-                </div>
-                <button class="primary" onclick="loadMyListings()">Refresh</button>
+                <h2>My Listings</h2>
+                <table><tbody id="my-listings-body"></tbody></table>
+                <button class="btn btn-outline" onclick="loadMyListings()">Refresh</button>
             </div>
-            <div class="card" id="listing-form-card">
-                <h2 id="form-title">📍 List New Property</h2>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <input type="text" id="fname" placeholder="First Name">
-                    <input type="tel" id="phone" placeholder="Phone">
-                    <input type="text" id="area" placeholder="Area">
-                    <input type="text" id="city" value="Chennai">
-                    <div style="grid-column:span 2"><input type="text" id="house" placeholder="Full Address"></div>
-                    <div style="grid-column:span 2"><input type="file" id="prop-image"></div>
-                </div>
+            <div class="card">
+                <h2>List New Property</h2>
+                <input type="text" id="fname" placeholder="Name"><input type="tel" id="phone" placeholder="Phone">
+                <input type="text" id="area" placeholder="Area"><input type="text" id="city" value="Chennai">
+                <input type="text" id="house" placeholder="Full Address">
+                <label>Photo:</label><input type="file" id="prop-image">
                 <div id="owner-map" class="map-box"></div>
-                <button class="primary" id="submit-btn" onclick="submitListing()" style="margin-top:15px;">Submit Listing</button>
-                <button class="primary" id="cancel-edit-btn" onclick="cancelEdit()" style="background:#999; margin-top:5px;" class="hidden">Cancel</button>
+                <button class="btn btn-primary" id="submit-btn" onclick="submitListing()" style="margin-top:10px;">Submit</button>
             </div>
         </div>
 
         <div id="tenant-section" class="hidden">
             <div class="card">
-                <h2>Find Homes</h2>
+                <h2>Search Homes</h2>
                 <div style="display:flex; gap:10px;">
-                    <input type="text" id="search-query" placeholder="Search Area or Street">
-                    <button class="primary" style="width:auto; margin-top:0;" onclick="searchProperties()">Search</button>
+                    <input type="text" id="search-query" placeholder="Search Area (e.g. Anna Nagar)">
+                    <button class="btn btn-primary" style="width:auto; margin:0;" onclick="searchProperties()">Search</button>
                 </div>
             </div>
-            <div class="card"><div id="tenant-map" class="map-box" style="height:500px;"></div></div>
+            <div class="card"><div id="tenant-map" class="map-box"></div></div>
+        </div>
+    </div>
+
+    <div id="property-page" class="hidden">
+        <div class="container">
+            <button onclick="closePropertyPage()" style="background:none; border:none; color:#666; cursor:pointer; margin-bottom:10px;">← Back to Search</button>
+            
+            <div class="gallery-grid">
+                <img id="detail-img-main" src="" class="main-img">
+                <div class="side-imgs">
+                    <img src="https://via.placeholder.com/400x300/eee?text=Kitchen" class="sub-img">
+                    <img src="https://via.placeholder.com/400x300/eee?text=Living+Room" class="sub-img">
+                </div>
+            </div>
+
+            <div class="details-layout">
+                <div class="main-content">
+                    <h1 id="detail-title" style="margin:0;">3BHK Apartment</h1>
+                    <p id="detail-address" style="color:#666;">📍 Anna Nagar, Chennai</p>
+                    
+                    <div class="highlights">
+                        <div class="highlight-item"><i class="fas fa-ruler-combined"></i><br>1500 sqft</div>
+                        <div class="highlight-item"><i class="fas fa-bed"></i><br>3 Beds</div>
+                        <div class="highlight-item"><i class="fas fa-bath"></i><br>2 Baths</div>
+                        <div class="highlight-item"><i class="fas fa-couch"></i><br>Furnished</div>
+                    </div>
+
+                    <h3>Description</h3>
+                    <p style="color:#555; line-height:1.6;">
+                        Beautiful property located in a prime area. Close to schools, hospitals, and metro stations. 
+                        Perfect for families looking for a peaceful yet connected neighborhood.
+                    </p>
+
+                    <h3>Amenities</h3>
+                    <div class="amenities-grid">
+                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> Lift</div>
+                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> Power Backup</div>
+                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> CCTV</div>
+                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> Gym</div>
+                        <div class="amenity"><i class="fas fa-check-circle" style="color:green"></i> Parking</div>
+                    </div>
+
+                    <h3>Location Map</h3>
+                    <div id="detail-map" class="mini-map"></div>
+                    <a id="street-view-btn" href="#" target="_blank" class="btn btn-outline">👀 Open 360° Street View</a>
+
+                    <div class="emi-box">
+                        <h3>EMI Calculator</h3>
+                        <input type="number" id="loan-amount" placeholder="Loan Amount (e.g. 5000000)" oninput="calculateEMI()">
+                        <div class="emi-result">Monthly EMI: <span id="emi-val">₹ 0</span></div>
+                    </div>
+                </div>
+
+                <div class="sidebar">
+                    <div class="card price-card">
+                        <div class="price-tag">₹ <span id="detail-price">75 Lakhs</span></div>
+                        <p style="font-size:12px; color:#999;">EMI starts at ₹40k</p>
+                        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+                        
+                        <h4>Owner Details</h4>
+                        <p style="font-weight:600;" id="detail-owner">John Doe</p>
+                        
+                        <a id="btn-call" href="#" class="btn btn-primary"><i class="fas fa-phone"></i> Call Now</a>
+                        <a id="btn-whatsapp" href="#" target="_blank" class="btn btn-whatsapp"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                        <button class="btn btn-outline">Request Visit</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>Nearby Essentials</h4>
+                        <ul style="padding-left:20px; color:#555;">
+                            <li>🏫 School: 0.5 km</li>
+                            <li>🏥 Hospital: 1.2 km</li>
+                            <li>🚆 Metro: 2.0 km</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -245,14 +217,14 @@
         const UPLOAD_PRESET = 'estate'; // REPLACE
 
         let currentUserType = 'owner';
-        let ownerMap, tenantMap, selectedLat, selectedLng, ownerMarker;
-        let isEditing = false, editingId = null;
+        let ownerMap, tenantMap, detailMap; 
+        let selectedLat, selectedLng, ownerMarker;
 
-        // --- NAVIGATION LOGIC ---
+        // --- NAVIGATION ---
         function goHome() {
             document.getElementById('home-page').classList.remove('hidden');
             document.getElementById('app-section').classList.add('hidden');
-            loadFeaturedProperties(); // Load fresh data
+            document.getElementById('property-page').classList.add('hidden');
         }
 
         function showAuth(type) {
@@ -262,49 +234,14 @@
             document.getElementById('auth-section').classList.remove('hidden');
             document.getElementById('owner-section').classList.add('hidden');
             document.getElementById('tenant-section').classList.add('hidden');
-            document.getElementById('auth-title').innerText = type === 'owner' ? 'Owner Login' : 'Tenant Login';
         }
 
-        function triggerTenantSearch() {
-            // User searched on Home Page -> Send them to Tenant Login/Dashboard
-            const query = document.getElementById('home-search-input').value;
-            showAuth('tenant');
-            // Store query to auto-search after login (Optional advanced feature)
-            if(query) localStorage.setItem('pendingSearch', query);
+        function closePropertyPage() {
+            document.getElementById('property-page').classList.add('hidden');
+            document.getElementById('app-section').classList.remove('hidden');
         }
 
-        function scrollToSection(id) {
-            document.getElementById(id).scrollIntoView({behavior: 'smooth'});
-        }
-
-        // --- FETCH FEATURED PROPERTIES ---
-        async function loadFeaturedProperties() {
-            try {
-                const res = await fetch(`${API_URL}/featured-properties`);
-                const data = await res.json();
-                const container = document.getElementById('featured-list');
-                container.innerHTML = '';
-
-                data.properties.forEach(p => {
-                    const img = p.imageUrl || 'https://via.placeholder.com/300x200?text=No+Image';
-                    const html = `
-                        <div class="prop-card">
-                            <img src="${img}" class="prop-img">
-                            <div class="prop-info">
-                                <div class="prop-price">₹ On Request</div>
-                                <div class="prop-loc">📍 ${p.area}, ${p.city}</div>
-                                <div class="prop-features">
-                                    <span>3 Beds</span><span>2 Baths</span><span>1200 sqft</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += html;
-                });
-            } catch(e) { console.error(e); }
-        }
-
-        // --- APP LOGIC (Login, Maps, Etc) ---
+        // --- AUTH & UPLOAD (Standard) ---
         async function handleLogin() {
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
@@ -325,13 +262,10 @@
 
         function checkSession() {
             if(localStorage.getItem('token')) {
-                // Hide Home, Show App
                 document.getElementById('home-page').classList.add('hidden');
                 document.getElementById('app-section').classList.remove('hidden');
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('logout-btn').classList.remove('hidden');
-                document.querySelector('.nav-links').classList.add('hidden'); // Hide Home links
-
                 if(localStorage.getItem('type') === 'owner') {
                     document.getElementById('owner-section').classList.remove('hidden');
                     initOwnerMap();
@@ -340,17 +274,11 @@
                     document.getElementById('tenant-section').classList.remove('hidden');
                     initTenantMap();
                 }
-            } else {
-                goHome(); // Show Home if not logged in
-            }
+            } else { goHome(); }
         }
 
-        function handleLogout() { 
-            localStorage.clear(); 
-            location.reload(); 
-        }
+        function handleLogout() { localStorage.clear(); location.reload(); }
 
-        // --- IMAGE UPLOAD ---
         async function uploadImage() {
             const fileInput = document.getElementById('prop-image');
             if(fileInput.files.length === 0) return null;
@@ -364,7 +292,7 @@
             } catch(e) { return null; }
         }
 
-        // --- OWNER ---
+        // --- OWNER LOGIC ---
         function initOwnerMap() {
             if(ownerMap) return;
             ownerMap = L.map('owner-map').setView([13.0827, 80.2707], 12);
@@ -379,10 +307,8 @@
 
         async function submitListing() {
             const btn = document.getElementById('submit-btn');
-            btn.innerText = "Processing...";
-            btn.disabled = true;
+            btn.innerText = "Processing..."; btn.disabled = true;
             let imgUrl = await uploadImage();
-            
             const form = {
                 ownerEmail: localStorage.getItem('email'),
                 firstName: document.getElementById('fname').value,
@@ -394,72 +320,26 @@
                 lat: selectedLat, lng: selectedLng
             };
             if(imgUrl) form.imageUrl = imgUrl;
-
             if(!form.firstName || !form.area || !form.lat) {
                 btn.innerText = "Submit"; btn.disabled = false;
-                return alert("Fill details & Pin Map!");
+                return alert("Fill Details & Pin Map!");
             }
-
-            let endpoint = isEditing ? `/update-property/${editingId}` : '/list-property';
-            let method = isEditing ? 'PUT' : 'POST';
-
-            await fetch(`${API_URL}${endpoint}`, {
-                method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
+            await fetch(`${API_URL}/list-property`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
             });
-            
             alert("Success!");
-            cancelEdit();
-            loadMyListings();
-        }
-
-        // Edit/Delete
-        async function deleteProperty(id) {
-            if(confirm("Delete?")) {
-                await fetch(`${API_URL}/delete-property/${id}`, { method: 'DELETE' });
-                loadMyListings();
-            }
-        }
-        function editProperty(id, fname, phone, house, area, city, lat, lng) {
-            document.getElementById('fname').value = fname;
-            document.getElementById('phone').value = phone;
-            document.getElementById('house').value = house;
-            document.getElementById('area').value = area;
-            document.getElementById('city').value = city;
-            selectedLat = lat; selectedLng = lng;
-            if(ownerMarker) ownerMap.removeLayer(ownerMarker);
-            ownerMarker = L.marker([lat, lng]).addTo(ownerMap);
-            ownerMap.setView([lat, lng], 14);
-            isEditing = true; editingId = id;
-            document.getElementById('form-title').innerText = "Edit Property";
-            document.getElementById('submit-btn').innerText = "Update";
-            document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            document.getElementById('listing-form-card').scrollIntoView({behavior:"smooth"});
-        }
-        function cancelEdit() {
-            isEditing = false; editingId = null;
-            document.querySelectorAll('#listing-form-card input').forEach(i => i.value = '');
-            document.getElementById('form-title').innerText = "List New Property";
-            document.getElementById('submit-btn').innerText = "Submit Listing";
-            document.getElementById('submit-btn').disabled = false;
-            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            location.reload();
         }
 
         async function loadMyListings() {
             const res = await fetch(`${API_URL}/my-properties?email=${localStorage.getItem('email')}`);
             const data = await res.json();
-            const tbody = document.getElementById('my-listings-body');
-            tbody.innerHTML = '';
-            data.properties.forEach(p => {
-                const editCall = `editProperty('${p._id}', '${p.firstName}', '${p.phone}', '${p.street}', '${p.area}', '${p.city}', ${p.lat}, ${p.lng})`;
-                tbody.innerHTML += `<tr>
-                    <td><b>${p.area}</b></td>
-                    <td>${p.status}</td>
-                    <td><button onclick="${editCall}">Edit</button> <button onclick="deleteProperty('${p._id}')">Del</button></td>
-                </tr>`;
-            });
+            document.getElementById('my-listings-body').innerHTML = data.properties.map(p => 
+                `<tr><td>${p.area}</td><td>${p.status}</td><td>View</td></tr>`
+            ).join('');
         }
 
-        // --- TENANT ---
+        // --- TENANT SEARCH ---
         function initTenantMap() {
             if(tenantMap) return;
             tenantMap = L.map('tenant-map').setView([13.0827, 80.2707], 12);
@@ -506,8 +386,45 @@
             } else { alert("No listings found."); }
         }
 
-        // Initialize (Auto-checks session)
-        loadFeaturedProperties();
+        // --- OPEN PROPERTY PAGE LOGIC ---
+        function openPropertyPage(prop) {
+            // 1. Switch Views
+            document.getElementById('app-section').classList.add('hidden');
+            document.getElementById('property-page').classList.remove('hidden');
+            window.scrollTo(0,0);
+
+            // 2. Inject Data
+            document.getElementById('detail-title').innerText = `Property in ${prop.area}`;
+            document.getElementById('detail-address').innerText = `📍 ${prop.houseNo}, ${prop.street}, ${prop.city}`;
+            document.getElementById('detail-owner').innerText = prop.firstName;
+            document.getElementById('detail-img-main').src = prop.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image';
+
+            // 3. Fake Price (Randomized for demo)
+            const randomPrice = Math.floor(Math.random() * (90 - 40 + 1) + 40);
+            document.getElementById('detail-price').innerText = `${randomPrice} Lakhs`;
+
+            // 4. Contact Buttons
+            document.getElementById('btn-call').href = `tel:${prop.phone}`;
+            document.getElementById('btn-whatsapp').href = `https://wa.me/91${prop.phone}?text=Hi, I am interested in your property at ${prop.area}`;
+            document.getElementById('street-view-btn').href = `https://www.google.com/maps?layer=c&cbll=${prop.lat},${prop.lng}`;
+
+            // 5. Mini Map inside Page
+            if(detailMap) detailMap.remove(); // Reset map
+            detailMap = L.map('detail-map').setView([prop.lat, prop.lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
+            L.marker([prop.lat, prop.lng]).addTo(detailMap);
+        }
+
+        // --- EMI CALCULATOR ---
+        function calculateEMI() {
+            const principal = document.getElementById('loan-amount').value;
+            if(!principal) return;
+            const rate = 8.5 / 12 / 100; // 8.5% Interest
+            const tenure = 240; // 20 Years
+            const emi = principal * rate * (Math.pow(1 + rate, tenure) / (Math.pow(1 + rate, tenure) - 1));
+            document.getElementById('emi-val').innerText = "₹ " + Math.round(emi).toLocaleString();
+        }
+
         checkSession();
     </script>
 </body>
