@@ -83,6 +83,12 @@
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } 
         .full-width { grid-column: span 2; }
         
+        /* IMAGE UPLOAD GRID */
+        .upload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .upload-item { background: #f8f9fa; padding: 10px; border-radius: 10px; text-align: center; border: 1px dashed #ccc; }
+        .upload-item label { font-size: 11px; font-weight: bold; display: block; margin-bottom: 5px; }
+        .upload-item input { width: 100%; font-size: 10px; padding: 0; background: transparent; border: none; }
+
         .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
         .checkbox-item { display: flex; align-items: center; gap: 5px; font-size: 13px; background: #f1f2f6; padding: 5px 10px; border-radius: 5px; }
         .checkbox-item input { width: auto; margin: 0; }
@@ -94,6 +100,7 @@
         /* --- PROPERTY DETAIL PAGE --- */
         .gallery-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; height: 400px; margin-bottom: 30px; }
         .main-img { width: 100%; height: 100%; object-fit: cover; border-radius: 15px; background: #ddd; }
+        .side-imgs { display: flex; flex-direction: column; gap: 15px; }
         .sub-img { width: 100%; height: 100%; object-fit: cover; border-radius: 15px; background: #eee; }
         
         .details-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
@@ -123,7 +130,7 @@
             <a onclick="showAuth('owner')">List Property</a>
             <a onclick="showAuth('tenant')" class="btn-login">Login</a>
         </div>
-        <button id="logout-btn" class="hidden" style="background:none; border:none; color:red; cursor:pointer;" onclick="handleLogout()">Logout</button>
+        <button id="logout-btn" class="hidden" style="margin-left:20px; background:none; border:none; color:red; cursor:pointer;" onclick="handleLogout()">Logout</button>
     </nav>
 
     <div id="home-page">
@@ -210,7 +217,9 @@
         <div id="owner-section" class="hidden">
             <div class="card">
                 <h2>📊 My Listings</h2>
-                <table><thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead><tbody id="my-listings-body"></tbody></table>
+                <div style="overflow-x:auto;">
+                    <table><thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead><tbody id="my-listings-body"></tbody></table>
+                </div>
                 <button class="btn btn-primary" style="width:auto; margin-top:15px;" onclick="loadMyListings()">Refresh Status</button>
             </div>
 
@@ -242,14 +251,14 @@
                         <textarea id="desc" rows="3" placeholder="Describe the property..."></textarea>
                     </div>
 
-                    <div class="full-width" style="margin-top:10px;">
+                    <div class="full-width">
                         <label>Upload Photos:</label>
-                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px;">
-                            <div><small>Outer</small><input type="file" id="img-outer"></div>
-                            <div><small>Hall</small><input type="file" id="img-hall"></div>
-                            <div><small>Bedroom</small><input type="file" id="img-bed"></div>
-                            <div><small>Kitchen</small><input type="file" id="img-kitchen"></div>
-                            <div><small>Bath</small><input type="file" id="img-bath"></div>
+                        <div class="upload-grid">
+                            <div class="upload-item"><label>Outer</label><input type="file" id="img-outer"></div>
+                            <div class="upload-item"><label>Hall</label><input type="file" id="img-hall"></div>
+                            <div class="upload-item"><label>Bedroom</label><input type="file" id="img-bed"></div>
+                            <div class="upload-item"><label>Kitchen</label><input type="file" id="img-kitchen"></div>
+                            <div class="upload-item"><label>Bathroom</label><input type="file" id="img-bath"></div>
                         </div>
                     </div>
                 </div>
@@ -293,13 +302,13 @@
             <button onclick="closePropertyPage()" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
             
             <div class="gallery-grid">
-                <img id="dt-img" src="" class="main-img">
+                <img id="dt-img-outer" class="main-img" src="https://via.placeholder.com/800x600?text=Outer">
                 <div class="side-imgs">
-                    <div class="sub-img" style="background:#eee; display:flex; align-items:center; justify-content:center;">Image 2</div>
-                    <div class="sub-img" style="background:#eee; display:flex; align-items:center; justify-content:center;">Image 3</div>
+                    <img id="dt-img-hall" class="sub-img" src="https://via.placeholder.com/400x300?text=Hall">
+                    <img id="dt-img-bed" class="sub-img" src="https://via.placeholder.com/400x300?text=Bedroom">
                 </div>
             </div>
-
+            
             <div class="details-layout">
                 <div class="main-content">
                     <h1 id="dt-title" style="margin:0;">Property Title</h1>
@@ -355,9 +364,10 @@
     <script>
         // --- CONFIG ---
         // ⚠️ REPLACE WITH YOUR RENDER URL
-        const API_URL = 'https://real-estate-app-925m.onrender.com/api'; // REPLACE
-        const CLOUD_NAME = 'dfsotxfxg';      // REPLACE
-        const UPLOAD_PRESET = 'estate'; // REPLACE 
+        const API_URL = 'https://real-estate-backend-xyz.onrender.com/api'; 
+        // ⚠️ REPLACE WITH YOUR CLOUDINARY KEYS
+        const CLOUD_NAME = 'YOUR_CLOUD_NAME';      
+        const UPLOAD_PRESET = 'YOUR_UPLOAD_PRESET'; 
 
         let currentUserType = 'owner';
         let ownerMap, tenantMap, detailMap; 
@@ -453,15 +463,12 @@
         function handleLogout() { localStorage.clear(); location.reload(); }
 
         // --- UPLOAD ---
-        // NEW FLEXIBLE UPLOAD FUNCTION
         async function uploadFile(inputId) {
             const fileInput = document.getElementById(inputId);
-            if(!fileInput || fileInput.files.length === 0) return ""; // Return empty string if no file
-            
+            if(!fileInput || fileInput.files.length === 0) return "";
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
             formData.append('upload_preset', UPLOAD_PRESET);
-            
             try {
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
@@ -492,16 +499,12 @@
 
         async function submitListing() {
             const btn = document.getElementById('submit-btn');
-            btn.innerText = "Uploading 5 Photos..."; 
-            btn.disabled = true;
+            btn.innerText = "Uploading 5 Photos..."; btn.disabled = true;
             
             const [outer, hall, bed, kitchen, bath] = await Promise.all([
-                uploadFile('img-outer'),
-                uploadFile('img-hall'),
-                uploadFile('img-bed'),
-                uploadFile('img-kitchen'),
-                uploadFile('img-bath')
+                uploadFile('img-outer'), uploadFile('img-hall'), uploadFile('img-bed'), uploadFile('img-kitchen'), uploadFile('img-bath')
             ]);
+            
             const amenities = [];
             document.querySelectorAll('.amenity-chk:checked').forEach(c => amenities.push(c.value));
 
@@ -520,25 +523,15 @@
                 furnishing: document.getElementById('furnish').value,
                 description: document.getElementById('desc').value,
                 amenities: amenities,
-                images: { 
-                    outer: outer, 
-                    hall: hall, 
-                    bedroom: bed, 
-                    kitchen: kitchen, 
-                    bathroom: bath 
-                },
+                images: { outer, hall, bedroom: bed, kitchen, bathroom: bath },
                 lat: selectedLat, lng: selectedLng
-                
             };
-            
-
-            if(imgUrl) form.imageUrl = imgUrl;
 
             if(!form.firstName || !form.price || !form.lat) {
                 btn.innerText = "Submit"; btn.disabled = false;
                 return alert("Fill Details & Pin Map!");
             }
-            
+
             let endpoint = isEditing ? `/update-property/${editingId}` : '/list-property';
             let method = isEditing ? 'PUT' : 'POST';
 
@@ -639,9 +632,13 @@
             document.getElementById('dt-baths').innerText = p.baths || '-';
             document.getElementById('dt-furnish').innerText = p.furnishing || '-';
             document.getElementById('dt-desc').innerText = p.description || "No description.";
-            document.getElementById('dt-img').src = imgs.outer;
             
-            const imgs = p.images || { outer: p.imageUrl || 'https://via.placeholder.com/800x600' };
+            // IMAGES
+            const imgs = p.images || { outer: p.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image' };
+            document.getElementById('dt-img-outer').src = imgs.outer || 'https://via.placeholder.com/800x600?text=No+Outer';
+            document.getElementById('dt-img-hall').src = imgs.hall || 'https://via.placeholder.com/400x300?text=Hall';
+            document.getElementById('dt-img-bed').src = imgs.bedroom || 'https://via.placeholder.com/400x300?text=Bed';
+            
             const am = document.getElementById('dt-amenities'); am.innerHTML = '';
             if(p.amenities) p.amenities.forEach(a => am.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
 
@@ -660,15 +657,16 @@
             try {
                 const res = await fetch(`${API_URL}/featured-properties`);
                 const data = await res.json();
-                document.getElementById('featured-list').innerHTML = data.properties.map(p => `
-                    <div class="prop-card" onclick="showAuth('tenant')">
-                        <img src="${p.imageUrl || 'https://via.placeholder.com/300x200'}" class="prop-img">
+                document.getElementById('featured-list').innerHTML = data.properties.map(p => {
+                    const img = (p.images && p.images.outer) ? p.images.outer : (p.imageUrl || 'https://via.placeholder.com/300x200');
+                    return `<div class="prop-card" onclick="showAuth('tenant')">
+                        <img src="${img}" class="prop-img">
                         <div class="prop-info">
                             <h3 style="margin:0; color:var(--primary);">₹ ${Number(p.price).toLocaleString()}</h3>
                             <p style="color:#666;">${p.bedrooms || 2} BHK in ${p.area}</p>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`;
+                }).join('');
             } catch(e) {}
         }
 
