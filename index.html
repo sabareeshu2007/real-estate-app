@@ -119,9 +119,50 @@
             .full-width { grid-column: span 1; }
             .gallery-grid { height: 250px; }
         }
+        /* --- NEW STYLES FOR MOBILE & LIGHTBOX --- */
+        
+        /* 1. Lightbox (Full Screen Zoom) */
+        #lightbox {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); z-index: 9999; 
+            display: flex; justify-content: center; align-items: center;
+        }
+        #lightbox img { max-width: 95%; max-height: 80vh; border-radius: 5px; }
+        .close-lb { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
+
+        /* 2. Gallery Layouts */
+        .gallery-desktop { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; height: 400px; }
+        .gallery-right { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; }
+        .gal-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; border-radius: 10px; transition:0.2s; }
+        .gal-img:hover { opacity: 0.9; }
+
+        .gallery-mobile { display: none; } /* Hidden on Desktop */
+
+        /* 3. Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .gallery-desktop { display: none; } /* Hide Grid on Mobile */
+            
+            .gallery-mobile { 
+                display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; 
+                scroll-snap-type: x mandatory; 
+            }
+            .gallery-mobile img { 
+                width: 85vw; height: 250px; object-fit: cover; 
+                border-radius: 10px; flex-shrink: 0; scroll-snap-align: center; 
+            }
+
+            .form-grid { grid-template-columns: 1fr; } /* Stack Forms */
+            .details-layout { grid-template-columns: 1fr; } /* Stack Property Page */
+            .price-card { position: static; }
+            .logo span { display: none; } /* Hide Logo Text on small screens */
+        }
     </style>
 </head>
 <body>
+    <div id="lightbox" class="hidden" onclick="this.classList.add('hidden')">
+        <span class="close-lb">&times;</span>
+        <img id="lightbox-img" src="">
+    </div>
 
     <nav>
         <div class="logo" onclick="goHome()">🏠 EstatePro</div>
@@ -301,12 +342,22 @@
         <div class="container">
             <button onclick="closePropertyPage()" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
             
-            <div class="gallery-grid">
-                <img id="dt-img-outer" class="main-img" src="https://via.placeholder.com/800x600?text=Outer">
-                <div class="side-imgs">
-                    <img id="dt-img-hall" class="sub-img" src="https://via.placeholder.com/400x300?text=Hall">
-                    <img id="dt-img-bed" class="sub-img" src="https://via.placeholder.com/400x300?text=Bedroom">
+            <div class="gallery-desktop">
+                <img id="dt-img-1" class="gal-img" onclick="openLight(this.src)">
+                <div class="gallery-right">
+                    <img id="dt-img-2" class="gal-img" onclick="openLight(this.src)">
+                    <img id="dt-img-3" class="gal-img" onclick="openLight(this.src)">
+                    <img id="dt-img-4" class="gal-img" onclick="openLight(this.src)">
+                    <img id="dt-img-5" class="gal-img" onclick="openLight(this.src)">
                 </div>
+            </div>
+
+            <div class="gallery-mobile">
+                <img id="m-img-1" onclick="openLight(this.src)">
+                <img id="m-img-2" onclick="openLight(this.src)">
+                <img id="m-img-3" onclick="openLight(this.src)">
+                <img id="m-img-4" onclick="openLight(this.src)">
+                <img id="m-img-5" onclick="openLight(this.src)">
             </div>
             
             <div class="details-layout">
@@ -629,21 +680,32 @@
             document.getElementById('dt-sqft').innerText = p.sqft || '-';
             document.getElementById('dt-beds').innerText = p.bedrooms || '-';
             document.getElementById('dt-baths').innerText = p.baths || '-';
-            document.getElementById('dt-furnish').innerText = p.furnishing || '-';
-            document.getElementById('dt-desc').innerText = p.description || "No description.";
-            
-            // IMAGES
-            const imgs = p.images || { outer: p.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image' };
-            document.getElementById('dt-img-outer').src = imgs.outer || 'https://via.placeholder.com/800x600?text=No+Outer';
-            document.getElementById('dt-img-hall').src = imgs.hall || 'https://via.placeholder.com/400x300?text=Hall';
-            document.getElementById('dt-img-bed').src = imgs.bedroom || 'https://via.placeholder.com/400x300?text=Bed';
-            
-            const am = document.getElementById('dt-amenities'); am.innerHTML = '';
-            if(p.amenities) p.amenities.forEach(a => am.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
-
+            document.getElementById('dt-desc').innerText = p.description || "";
             document.getElementById('dt-call').href = `tel:${p.phone}`;
             document.getElementById('dt-wa').href = `https://wa.me/91${p.phone}`;
             document.getElementById('dt-sv').href = `https://www.google.com/maps?layer=c&cbll=${p.lat},${p.lng}`;
+
+            // --- NEW 5-IMAGE LOGIC (PASTED HERE) ---
+            const i = p.images || {};
+            const def = 'https://via.placeholder.com/800x600?text=No+Image';
+
+            // Fill Desktop Grid
+            document.getElementById('dt-img-1').src = i.outer || (p.imageUrl || def);
+            document.getElementById('dt-img-2').src = i.hall || def;
+            document.getElementById('dt-img-3').src = i.bedroom || def;
+            document.getElementById('dt-img-4').src = i.kitchen || def;
+            document.getElementById('dt-img-5').src = i.bathroom || def;
+
+            // Fill Mobile Scroll
+            document.getElementById('m-img-1').src = i.outer || (p.imageUrl || def);
+            document.getElementById('m-img-2').src = i.hall || def;
+            document.getElementById('m-img-3').src = i.bedroom || def;
+            document.getElementById('m-img-4').src = i.kitchen || def;
+            document.getElementById('m-img-5').src = i.bathroom || def;
+            // ---------------------------------------
+
+            const am = document.getElementById('dt-amenities'); am.innerHTML = '';
+            if(p.amenities) p.amenities.forEach(a => am.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
 
             if(detailMap) detailMap.remove();
             detailMap = L.map('detail-map').setView([p.lat, p.lng], 15);
@@ -677,10 +739,17 @@
             const emi = P * R * (Math.pow(1+R, N) / (Math.pow(1+R, N)-1));
             document.getElementById('emi-val').innerText = "₹ " + Math.round(emi).toLocaleString();
         }
+        function openLight(src) {
+            if(src) {
+                document.getElementById('lightbox-img').src = src;
+                document.getElementById('lightbox').classList.remove('hidden');
+            }
+        }
 
         // INIT
         loadFeatured();
         checkSession();
+
     </script>
 </body>
 </html>
