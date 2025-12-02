@@ -42,7 +42,14 @@ const PropertySchema = new mongoose.Schema({
     furnishing: String,
     description: String,
     amenities: [String], 
-    imageUrl: String,
+    // REPLACEMENT CODE:
+    images: {
+        outer: String,
+        hall: String,
+        bedroom: String,
+        kitchen: String,
+        bathroom: String
+    },
     // Map Location
     lat: Number, lng: Number,
     // System Status

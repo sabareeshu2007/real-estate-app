@@ -242,7 +242,16 @@
                         <textarea id="desc" rows="3" placeholder="Describe the property..."></textarea>
                     </div>
 
-                    <div class="full-width"><label>Property Photo:</label> <input type="file" id="prop-image"></div>
+                    <div class="full-width" style="margin-top:10px;">
+                        <label>Upload Photos:</label>
+                        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px;">
+                            <div><small>Outer</small><input type="file" id="img-outer"></div>
+                            <div><small>Hall</small><input type="file" id="img-hall"></div>
+                            <div><small>Bedroom</small><input type="file" id="img-bed"></div>
+                            <div><small>Kitchen</small><input type="file" id="img-kitchen"></div>
+                            <div><small>Bath</small><input type="file" id="img-bath"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <h4 style="margin-top:20px;">Amenities</h4>
@@ -444,17 +453,20 @@
         function handleLogout() { localStorage.clear(); location.reload(); }
 
         // --- UPLOAD ---
-        async function uploadImage() {
-            const fileInput = document.getElementById('prop-image');
-            if(fileInput.files.length === 0) return null;
+        // NEW FLEXIBLE UPLOAD FUNCTION
+        async function uploadFile(inputId) {
+            const fileInput = document.getElementById(inputId);
+            if(!fileInput || fileInput.files.length === 0) return ""; // Return empty string if no file
+            
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
             formData.append('upload_preset', UPLOAD_PRESET);
+            
             try {
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
                 const data = await res.json();
                 return data.secure_url;
-            } catch(e) { return null; }
+            } catch(e) { return ""; }
         }
 
         // --- OWNER FUNCTIONS ---
@@ -480,9 +492,16 @@
 
         async function submitListing() {
             const btn = document.getElementById('submit-btn');
-            btn.innerText = "Processing..."; btn.disabled = true;
-            let imgUrl = await uploadImage();
+            btn.innerText = "Uploading 5 Photos..."; 
+            btn.disabled = true;
             
+            const [outer, hall, bed, kitchen, bath] = await Promise.all([
+                uploadFile('img-outer'),
+                uploadFile('img-hall'),
+                uploadFile('img-bed'),
+                uploadFile('img-kitchen'),
+                uploadFile('img-bath')
+            ]);
             const amenities = [];
             document.querySelectorAll('.amenity-chk:checked').forEach(c => amenities.push(c.value));
 
@@ -501,15 +520,25 @@
                 furnishing: document.getElementById('furnish').value,
                 description: document.getElementById('desc').value,
                 amenities: amenities,
+                images: { 
+                    outer: outer, 
+                    hall: hall, 
+                    bedroom: bed, 
+                    kitchen: kitchen, 
+                    bathroom: bath 
+                },
                 lat: selectedLat, lng: selectedLng
+                
             };
+            
+
             if(imgUrl) form.imageUrl = imgUrl;
 
             if(!form.firstName || !form.price || !form.lat) {
                 btn.innerText = "Submit"; btn.disabled = false;
                 return alert("Fill Details & Pin Map!");
             }
-
+            
             let endpoint = isEditing ? `/update-property/${editingId}` : '/list-property';
             let method = isEditing ? 'PUT' : 'POST';
 
@@ -610,8 +639,9 @@
             document.getElementById('dt-baths').innerText = p.baths || '-';
             document.getElementById('dt-furnish').innerText = p.furnishing || '-';
             document.getElementById('dt-desc').innerText = p.description || "No description.";
-            document.getElementById('dt-img').src = p.imageUrl || 'https://via.placeholder.com/800x600?text=No+Image';
+            document.getElementById('dt-img').src = imgs.outer;
             
+            const imgs = p.images || { outer: p.imageUrl || 'https://via.placeholder.com/800x600' };
             const am = document.getElementById('dt-amenities'); am.innerHTML = '';
             if(p.amenities) p.amenities.forEach(a => am.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
 
