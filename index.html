@@ -139,22 +139,34 @@
         .gallery-mobile { display: none; } /* Hidden on Desktop */
 
         /* 3. Mobile Responsiveness */
+        /* --- MOBILE FIXES --- */
         @media (max-width: 768px) {
-            .gallery-desktop { display: none; } /* Hide Grid on Mobile */
-            
+            /* Fix Navigation */
+            nav { padding: 15px; flex-direction: column; gap: 10px; }
+            .nav-links { width: 100%; justify-content: center; gap: 15px; }
+            .logo { margin-bottom: 5px; }
+
+            /* Fix Gallery */
+            .gallery-desktop { display: none; }
             .gallery-mobile { 
-                display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; 
-                scroll-snap-type: x mandatory; 
+                display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; scroll-snap-type: x mandatory; 
             }
             .gallery-mobile img { 
-                width: 85vw; height: 250px; object-fit: cover; 
-                border-radius: 10px; flex-shrink: 0; scroll-snap-align: center; 
+                width: 85vw; height: 250px; object-fit: cover; border-radius: 10px; flex-shrink: 0; scroll-snap-align: center; 
             }
 
-            .form-grid { grid-template-columns: 1fr; } /* Stack Forms */
-            .details-layout { grid-template-columns: 1fr; } /* Stack Property Page */
-            .price-card { position: static; }
-            .logo span { display: none; } /* Hide Logo Text on small screens */
+            /* Fix Forms & Layout */
+            .form-grid, .details-layout, .upload-grid { grid-template-columns: 1fr !important; }
+            .full-width { grid-column: span 1 !important; }
+            
+            /* Fix Search Bar */
+            .search-wrapper { flex-direction: column; padding: 15px; border-radius: 20px; }
+            .search-wrapper input, .search-wrapper select, .search-wrapper button { width: 100%; border-radius: 10px; margin-bottom: 5px; }
+            
+            /* Fix Property Page */
+            .highlights { flex-wrap: wrap; gap: 10px; }
+            .highlight-item { flex: 1 1 40%; margin-bottom: 10px; }
+            .price-card { position: static; margin-top: 20px; }
         }
     </style>
 </head>
@@ -343,21 +355,21 @@
             <button onclick="closePropertyPage()" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
             
             <div class="gallery-desktop">
-                <img id="dt-img-1" class="gal-img" onclick="openLight(this.src)">
+                <img id="dt-img-1" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
                 <div class="gallery-right">
-                    <img id="dt-img-2" class="gal-img" onclick="openLight(this.src)">
-                    <img id="dt-img-3" class="gal-img" onclick="openLight(this.src)">
-                    <img id="dt-img-4" class="gal-img" onclick="openLight(this.src)">
-                    <img id="dt-img-5" class="gal-img" onclick="openLight(this.src)">
+                    <img id="dt-img-2" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-3" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-4" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-5" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
                 </div>
             </div>
-
+            
             <div class="gallery-mobile">
-                <img id="m-img-1" onclick="openLight(this.src)">
-                <img id="m-img-2" onclick="openLight(this.src)">
-                <img id="m-img-3" onclick="openLight(this.src)">
-                <img id="m-img-4" onclick="openLight(this.src)">
-                <img id="m-img-5" onclick="openLight(this.src)">
+                <img id="m-img-1" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+                <img id="m-img-2" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                <img id="m-img-3" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                <img id="m-img-4" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                <img id="m-img-5" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
             </div>
             
             <div class="details-layout">
