@@ -171,6 +171,11 @@
     </style>
 </head>
 <body>
+    <div id="lightbox" class="hidden" onclick="closeLightbox()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column;">
+        <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer;">&times;</span>
+        <img id="lightbox-img" src="" style="max-width:90%; max-height:80vh; border-radius:5px; box-shadow:0 0 20px rgba(255,255,255,0.2);">
+        <p style="color:#ccc; margin-top:10px;">Tap anywhere to close</p>
+    </div>
     <div id="lightbox" class="hidden" onclick="this.classList.add('hidden')">
         <span class="close-lb">&times;</span>
         <img id="lightbox-img" src="">
@@ -796,6 +801,21 @@
                 document.getElementById('lightbox-img').src = src;
                 document.getElementById('lightbox').classList.remove('hidden');
             }
+        }
+        // --- LIGHTBOX FUNCTIONS ---
+        function openLightbox(src) {
+            // Only open if it's a valid image link
+            if(src && src.includes('http')) {
+                document.getElementById('lightbox-img').src = src;
+                document.getElementById('lightbox').classList.remove('hidden');
+                // Ensure it's visible by forcing display style
+                document.getElementById('lightbox').style.display = 'flex';
+            }
+        }
+
+        function closeLightbox() { 
+            document.getElementById('lightbox').classList.add('hidden'); 
+            document.getElementById('lightbox').style.display = 'none';
         }
 
         // INIT
