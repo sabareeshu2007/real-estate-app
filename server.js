@@ -126,13 +126,26 @@ app.put('/api/update-property/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 7. SEARCH (For Tenant Map)
+// 7. SMART SEARCH (With Filters)
 app.get('/api/search-properties', async (req, res) => {
     try {
-        const query = req.query.query;
-        if (!query) return res.json({ success: true, properties: [] });
-        const regex = new RegExp(query, "i");
-        const props = await Property.find({ $or: [{ city: regex }, { area: regex }, { street: regex }] });
+        const { query, maxPrice, bhk } = req.query;
+        
+        let dbQuery = {};
+
+        // Text Search
+        if (query) {
+            const regex = new RegExp(query, "i");
+            dbQuery.$or = [{ city: regex }, { area: regex }, { street: regex }];
+        }
+
+        // Price Filter (Less than or equal)
+        if (maxPrice) dbQuery.price = { $lte: Number(maxPrice) };
+
+        // BHK Filter (Equal)
+        if (bhk) dbQuery.bedrooms = Number(bhk);
+
+        const props = await Property.find(dbQuery);
         res.json({ success: true, properties: props });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });

@@ -191,8 +191,19 @@
             <h1>Find Your Dream Home in Chennai</h1>
             <p>Search properties for buy & rent</p>
             <div class="search-hero">
-                <input type="text" id="home-search-input" placeholder="Search Area (e.g. Anna Nagar)">
-                <button class="btn-primary" style="width:120px; border-radius:40px;" onclick="triggerTenantSearch()">Search</button>
+                <input type="text" id="home-search-input" placeholder="Area...">
+                <select id="home-budget" style="border:none; padding:10px;">
+                    <option value="">Budget</option>
+                    <option value="5000000">Max 50L</option>
+                    <option value="10000000">Max 1Cr</option>
+                </select>
+                <select id="home-bhk" style="border:none; padding:10px;">
+                    <option value="">BHK</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+                <button class="btn-primary" onclick="triggerTenantSearch()" style="width:auto; padding:10px 20px; border-radius:40px;">Search</button>
             </div>
         </header>
 
@@ -341,9 +352,20 @@
         <div id="tenant-section" class="hidden">
             <div class="card">
                 <h2>Find Homes</h2>
-                <div style="display:flex; gap:10px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <input type="text" id="search-query" placeholder="Search Area...">
-                    <button class="btn btn-primary" style="width:auto;" onclick="searchProperties()">Search</button>
+                    <select id="search-budget">
+                        <option value="">Budget</option>
+                        <option value="5000000">Max 50L</option>
+                        <option value="10000000">Max 1Cr</option>
+                    </select>
+                    <select id="search-bhk">
+                        <option value="">BHK</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                    <button class="btn btn-primary" style="width:auto;" onclick="searchProperties()">🔍</button>
                 </div>
             </div>
             <div class="card"><div id="tenant-map" class="map-box" style="height:500px;"></div></div>
@@ -454,9 +476,13 @@
         }
 
         function triggerTenantSearch() {
-            const query = document.getElementById('home-search-input').value;
+            const q = document.getElementById('home-search-input').value;
+            const price = document.getElementById('home-budget').value;
+            const bhk = document.getElementById('home-bhk').value;
+            
             showAuth('tenant');
-            if(query) localStorage.setItem('pendingSearch', query);
+            // Save filters as a JSON string
+            localStorage.setItem('pendingSearch', JSON.stringify({q, price, bhk}));
         }
 
         function closePropertyPage() {
@@ -515,8 +541,17 @@
                     initTenantMap();
                     const pending = localStorage.getItem('pendingSearch');
                     if(pending) {
-                        document.getElementById('search-query').value = pending;
-                        setTimeout(searchProperties, 1000);
+                        // Parse the JSON object
+                        try {
+                            const {q, price, bhk} = JSON.parse(pending);
+                            document.getElementById('search-query').value = q || '';
+                            document.getElementById('search-budget').value = price || '';
+                            document.getElementById('search-bhk').value = bhk || '';
+                            setTimeout(searchProperties, 1000);
+                        } catch(e) {
+                            // Fallback for old string searches
+                            document.getElementById('search-query').value = pending;
+                        }
                         localStorage.removeItem('pendingSearch');
                     }
                 }
@@ -667,16 +702,21 @@
 
         async function searchProperties() {
             const q = document.getElementById('search-query').value;
-            const res = await fetch(`${API_URL}/search-properties?query=${q}`);
+            const price = document.getElementById('search-budget').value;
+            const bhk = document.getElementById('search-bhk').value;
+            
+            const res = await fetch(`${API_URL}/search-properties?query=${q}&maxPrice=${price}&bhk=${bhk}`);
             const data = await res.json();
+            
             tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
+            
             if(data.properties.length > 0) {
                  tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                 data.properties.forEach(p => {
+                 data.properties.forEach(p => { 
                      const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
-                     m.on('click', () => openPropertyPage(p));
+                     m.on('click', () => openPropertyPage(p)); 
                  });
-            } else { alert("No listings found."); }
+            } else { alert("No listings match your filters."); }
         }
 
         // --- PROPERTY PAGE LOGIC ---
