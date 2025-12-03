@@ -168,9 +168,25 @@
             .highlight-item { flex: 1 1 40%; margin-bottom: 10px; }
             .price-card { position: static; margin-top: 20px; }
         }
+            /* --- LOADING SPINNER CSS --- */
+            #loading-overlay {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(255, 255, 255, 0.9); z-index: 10000;
+                display: flex; justify-content: center; align-items: center; flex-direction: column;
+            }
+            .spinner {
+                width: 50px; height: 50px; border: 5px solid #e3e3e3;
+                border-top: 5px solid var(--primary); border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <div id="loading-overlay" class="hidden">
+        <div class="spinner"></div>
+        <p id="loading-msg" style="margin-top:15px; font-weight:600; color:#666;">Processing...</p>
+    </div>
     <div id="lightbox" class="hidden" onclick="closeLightbox()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column;">
         <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer;">&times;</span>
         <img id="lightbox-img" src="" style="max-width:90%; max-height:80vh; border-radius:5px; box-shadow:0 0 20px rgba(255,255,255,0.2);">
@@ -463,6 +479,15 @@
         let selectedLat, selectedLng, ownerMarker;
         let isLoginMode = true, isEditing = false, editingId = null;
 
+        // --- LOADING HELPERS ---
+            function showLoading(msg = "Please wait...") {
+                document.getElementById('loading-msg').innerText = msg;
+                document.getElementById('loading-overlay').classList.remove('hidden');
+            }
+            function hideLoading() {
+                document.getElementById('loading-overlay').classList.add('hidden');
+            }
+
         // --- NAVIGATION LOGIC ---
         function goHome() {
             document.getElementById('home-page').classList.remove('hidden');
@@ -600,22 +625,33 @@
         }
 
         async function submitListing() {
-            const btn = document.getElementById('submit-btn');
-            btn.innerText = "Uploading 5 Photos..."; btn.disabled = true;
-            
+        // 1. START SPINNER
+        showLoading("Uploading 5 Photos... This may take a minute.");
+        
+        try {
+            // Upload images
             const [outer, hall, bed, kitchen, bath] = await Promise.all([
-                uploadFile('img-outer'), uploadFile('img-hall'), uploadFile('img-bed'), uploadFile('img-kitchen'), uploadFile('img-bath')
+                uploadFile('img-outer'),
+                uploadFile('img-hall'),
+                uploadFile('img-bed'),
+                uploadFile('img-kitchen'),
+                uploadFile('img-bath')
             ]);
             
+            // Update Spinner Text
+            showLoading("Saving Property Details...");
+
+            // Get Amenities
             const amenities = [];
             document.querySelectorAll('.amenity-chk:checked').forEach(c => amenities.push(c.value));
 
+            // Gather Data
             const form = {
                 ownerEmail: localStorage.getItem('email'),
                 firstName: document.getElementById('fname').value,
                 phone: document.getElementById('phone').value,
                 houseNo: document.getElementById('house').value,
-                street: document.getElementById('house').value,
+                street: document.getElementById('street').value,
                 area: document.getElementById('area').value,
                 city: document.getElementById('city').value,
                 price: document.getElementById('price').value,
@@ -630,7 +666,7 @@
             };
 
             if(!form.firstName || !form.price || !form.lat) {
-                btn.innerText = "Submit"; btn.disabled = false;
+                hideLoading(); // Stop spinner if validation fails
                 return alert("Fill Details & Pin Map!");
             }
 
@@ -642,17 +678,14 @@
             });
             
             alert("Success!");
-            cancelEdit();
-            loadMyListings();
+            location.reload(); 
+            
+        } catch (error) {
+            console.error(error);
+            alert("Something went wrong!");
+            hideLoading(); // Stop spinner on error
         }
-
-        // Edit & Delete
-        async function deleteProperty(id) {
-            if(confirm("Delete Listing?")) {
-                await fetch(`${API_URL}/delete-property/${id}`, { method: 'DELETE' });
-                loadMyListings();
-            }
-        }
+    }
 
         function editProperty(id, fname, price, area, lat, lng) {
             document.getElementById('fname').value = fname;
@@ -706,22 +739,28 @@
         }
 
         async function searchProperties() {
-            const q = document.getElementById('search-query').value;
-            const price = document.getElementById('search-budget').value;
-            const bhk = document.getElementById('search-bhk').value;
+            showLoading("Searching properties..."); // START
             
-            const res = await fetch(`${API_URL}/search-properties?query=${q}&maxPrice=${price}&bhk=${bhk}`);
-            const data = await res.json();
-            
-            tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
-            
-            if(data.properties.length > 0) {
-                 tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                 data.properties.forEach(p => { 
-                     const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
-                     m.on('click', () => openPropertyPage(p)); 
-                 });
-            } else { alert("No listings match your filters."); }
+            try {
+                const q = document.getElementById('search-query').value;
+                const price = document.getElementById('search-budget').value;
+                const bhk = document.getElementById('search-bhk').value;
+                
+                const res = await fetch(`${API_URL}/search-properties?query=${q}&maxPrice=${price}&bhk=${bhk}`);
+                const data = await res.json();
+                
+                tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
+                
+                if(data.properties.length > 0) {
+                    tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
+                    data.properties.forEach(p => { 
+                        const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                        m.on('click', () => openPropertyPage(p)); 
+                    });
+                } else { alert("No listings match your filters."); }
+                
+            } catch(e) { alert("Search failed"); }
+            finally { hideLoading(); } // STOP (Always runs)
         }
 
         // --- PROPERTY PAGE LOGIC ---
