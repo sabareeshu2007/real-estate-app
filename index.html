@@ -778,7 +778,9 @@
             document.getElementById('dt-baths').innerText = p.baths || '-';
             document.getElementById('dt-desc').innerText = p.description || "";
             document.getElementById('dt-call').href = `tel:${p.phone}`;
-            document.getElementById('dt-wa').href = `https://wa.me/91${p.phone}`;
+            const message = `Hi ${p.firstName}, I saw your ${p.bedrooms || 2} BHK property in ${p.area} listed on EstatePro for ₹${Number(p.price).toLocaleString()}. Is it still available?`;
+            const encodedMsg = encodeURIComponent(message);
+            document.getElementById('dt-wa').href = `https://wa.me/91${p.phone}?text=${encodedMsg}`;
             document.getElementById('dt-sv').href = `https://www.google.com/maps?layer=c&cbll=${p.lat},${p.lng}`;
 
             // --- NEW 5-IMAGE LOGIC (PASTED HERE) ---
