@@ -585,7 +585,7 @@
         let isLoginMode = true, isEditing = false, editingId = null;
         let currentImages = {}; // Stores the current photos while editing
         let allMyProperties = []; // Stores full property data
-        let searchFilters = { listingType: 'Buy', propertyType: '', price: 0, sqft: 0 };
+        let searchFilters = { listingType: '', propertyType: '', price: 0, sqft: 0 };
         // --- LOADING HELPERS ---
             function showLoading(msg = "Please wait...") {
                 document.getElementById('loading-msg').innerText = msg;
@@ -1125,9 +1125,21 @@
         }
 
         function selectOpt(groupId, el, value) {
-            document.getElementById(groupId).querySelectorAll('.filter-chip').forEach(c => c.classList.remove('selected'));
+            const group = document.getElementById(groupId);
+
+            // Check if we are clicking the same button to "Unselect" it
+            if (el.classList.contains('selected')) {
+                el.classList.remove('selected');
+                // Reset that specific filter
+                if(groupId === 'f-listing') searchFilters.listingType = '';
+                if(groupId === 'f-prop') searchFilters.propertyType = '';
+                return;
+            }
+
+            // Otherwise, select the new one
+            group.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');
-            // Map ID to filter key
+
             if(groupId === 'f-listing') searchFilters.listingType = value;
             if(groupId === 'f-prop') searchFilters.propertyType = value;
         }
