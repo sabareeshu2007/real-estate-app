@@ -11,6 +11,19 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
+        /* --- FILTER MODAL STYLES --- */
+        #filter-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .filter-box { background: white; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: 15px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        
+        .filter-section { margin-bottom: 20px; }
+        .filter-section h4 { margin: 0 0 10px 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .filter-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        .filter-chip { border: 1px solid #ddd; background: white; padding: 8px 15px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .filter-chip.selected { background: var(--secondary); color: white; border-color: var(--secondary); }
+        
+        .range-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 5px;}
+        input[type=range] { width: 100%; padding: 0; margin: 0; }
         /* --- PROFESSIONAL DESIGN VARIABLES --- */
         :root { 
             --primary: #6C63FF; 
@@ -192,6 +205,44 @@
     </style>
 </head>
 <body>
+    <div id="filter-modal" class="hidden">
+        <div class="filter-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0;">⚙️ Filters</h2>
+                <span onclick="toggleFilter()" style="font-size:24px; cursor:pointer;">&times;</span>
+            </div>
+
+            <div class="filter-section">
+                <h4>Looking To</h4>
+                <div class="filter-grid" id="f-listing">
+                    <span class="filter-chip selected" onclick="selectOpt('f-listing', this, 'Buy')">Buy</span>
+                    <span class="filter-chip" onclick="selectOpt('f-listing', this, 'Rent')">Rent</span>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Property Type</h4>
+                <div class="filter-grid" id="f-prop">
+                    <span class="filter-chip" onclick="selectOpt('f-prop', this, 'House')">House</span>
+                    <span class="filter-chip" onclick="selectOpt('f-prop', this, 'Apartment')">Apartment</span>
+                    <span class="filter-chip" onclick="selectOpt('f-prop', this, 'Office')">Office</span>
+                    <span class="filter-chip" onclick="selectOpt('f-prop', this, 'Shop')">Shop</span>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Max Price: <span id="price-val">Any</span></h4>
+                <input type="range" min="0" max="50000000" step="500000" value="0" oninput="updateRange('price-val', this.value, '₹ ')">
+            </div>
+
+            <div class="filter-section">
+                <h4>Max Area: <span id="sqft-val">Any</span></h4>
+                <input type="range" min="0" max="10000" step="100" value="0" oninput="updateRange('sqft-val', this.value, '', ' sqft')">
+            </div>
+
+            <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+        </div>
+    </div>
     <div id="loading-overlay" class="hidden">
         <div class="spinner"></div>
         <p id="loading-msg" style="margin-top:15px; font-weight:600; color:#666;">Processing...</p>
@@ -233,7 +284,7 @@
                     <option value="2">2</option>
                     <option value="3">3</option>
                 </select>
-                <button class="btn-primary" onclick="triggerTenantSearch()" style="width:auto; padding:10px 20px; border-radius:40px;">Search</button>
+                <button class="btn-primary" onclick="toggleFilter()" style="width:auto; padding:10px 20px; border-radius:40px;">Search</button>
             </div>
         </header>
 
@@ -319,6 +370,10 @@
 
             <div class="card" id="listing-form-card">
                 <h2 id="form-title">📍 List New Property</h2>
+                <select id="o-listType"><option value="Buy">Sell</option><option value="Rent">Rent</option></select>
+                <select id="o-propType"><option value="House">House</option><option value="Apartment">Apartment</option><option value="Office">Office</option><option value="Shop">Shop</option></select>
+                <select id="o-buildType"><option value="Independent">Independent</option><option value="Mall">Mall</option><option value="Complex">Complex</option></select>
+                <select id="o-park"><option value="Public">Public Parking</option><option value="Reserved">Reserved Parking</option></select>
                 
                 <div class="form-grid">
                     <input type="text" id="fname" placeholder="Owner Name">
@@ -530,7 +585,7 @@
         let isLoginMode = true, isEditing = false, editingId = null;
         let currentImages = {}; // Stores the current photos while editing
         let allMyProperties = []; // Stores full property data
-
+        let searchFilters = { listingType: 'Buy', propertyType: '', price: 0, sqft: 0 };
         // --- LOADING HELPERS ---
             function showLoading(msg = "Please wait...") {
                 document.getElementById('loading-msg').innerText = msg;
@@ -731,6 +786,10 @@
                     bedrooms: val('beds'),
                     bathrooms: val('baths'),
                     furnishing: val('furnish'),
+                    listingType: document.getElementById('o-listType').value,
+                    propertyType: document.getElementById('o-propType').value,
+                    buildingType: document.getElementById('o-buildType').value,
+                    parking: document.getElementById('o-park').value,
                     description: val('desc'),
                     amenities: amenities,
                     images: finalImages,
@@ -933,30 +992,28 @@
         }
 
         async function searchProperties() {
-            showLoading("Searching properties..."); // START
+            const q = document.getElementById('search-query') ? document.getElementById('search-query').value : '';
+            // If called from Home Page, we might not have the input, so rely on filters
             
-            try {
-                const q = document.getElementById('search-query').value;
-                const price = document.getElementById('search-budget').value;
-                const bhk = document.getElementById('search-bhk').value;
-                
-                const res = await fetch(`${API_URL}/search-properties?query=${q}&maxPrice=${price}&bhk=${bhk}`);
-                const data = await res.json();
-                
-                tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
-                
-                if(data.properties.length > 0) {
-                    tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                    data.properties.forEach(p => { 
-                        const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
-                        m.on('click', () => openPropertyPage(p)); 
-                    });
-                } else { alert("No listings match your filters."); }
-                
-            } catch(e) { alert("Search failed"); }
-            finally { hideLoading(); } // STOP (Always runs)
-        }
+            let url = `${API_URL}/search-properties?query=${q}`;
+            if(searchFilters.listingType) url += `&listingType=${searchFilters.listingType}`;
+            if(searchFilters.propertyType) url += `&propertyType=${searchFilters.propertyType}`;
+            if(searchFilters.price > 0) url += `&maxPrice=${searchFilters.price}`;
+            if(searchFilters.sqft > 0) url += `&maxSqft=${searchFilters.sqft}`;
 
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            // ... (Rest of your existing map marker logic stays here) ...
+            tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
+            if(data.properties.length > 0) {
+                 tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
+                 data.properties.forEach(p => { 
+                     const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                     m.on('click', () => openPropertyPage(p)); 
+                 });
+            } else { alert("No listings match your filters."); }
+        }
         // --- PROPERTY PAGE LOGIC ---
         function openPropertyPage(p) {
             document.getElementById('app-section').classList.add('hidden');
@@ -1062,6 +1119,30 @@
             
             // 3. Clear the file input (in case they selected something then deleted it)
             document.getElementById(`img-${type}`).value = "";
+        }
+        function toggleFilter() {
+            document.getElementById('filter-modal').classList.toggle('hidden');
+        }
+
+        function selectOpt(groupId, el, value) {
+            document.getElementById(groupId).querySelectorAll('.filter-chip').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            // Map ID to filter key
+            if(groupId === 'f-listing') searchFilters.listingType = value;
+            if(groupId === 'f-prop') searchFilters.propertyType = value;
+        }
+
+        function updateRange(id, val, pre='', post='') {
+            document.getElementById(id).innerText = val == 0 ? "Any" : pre + Number(val).toLocaleString() + post;
+            if(id === 'price-val') searchFilters.price = val;
+            if(id === 'sqft-val') searchFilters.sqft = val;
+        }
+
+        function applyFilters() {
+            toggleFilter(); // Close modal
+            showAuth('tenant'); // Go to tenant view
+            // Trigger search immediately
+            setTimeout(searchProperties, 500); 
         }
 
         // INIT

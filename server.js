@@ -34,6 +34,13 @@ const PropertySchema = new mongoose.Schema({
     // Address Details
     houseNo: String, street: String, area: String,
     city: String, state: String, country: String,
+    // --- PASTE THIS INSIDE PropertySchema ---
+    listingType: String,  // 'Buy' or 'Rent'
+    propertyType: String, // 'Office', 'Shop', 'House'
+    buildingType: String, // 'Mall', 'Independent'
+    parking: String,      // 'Public', 'Reserved'
+    furnishing: String,   // 'Full', 'Semi', 'None'
+    // ----------------------------------------
     // Property Specs
     price: Number,
     sqft: Number,
@@ -126,12 +133,15 @@ app.put('/api/update-property/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 7. SMART SEARCH (With Filters)
+// 7. ADVANCED SEARCH ROUTE
 app.get('/api/search-properties', async (req, res) => {
     try {
-        const { query, maxPrice, bhk } = req.query;
+        const { 
+            query, maxPrice, maxSqft, 
+            listingType, propertyType, furnishing, buildingType, parking 
+        } = req.query;
         
-        let dbQuery = {};
+        let dbQuery = { status: { $ne: 'Rented' } }; 
 
         // Text Search
         if (query) {
@@ -139,11 +149,16 @@ app.get('/api/search-properties', async (req, res) => {
             dbQuery.$or = [{ city: regex }, { area: regex }, { street: regex }];
         }
 
-        // Price Filter (Less than or equal)
+        // Range Filters
         if (maxPrice) dbQuery.price = { $lte: Number(maxPrice) };
+        if (maxSqft) dbQuery.sqft = { $lte: Number(maxSqft) };
 
-        // BHK Filter (Equal)
-        if (bhk) dbQuery.bedrooms = Number(bhk);
+        // Dropdown Filters
+        if (listingType) dbQuery.listingType = listingType;
+        if (propertyType) dbQuery.propertyType = propertyType;
+        if (furnishing) dbQuery.furnishing = furnishing;
+        if (buildingType) dbQuery.buildingType = buildingType;
+        if (parking) dbQuery.parking = parking;
 
         const props = await Property.find(dbQuery);
         res.json({ success: true, properties: props });
