@@ -677,11 +677,18 @@
         }
 
         async function submitListing() {
+            // 1. UI Feedback
             const btn = document.getElementById('submit-btn');
-            showLoading("Saving..."); // Assuming you have the spinner
+            const originalText = btn.innerText;
+            btn.innerText = "Processing Photos..."; 
+            btn.disabled = true;
             
+            // Show Loading Spinner (if you added that feature)
+            if(typeof showLoading === "function") showLoading("Saving changes...");
+
             try {
-                // 1. Upload New Files (if any)
+                // 2. Upload ALL files (in parallel)
+                // If no new file is chosen, these variables will be empty strings ""
                 const [newOuter, newHall, newBed, newKitchen, newBath] = await Promise.all([
                     uploadFile('img-outer'),
                     uploadFile('img-hall'),
@@ -690,19 +697,21 @@
                     uploadFile('img-bath')
                 ]);
 
-                // 2. Merge Logic: New Upload > Existing Saved > Empty
-                // Note: If user clicked 'X', currentImages[key] is already "", so it clears correctly.
+                // 3. MERGE LOGIC (The most important part!)
+                // Logic: "Use New Upload" -> OR "Use Old Existing Image" -> OR "Empty"
                 const finalImages = {
                     outer: newOuter || currentImages.outer || "",
                     hall: newHall || currentImages.hall || "",
-                    bedroom: newBed || currentImages.bedroom || "",
+                    bedroom: newBed || currentImages.bedroom || "", // Note: mapping 'bed' to 'bedroom'
                     kitchen: newKitchen || currentImages.kitchen || "",
                     bathroom: newBath || currentImages.bathroom || ""
                 };
 
+                // 4. Gather Amenities
                 const amenities = [];
                 document.querySelectorAll('.amenity-chk:checked').forEach(c => amenities.push(c.value));
 
+                // 5. Build Form Data
                 const form = {
                     ownerEmail: localStorage.getItem('email'),
                     firstName: document.getElementById('fname').value,
@@ -718,28 +727,53 @@
                     furnishing: document.getElementById('furnish').value,
                     description: document.getElementById('desc').value,
                     amenities: amenities,
-                    images: finalImages, // <--- Use our merged object
-                    lat: selectedLat, lng: selectedLng
+                    
+                    images: finalImages, // <--- Sending the merged images
+                    
+                    lat: selectedLat, 
+                    lng: selectedLng
                 };
 
-                if(!form.firstName || !form.price || !form.lat) {
-                    hideLoading();
-                    return alert("Fill Details & Pin Map!");
+                // 6. Basic Validation
+                if(!form.firstName || !form.price) {
+                    throw new Error("Please fill required fields (Name, Price)");
+                }
+                // Only enforce Map Pin if it's a NEW listing. 
+                // If editing, we keep old lat/lng if user didn't click map.
+                if(!isEditing && !form.lat) {
+                    throw new Error("Please Pin Location on Map");
                 }
 
-                let endpoint = isEditing ? `/update-property/${editingId}` : '/list-property';
-                let method = isEditing ? 'PUT' : 'POST';
+                // 7. Send to Server
+                let endpoint = '/list-property';
+                let method = 'POST';
 
-                await fetch(`${API_URL}${endpoint}`, {
-                    method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
+                if (isEditing) {
+                    endpoint = `/update-property/${editingId}`;
+                    method = 'PUT';
+                }
+
+                const res = await fetch(`${API_URL}${endpoint}`, {
+                    method: method, 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(form)
                 });
                 
-                alert("Success!");
-                location.reload();
-            } catch(e) { 
+                const result = await res.json();
+                
+                if(result.success) {
+                    alert("Success! Saved successfully.");
+                    location.reload(); 
+                } else {
+                    throw new Error(result.error || "Server rejected request");
+                }
+
+            } catch(e) {
                 console.error(e);
-                alert("Error saving");
-                hideLoading();
+                alert("Error saving: " + e.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+                if(typeof hideLoading === "function") hideLoading();
             }
         }
 
