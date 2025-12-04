@@ -180,6 +180,15 @@
                 animation: spin 1s linear infinite;
             }
             @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            /* --- EDIT PHOTO STYLES --- */
+            .img-preview-box { position: relative; margin-top: 5px; display: none; } /* Hidden by default */
+            .img-preview-box img { width: 100%; height: 80px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd; }
+            .btn-remove-img {
+                position: absolute; top: -5px; right: -5px;
+                background: red; color: white; border: none;
+                border-radius: 50%; width: 20px; height: 20px;
+                font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            }
     </style>
 </head>
 <body>
@@ -337,16 +346,57 @@
                     </div>
 
                     <div class="full-width">
-                        <label>Upload Photos:</label>
+                        <label>Upload / Manage Photos:</label>
                         <div class="upload-grid">
-                            <div class="upload-item"><label>Outer</label><input type="file" id="img-outer"></div>
-                            <div class="upload-item"><label>Hall</label><input type="file" id="img-hall"></div>
-                            <div class="upload-item"><label>Bedroom</label><input type="file" id="img-bed"></div>
-                            <div class="upload-item"><label>Kitchen</label><input type="file" id="img-kitchen"></div>
-                            <div class="upload-item"><label>Bathroom</label><input type="file" id="img-bath"></div>
+                            
+                            <div class="upload-item">
+                                <label>Outer</label>
+                                <input type="file" id="img-outer">
+                                <div id="preview-outer" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('outer')">×</button>
+                                </div>
+                            </div>
+
+                            <div class="upload-item">
+                                <label>Hall</label>
+                                <input type="file" id="img-hall">
+                                <div id="preview-hall" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('hall')">×</button>
+                                </div>
+                            </div>
+
+                            <div class="upload-item">
+                                <label>Bed</label>
+                                <input type="file" id="img-bed">
+                                <div id="preview-bed" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('bed')">×</button>
+                                </div>
+                            </div>
+
+                            <div class="upload-item">
+                                <label>Kitchen</label>
+                                <input type="file" id="img-kitchen">
+                                <div id="preview-kitchen" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('kitchen')">×</button>
+                                </div>
+                            </div>
+
+                            <div class="upload-item">
+                                <label>Bath</label>
+                                <input type="file" id="img-bath">
+                                <div id="preview-bath" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('bath')">×</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
                 <h4 style="margin-top:20px;">Amenities</h4>
                 <div class="checkbox-group">
@@ -478,6 +528,8 @@
         let ownerMap, tenantMap, detailMap; 
         let selectedLat, selectedLng, ownerMarker;
         let isLoginMode = true, isEditing = false, editingId = null;
+        let currentImages = {}; // Stores the current photos while editing
+        let allMyProperties = []; // Stores full property data
 
         // --- LOADING HELPERS ---
             function showLoading(msg = "Please wait...") {
@@ -625,84 +677,123 @@
         }
 
         async function submitListing() {
-        // 1. START SPINNER
-        showLoading("Uploading 5 Photos... This may take a minute.");
-        
-        try {
-            // Upload images
-            const [outer, hall, bed, kitchen, bath] = await Promise.all([
-                uploadFile('img-outer'),
-                uploadFile('img-hall'),
-                uploadFile('img-bed'),
-                uploadFile('img-kitchen'),
-                uploadFile('img-bath')
-            ]);
+            const btn = document.getElementById('submit-btn');
+            showLoading("Saving..."); // Assuming you have the spinner
             
-            // Update Spinner Text
-            showLoading("Saving Property Details...");
+            try {
+                // 1. Upload New Files (if any)
+                const [newOuter, newHall, newBed, newKitchen, newBath] = await Promise.all([
+                    uploadFile('img-outer'),
+                    uploadFile('img-hall'),
+                    uploadFile('img-bed'),
+                    uploadFile('img-kitchen'),
+                    uploadFile('img-bath')
+                ]);
 
-            // Get Amenities
-            const amenities = [];
-            document.querySelectorAll('.amenity-chk:checked').forEach(c => amenities.push(c.value));
+                // 2. Merge Logic: New Upload > Existing Saved > Empty
+                // Note: If user clicked 'X', currentImages[key] is already "", so it clears correctly.
+                const finalImages = {
+                    outer: newOuter || currentImages.outer || "",
+                    hall: newHall || currentImages.hall || "",
+                    bedroom: newBed || currentImages.bedroom || "",
+                    kitchen: newKitchen || currentImages.kitchen || "",
+                    bathroom: newBath || currentImages.bathroom || ""
+                };
 
-            // Gather Data
-            const form = {
-                ownerEmail: localStorage.getItem('email'),
-                firstName: document.getElementById('fname').value,
-                phone: document.getElementById('phone').value,
-                houseNo: document.getElementById('house').value,
-                street: document.getElementById('street').value,
-                area: document.getElementById('area').value,
-                city: document.getElementById('city').value,
-                price: document.getElementById('price').value,
-                sqft: document.getElementById('sqft').value,
-                bedrooms: document.getElementById('beds').value,
-                bathrooms: document.getElementById('baths').value,
-                furnishing: document.getElementById('furnish').value,
-                description: document.getElementById('desc').value,
-                amenities: amenities,
-                images: { outer, hall, bedroom: bed, kitchen, bathroom: bath },
-                lat: selectedLat, lng: selectedLng
-            };
+                const amenities = [];
+                document.querySelectorAll('.amenity-chk:checked').forEach(c => amenities.push(c.value));
 
-            if(!form.firstName || !form.price || !form.lat) {
-                hideLoading(); // Stop spinner if validation fails
-                return alert("Fill Details & Pin Map!");
+                const form = {
+                    ownerEmail: localStorage.getItem('email'),
+                    firstName: document.getElementById('fname').value,
+                    phone: document.getElementById('phone').value,
+                    houseNo: document.getElementById('house').value,
+                    street: document.getElementById('street').value,
+                    area: document.getElementById('area').value,
+                    city: document.getElementById('city').value,
+                    price: document.getElementById('price').value,
+                    sqft: document.getElementById('sqft').value,
+                    bedrooms: document.getElementById('beds').value,
+                    bathrooms: document.getElementById('baths').value,
+                    furnishing: document.getElementById('furnish').value,
+                    description: document.getElementById('desc').value,
+                    amenities: amenities,
+                    images: finalImages, // <--- Use our merged object
+                    lat: selectedLat, lng: selectedLng
+                };
+
+                if(!form.firstName || !form.price || !form.lat) {
+                    hideLoading();
+                    return alert("Fill Details & Pin Map!");
+                }
+
+                let endpoint = isEditing ? `/update-property/${editingId}` : '/list-property';
+                let method = isEditing ? 'PUT' : 'POST';
+
+                await fetch(`${API_URL}${endpoint}`, {
+                    method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
+                });
+                
+                alert("Success!");
+                location.reload();
+            } catch(e) { 
+                console.error(e);
+                alert("Error saving");
+                hideLoading();
             }
-
-            let endpoint = isEditing ? `/update-property/${editingId}` : '/list-property';
-            let method = isEditing ? 'PUT' : 'POST';
-
-            await fetch(`${API_URL}${endpoint}`, {
-                method: method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(form)
-            });
-            
-            alert("Success!");
-            location.reload(); 
-            
-        } catch (error) {
-            console.error(error);
-            alert("Something went wrong!");
-            hideLoading(); // Stop spinner on error
         }
-    }
 
-        function editProperty(id, fname, price, area, lat, lng) {
-            document.getElementById('fname').value = fname;
-            document.getElementById('price').value = price;
-            document.getElementById('area').value = area;
-            // (Note: Populate other fields similarly if needed)
-            selectedLat = lat; selectedLng = lng;
+        function editProp(id) {
+            // 1. Find the full object from our global array
+            const p = allMyProperties.find(prop => prop._id === id);
+            if(!p) return;
+
+            // 2. Fill Text Fields
+            document.getElementById('fname').value = p.firstName;
+            document.getElementById('phone').value = p.phone;
+            document.getElementById('house').value = p.houseNo;
+            document.getElementById('street').value = p.street;
+            document.getElementById('area').value = p.area;
+            document.getElementById('city').value = p.city;
+            document.getElementById('price').value = p.price;
+            document.getElementById('sqft').value = p.sqft;
+            document.getElementById('beds').value = p.bedrooms;
+            document.getElementById('baths').value = p.bathrooms;
+            document.getElementById('furnish').value = p.furnishing;
+            document.getElementById('desc').value = p.description;
+
+            // 3. Handle Images
+            currentImages = p.images || {}; // Save current state
+            
+            // Loop through types and show previews if they exist
+            ['outer', 'hall', 'bed', 'kitchen', 'bath'].forEach(type => {
+                // Map 'bed' to 'bedroom' and 'bath' to 'bathroom' if needed by your schema
+                const key = (type === 'bed') ? 'bedroom' : (type === 'bath') ? 'bathroom' : type;
+                
+                const url = currentImages[key];
+                const box = document.getElementById(`preview-${type}`);
+                
+                if (url) {
+                    box.querySelector('img').src = url;
+                    box.style.display = 'block';
+                } else {
+                    box.style.display = 'none';
+                }
+            });
+
+            // 4. Set Map
+            selectedLat = p.lat; selectedLng = p.lng;
             if(ownerMarker) ownerMap.removeLayer(ownerMarker);
-            ownerMarker = L.marker([lat, lng]).addTo(ownerMap);
-            ownerMap.setView([lat, lng], 14);
+            ownerMarker = L.marker([p.lat, p.lng]).addTo(ownerMap);
+            ownerMap.setView([p.lat, p.lng], 14);
+
+            // 5. Toggle UI
             isEditing = true; editingId = id;
-            document.getElementById('form-title').innerText = "Edit Property";
-            document.getElementById('submit-btn').innerText = "Update";
+            document.getElementById('form-title').innerText = "✏️ Edit Listing";
+            document.getElementById('submit-btn').innerText = "Update Listing";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
             document.getElementById('listing-form-card').scrollIntoView({behavior:"smooth"});
         }
-
         function cancelEdit() {
             isEditing = false; editingId = null;
             document.querySelectorAll('#listing-form-card input, textarea').forEach(i => i.value = '');
@@ -715,19 +806,20 @@
         async function loadMyListings() {
             const res = await fetch(`${API_URL}/my-properties?email=${localStorage.getItem('email')}`);
             const data = await res.json();
-            const tbody = document.getElementById('my-listings-body');
-            tbody.innerHTML = '';
-            data.properties.forEach(p => {
-                const editCall = `editProperty('${p._id}', '${p.firstName}', '${p.price}', '${p.area}', ${p.lat}, ${p.lng})`;
-                tbody.innerHTML += `<tr>
+            
+            // SAVE DATA GLOBALLY
+            allMyProperties = data.properties;
+
+            document.getElementById('my-listings-body').innerHTML = data.properties.map(p => `
+                <tr>
                     <td><b>${p.area}</b></td>
                     <td>${p.status}</td>
                     <td>
-                        <button class="btn-sm bg-orange" onclick="${editCall}">Edit</button>
-                        <button class="btn-sm bg-red" onclick="deleteProperty('${p._id}')">Del</button>
+                        <button class="btn-sm bg-orange" onclick="editProp('${p._id}')">Edit</button>
+                        <button class="btn-sm bg-red" onclick="delProp('${p._id}')">Del</button>
                     </td>
-                </tr>`;
-            });
+                </tr>
+            `).join('');
         }
 
         // --- TENANT FUNCTIONS ---
@@ -857,6 +949,17 @@
         function closeLightbox() { 
             document.getElementById('lightbox').classList.add('hidden'); 
             document.getElementById('lightbox').style.display = 'none';
+        }
+
+        function deleteSpecificImage(type) {
+            // 1. Remove from our memory
+            currentImages[type] = ""; 
+            
+            // 2. Hide from UI
+            document.getElementById(`preview-${type}`).style.display = 'none';
+            
+            // 3. Clear the file input (in case they selected something then deleted it)
+            document.getElementById(`img-${type}`).value = "";
         }
 
         // INIT
