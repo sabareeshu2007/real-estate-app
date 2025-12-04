@@ -200,9 +200,94 @@
             .full-width { grid-column: span 1 !important; }
             
             /* Fix Search Bar */
-            .search-wrapper { flex-direction: column; padding: 15px; border-radius: 20px; }
-            .search-wrapper input, .search-wrapper select, .search-wrapper button { width: 100%; border-radius: 10px; margin-bottom: 5px; }
+            /* --- PRO SEARCH BAR CSS --- */
+            .search-wrapper {
+                background: white;
+                padding: 10px;
+                border-radius: 50px;
+                display: flex;
+                align-items: center;
+                width: 95%;
+                max-width: 850px;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.2); /* Deep shadow for 3D effect */
+                transition: transform 0.3s;
+            }
+            .search-wrapper:hover {
+                transform: translateY(-2px); /* Slight lift on hover */
+            }
+
+            /* Input Sections */
+            .search-group {
+                display: flex;
+                align-items: center;
+                flex: 1;
+                padding: 0 20px;
+                border-right: 1px solid #eee; /* Divider line */
+                position: relative;
+            }
+            .search-group:last-child {
+                border-right: none;
+            }
             
+            .search-group i {
+                color: var(--primary);
+                font-size: 18px;
+                margin-right: 10px;
+            }
+
+            /* Inputs & Selects */
+            .search-wrapper input, .search-wrapper select {
+                border: none;
+                width: 100%;
+                font-size: 15px;
+                font-weight: 500;
+                color: #333;
+                outline: none;
+                background: transparent;
+                cursor: pointer;
+            }
+            
+            /* Placeholder styling */
+            ::placeholder { color: #999; font-weight: 400; }
+
+            /* The Search Button */
+            .search-btn-pro {
+                background: var(--primary);
+                color: white;
+                border: none;
+                padding: 15px 35px;
+                border-radius: 40px;
+                font-weight: 600;
+                font-size: 16px;
+                cursor: pointer;
+                box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+                transition: 0.3s;
+                margin-left: 10px;
+            }
+            .search-btn-pro:hover {
+                background: #5b54e0;
+                transform: scale(1.05);
+            }
+
+            /* Mobile Fix */
+            @media (max-width: 768px) {
+                .search-wrapper {
+                    flex-direction: column;
+                    border-radius: 20px;
+                    padding: 20px;
+                    gap: 15px;
+                }
+                .search-group {
+                    width: 100%;
+                    border-right: none;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 10px;
+                }
+                .search-btn-pro {
+                    width: 100%;
+                    margin-left: 0;
+                }
+            }
             /* Fix Property Page */
             .highlights { flex-wrap: wrap; gap: 10px; }
             .highlight-item { flex: 1 1 40%; margin-bottom: 10px; }
@@ -298,20 +383,48 @@
         <header class="hero">
             <h1>Find Your Dream Home in Chennai</h1>
             <p>Search properties for buy & rent</p>
-            <div class="search-hero">
-                <input type="text" id="home-search-input" placeholder="Area...">
-                <select id="home-budget" style="border:none; padding:10px;">
-                    <option value="">Budget</option>
-                    <option value="5000000">Max 50L</option>
-                    <option value="10000000">Max 1Cr</option>
-                </select>
-                <select id="home-bhk" style="border:none; padding:10px;">
-                    <option value="">BHK</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                </select>
-                <button class="btn-primary" onclick="toggleFilter()" style="width:auto; padding:10px 20px; border-radius:40px;">Search</button>
+            
+            <div class="search-wrapper">
+                
+                <div class="search-group" style="flex: 2;">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <label style="font-size:10px; font-weight:bold; color:#999; display:block;">LOCATION</label>
+                        <input type="text" id="home-search-input" placeholder="Search City, Area...">
+                    </div>
+                </div>
+
+                <div class="search-group">
+                    <i class="fas fa-rupee-sign"></i>
+                    <div>
+                        <label style="font-size:10px; font-weight:bold; color:#999; display:block;">BUDGET</label>
+                        <select id="home-budget">
+                            <option value="">Max Price</option>
+                            <option value="5000000">₹ 50 Lakhs</option>
+                            <option value="10000000">₹ 1 Crore</option>
+                            <option value="20000000">₹ 2 Crores</option>
+                            <option value="50000000">₹ 5 Crores</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="search-group">
+                    <i class="fas fa-bed"></i>
+                    <div>
+                        <label style="font-size:10px; font-weight:bold; color:#999; display:block;">BEDROOMS</label>
+                        <select id="home-bhk">
+                            <option value="">BHK</option>
+                            <option value="1">1 BHK</option>
+                            <option value="2">2 BHK</option>
+                            <option value="3">3 BHK</option>
+                            <option value="4">4+ BHK</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="search-btn-pro" onclick="triggerTenantSearch()">
+                    Search
+                </button>
             </div>
         </header>
 
@@ -342,25 +455,27 @@
         </div>
 
         <footer>
-            <div>
-                <h4>EstatePro</h4>
-                <p style="font-size:13px; opacity:0.8;">The #1 Real Estate platform in Chennai.</p>
-            </div>
-            <div>
-                <h4>Company</h4>
-                <a href="#">About Us</a>
-                <a href="#">Careers</a>
-                <a href="#">Contact</a>
-            </div>
-            <div>
-                <h4>Legal</h4>
-                <a href="#">Terms</a>
-                <a href="#">Privacy</a>
-            </div>
-            <div>
-                <h4>Social</h4>
-                <a href="#">Facebook</a>
-                <a href="#">Instagram</a>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:30px;">
+                <div>
+                    <h4>EstatePro</h4>
+                    <p style="font-size:13px; opacity:0.8;">The #1 Real Estate platform in Chennai.</p>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <a href="#">About Us</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Terms</a>
+                    <a href="#">Privacy</a>
+                </div>
+                <div>
+                    <h4>Social</h4>
+                    <a href="#">Facebook</a>
+                    <a href="#">Instagram</a>
+                </div>
             </div>
         </footer>
     </div>
