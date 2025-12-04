@@ -677,18 +677,16 @@
         }
 
         async function submitListing() {
-            // 1. UI Feedback
             const btn = document.getElementById('submit-btn');
             const originalText = btn.innerText;
-            btn.innerText = "Processing Photos..."; 
+            btn.innerText = "Processing..."; 
             btn.disabled = true;
             
-            // Show Loading Spinner (if you added that feature)
+            // Show Loading Spinner (if available)
             if(typeof showLoading === "function") showLoading("Saving changes...");
 
             try {
-                // 2. Upload ALL files (in parallel)
-                // If no new file is chosen, these variables will be empty strings ""
+                // 1. Upload Images
                 const [newOuter, newHall, newBed, newKitchen, newBath] = await Promise.all([
                     uploadFile('img-outer'),
                     uploadFile('img-hall'),
@@ -697,39 +695,45 @@
                     uploadFile('img-bath')
                 ]);
 
-                // 3. MERGE LOGIC (The most important part!)
-                // Logic: "Use New Upload" -> OR "Use Old Existing Image" -> OR "Empty"
+                // 2. Merge Images safely
                 const finalImages = {
-                    outer: newOuter || currentImages.outer || "",
-                    hall: newHall || currentImages.hall || "",
-                    bedroom: newBed || currentImages.bedroom || "", // Note: mapping 'bed' to 'bedroom'
-                    kitchen: newKitchen || currentImages.kitchen || "",
-                    bathroom: newBath || currentImages.bathroom || ""
+                    outer: newOuter || (currentImages && currentImages.outer) || "",
+                    hall: newHall || (currentImages && currentImages.hall) || "",
+                    bedroom: newBed || (currentImages && currentImages.bedroom) || "",
+                    kitchen: newKitchen || (currentImages && currentImages.kitchen) || "",
+                    bathroom: newBath || (currentImages && currentImages.bathroom) || ""
                 };
 
-                // 4. Gather Amenities
+                // 3. Get Amenities (Safe Mode)
                 const amenities = [];
-                document.querySelectorAll('.amenity-chk:checked').forEach(c => amenities.push(c.value));
+                const checkboxes = document.querySelectorAll('.amenity-chk:checked');
+                if(checkboxes) {
+                    checkboxes.forEach(c => amenities.push(c.value));
+                }
+
+                // 4. Helper to get value safely
+                const val = (id) => {
+                    const el = document.getElementById(id);
+                    return el ? el.value : "";
+                };
 
                 // 5. Build Form Data
                 const form = {
                     ownerEmail: localStorage.getItem('email'),
-                    firstName: document.getElementById('fname').value,
-                    phone: document.getElementById('phone').value,
-                    houseNo: document.getElementById('house').value,
-                    street: document.getElementById('street').value,
-                    area: document.getElementById('area').value,
-                    city: document.getElementById('city').value,
-                    price: document.getElementById('price').value,
-                    sqft: document.getElementById('sqft').value,
-                    bedrooms: document.getElementById('beds').value,
-                    bathrooms: document.getElementById('baths').value,
-                    furnishing: document.getElementById('furnish').value,
-                    description: document.getElementById('desc').value,
+                    firstName: val('fname'),
+                    phone: val('phone'),
+                    houseNo: val('house'),
+                    street: val('house'), // fallback if street input missing
+                    area: val('area'),
+                    city: val('city'),
+                    price: val('price'),
+                    sqft: val('sqft'),
+                    bedrooms: val('beds'),
+                    bathrooms: val('baths'),
+                    furnishing: val('furnish'),
+                    description: val('desc'),
                     amenities: amenities,
-                    
-                    images: finalImages, // <--- Sending the merged images
-                    
+                    images: finalImages,
                     lat: selectedLat, 
                     lng: selectedLng
                 };
@@ -738,9 +742,9 @@
                 if(!form.firstName || !form.price) {
                     throw new Error("Please fill required fields (Name, Price)");
                 }
-                // Only enforce Map Pin if it's a NEW listing. 
-                // If editing, we keep old lat/lng if user didn't click map.
-                if(!isEditing && !form.lat) {
+                
+                // Only enforce Map Pin if creating NEW, not updating
+                if(!isEditing && (!form.lat || !form.lng)) {
                     throw new Error("Please Pin Location on Map");
                 }
 
@@ -748,7 +752,7 @@
                 let endpoint = '/list-property';
                 let method = 'POST';
 
-                if (isEditing) {
+                if (isEditing && editingId) {
                     endpoint = `/update-property/${editingId}`;
                     method = 'PUT';
                 }
@@ -776,7 +780,6 @@
                 if(typeof hideLoading === "function") hideLoading();
             }
         }
-
         function editProp(id) {
             // 1. Debugging: Check if we have the data
             console.log("Editing ID:", id);
