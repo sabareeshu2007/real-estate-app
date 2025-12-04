@@ -114,7 +114,7 @@ app.get('/api/my-properties', async (req, res) => {
 app.delete('/api/delete-property/:id', async (req, res) => {
     try {
         await Property.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
+        res.json({ success: true, message: "Deleted" });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
