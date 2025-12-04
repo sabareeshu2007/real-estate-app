@@ -144,9 +144,36 @@
         .close-lb { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
 
         /* 2. Gallery Layouts */
-        .gallery-desktop { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; height: 400px; }
-        .gallery-right { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; }
-        .gal-img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; border-radius: 10px; transition:0.2s; }
+        /* --- FIXED GALLERY CSS --- */
+        .gallery-desktop { 
+            display: grid; 
+            grid-template-columns: 2fr 1fr; /* Main image takes 2 parts, side images take 1 part */
+            gap: 10px; 
+            height: 400px; /* FORCE FIXED HEIGHT */
+            width: 100%;
+            margin-bottom: 20px;
+            overflow: hidden; /* Cut off anything that sticks out */
+        }
+        
+        .gallery-right { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; /* 2 columns */
+            grid-template-rows: 1fr 1fr;    /* 2 rows */
+            gap: 10px; 
+            height: 100%;
+        }
+        
+        .gal-img { 
+            width: 100%; 
+            height: 100%; /* Force image to match the box height */
+            object-fit: cover; /* CRITICAL: Crops the image so it doesn't stretch */
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            background-color: #eee; /* Light gray background if image loads slow */
+            display: block;
+        }
+        
         .gal-img:hover { opacity: 0.9; }
 
         .gallery-mobile { display: none; } /* Hidden on Desktop */
@@ -503,12 +530,18 @@
             <button onclick="closePropertyPage()" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
             
             <div class="gallery-desktop">
-                <img id="dt-img-1" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+                <img id="dt-img-1" class="gal-img" onclick="openLightbox(this.src)" 
+                     onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+                
                 <div class="gallery-right">
-                    <img id="dt-img-2" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                    <img id="dt-img-3" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                    <img id="dt-img-4" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                    <img id="dt-img-5" class="gal-img" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-2" class="gal-img" onclick="openLightbox(this.src)" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-3" class="gal-img" onclick="openLightbox(this.src)" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-4" class="gal-img" onclick="openLightbox(this.src)" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-5" class="gal-img" onclick="openLightbox(this.src)" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
                 </div>
             </div>
             
