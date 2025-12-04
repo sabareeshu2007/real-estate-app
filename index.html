@@ -744,54 +744,89 @@
         }
 
         function editProp(id) {
-            // 1. Find the full object from our global array
+            // 1. Debugging: Check if we have the data
+            console.log("Editing ID:", id);
+            console.log("All Properties:", allMyProperties);
+
+            // 2. Find the property in our global list
+            // We use .find() to look through the array we saved in loadMyListings()
             const p = allMyProperties.find(prop => prop._id === id);
-            if(!p) return;
-
-            // 2. Fill Text Fields
-            document.getElementById('fname').value = p.firstName;
-            document.getElementById('phone').value = p.phone;
-            document.getElementById('house').value = p.houseNo;
-            document.getElementById('street').value = p.street;
-            document.getElementById('area').value = p.area;
-            document.getElementById('city').value = p.city;
-            document.getElementById('price').value = p.price;
-            document.getElementById('sqft').value = p.sqft;
-            document.getElementById('beds').value = p.bedrooms;
-            document.getElementById('baths').value = p.bathrooms;
-            document.getElementById('furnish').value = p.furnishing;
-            document.getElementById('desc').value = p.description;
-
-            // 3. Handle Images
-            currentImages = p.images || {}; // Save current state
             
-            // Loop through types and show previews if they exist
+            if (!p) {
+                alert("Error: Property data not found. Please refresh and try again.");
+                return;
+            }
+
+            // 3. Fill Text Fields (Safety Checks added)
+            // We use || "" to make sure we don't put "undefined" in the box
+            document.getElementById('fname').value = p.firstName || "";
+            document.getElementById('phone').value = p.phone || "";
+            document.getElementById('house').value = p.houseNo || "";
+            document.getElementById('street').value = p.street || "";
+            document.getElementById('area').value = p.area || "";
+            document.getElementById('city').value = p.city || "Chennai";
+            document.getElementById('price').value = p.price || "";
+            document.getElementById('sqft').value = p.sqft || "";
+            
+            // Dropdowns need to match the <option> values exactly
+            document.getElementById('beds').value = p.bedrooms || "";
+            document.getElementById('baths').value = p.bathrooms || "";
+            document.getElementById('furnish').value = p.furnishing || "";
+            document.getElementById('desc').value = p.description || "";
+
+            // 4. Handle Images (The "No File Chosen" Fix)
+            // We cannot set the file input. We must show the PREVIEW instead.
+            currentImages = p.images || {}; 
+            
+            // Helper list to loop through all 5 types
             ['outer', 'hall', 'bed', 'kitchen', 'bath'].forEach(type => {
-                // Map 'bed' to 'bedroom' and 'bath' to 'bathroom' if needed by your schema
-                const key = (type === 'bed') ? 'bedroom' : (type === 'bath') ? 'bathroom' : type;
-                
-                const url = currentImages[key];
-                const box = document.getElementById(`preview-${type}`);
+                // Handle naming differences (e.g., 'bed' vs 'bedroom')
+                let dbKey = type;
+                if(type === 'bed') dbKey = 'bedroom';
+                if(type === 'bath') dbKey = 'bathroom';
+
+                const url = currentImages[dbKey];
+                const previewBox = document.getElementById(`preview-${type}`);
                 
                 if (url) {
-                    box.querySelector('img').src = url;
-                    box.style.display = 'block';
+                    // If we have an image, SHOW the preview box
+                    previewBox.style.display = 'block';
+                    previewBox.querySelector('img').src = url;
                 } else {
-                    box.style.display = 'none';
+                    // If no image, hide the preview
+                    previewBox.style.display = 'none';
                 }
             });
 
-            // 4. Set Map
-            selectedLat = p.lat; selectedLng = p.lng;
-            if(ownerMarker) ownerMap.removeLayer(ownerMarker);
-            ownerMarker = L.marker([p.lat, p.lng]).addTo(ownerMap);
-            ownerMap.setView([p.lat, p.lng], 14);
+            // 5. Handle Amenities Checkboxes
+            // Reset all first
+            document.querySelectorAll('.amenity-chk').forEach(chk => chk.checked = false);
+            // Check the ones saved in DB
+            if (p.amenities) {
+                p.amenities.forEach(am => {
+                    // Find the checkbox with this value and check it
+                    const chk = document.querySelector(`.amenity-chk[value="${am}"]`);
+                    if(chk) chk.checked = true;
+                });
+            }
 
-            // 5. Toggle UI
-            isEditing = true; editingId = id;
+            // 6. Set Map Location
+            selectedLat = p.lat; 
+            selectedLng = p.lng;
+            if(ownerMarker) ownerMap.removeLayer(ownerMarker);
+            if(p.lat && p.lng) {
+                ownerMarker = L.marker([p.lat, p.lng]).addTo(ownerMap);
+                ownerMap.setView([p.lat, p.lng], 14);
+            }
+
+            // 7. Toggle UI to Edit Mode
+            isEditing = true; 
+            editingId = id;
             document.getElementById('form-title').innerText = "✏️ Edit Listing";
             document.getElementById('submit-btn').innerText = "Update Listing";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            
+            // Scroll up to the form
             document.getElementById('listing-form-card').scrollIntoView({behavior:"smooth"});
         }
         function cancelEdit() {
