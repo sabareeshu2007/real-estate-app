@@ -998,7 +998,6 @@
         }
 
         function triggerTenantSearch() {
-            // 1. Get text from Home Page input
             const homeInput = document.getElementById('home-search-input');
             const term = homeInput ? homeInput.value : '';
 
@@ -1007,16 +1006,20 @@
                 return;
             }
 
-            // 2. Switch to Tenant View
+            // Switch to Tenant View
             showAuth('tenant'); 
 
-            // 3. Transfer text to Tenant Input (So the user sees what they searched)
-            const tenantInput = document.getElementById('search-query');
-            if(tenantInput) {
-                tenantInput.value = term;
-            }
+            // Transfer text to BOTH potential tenant inputs
+            const tenantInput1 = document.getElementById('search-query');
+            const tenantInput2 = document.getElementById('f-loc');
+            
+            if(tenantInput1) tenantInput1.value = term;
+            if(tenantInput2) tenantInput2.value = term;
 
-            // 4. Run the search immediately
+            // Clear the home input so it doesn't interfere later
+            if(homeInput) homeInput.value = '';
+
+            // Run search
             searchProperties();
         }
 
@@ -1395,26 +1398,32 @@
         async function searchProperties() {
             if(typeof showLoading === 'function') showLoading("Searching...");
             
-            // 1. SMART INPUT DETECTION
-            // We check the Tenant Input box first. If empty, we check the Home Page Input box.
-            const tenantInput = document.getElementById('search-query');
+            // 1. GET THE RIGHT SEARCH TEXT
+            // We check the "Sidebar Input" (f-loc) AND "Top Bar Input" (search-query)
+            // We prioritize the one that actually has text in it.
+            const sidebarInput = document.getElementById('f-loc');
+            const topbarInput = document.getElementById('search-query');
             const homeInput = document.getElementById('home-search-input');
             
             let q = '';
-            
-            // Priority: Tenant Search Bar > Home Search Bar > Empty
-            if (tenantInput && tenantInput.value.trim() !== '') {
-                q = tenantInput.value;
+
+            if (sidebarInput && sidebarInput.value.trim() !== '') {
+                q = sidebarInput.value;
+            } else if (topbarInput && topbarInput.value.trim() !== '') {
+                q = topbarInput.value;
             } else if (homeInput && homeInput.value.trim() !== '') {
-                q = homeInput.value;
+                // Only use Home Input if we are ON the Home Page
+                if(!document.getElementById('home-page').classList.contains('hidden')) {
+                    q = homeInput.value;
+                }
             }
 
-            console.log("Searching for:", q); 
+            console.log("Searching for:", q); // Debugging: Check console to see what it grabbed
 
             // 2. BUILD URL
             let url = `${API_URL}/search-properties?query=${q}`;
             
-            // Add Filters (Safe check)
+            // Add Filters (if they exist)
             if(typeof activeFilters !== 'undefined') {
                 if(activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
                 if(activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
@@ -1429,26 +1438,28 @@
                 const res = await fetch(url);
                 const data = await res.json();
                 
-                // 3. Clear Old Pins
+                // Clear Map
                 if (tenantMap) {
                     tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
                 }
 
                 if(data.properties.length > 0) {
-                     // 4. Move map to the first result
+                     // Move map to first result
                      if(tenantMap && data.properties[0].lat) {
                          tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
                      }
                      
-                     // 5. Add New Pins
                      data.properties.forEach(p => { 
                          if(tenantMap && p.lat) {
                              const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
                              m.on('click', () => openPropertyPage(p)); 
                          }
                      });
+                     
+                     // Mobile Alert
+                     if(window.innerWidth < 768) alert(`Found ${data.properties.length} properties!`);
                 } else { 
-                    alert("No listings found for '" + q + "'"); 
+                    alert("No properties found for '" + q + "'"); 
                 }
             } catch(e) { console.error(e); } 
             finally { if(typeof hideLoading === 'function') hideLoading(); }
