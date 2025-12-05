@@ -315,6 +315,64 @@
                 border-radius: 50%; width: 20px; height: 20px;
                 font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
             }
+            /* --- FIND HOMES PAGE (SEARCH UI) --- */
+            .search-layout { display: flex; height: calc(100vh - 70px); overflow: hidden; }
+            
+            /* Left Sidebar (Filters) */
+            .filter-sidebar { 
+                width: 400px; background: white; border-right: 1px solid #eee; 
+                overflow-y: auto; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 100;
+            }
+            
+            /* Top Tabs */
+            .filter-tabs { display: flex; border-bottom: 2px solid #f1f2f6; margin-bottom: 20px; }
+            .ft-btn { 
+                flex: 1; text-align: center; padding: 12px; font-weight: 600; color: #888; 
+                cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s;
+            }
+            .ft-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: #f8f9fa; }
+
+            /* Sections */
+            .f-section { margin-bottom: 25px; border-bottom: 1px solid #f9f9f9; padding-bottom: 15px; }
+            .f-title { font-size: 12px; font-weight: 700; color: #b2bec3; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
+
+            /* Search Input */
+            .search-loc-box { 
+                display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; padding: 10px; 
+                margin-bottom: 20px; transition: 0.3s;
+            }
+            .search-loc-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1); }
+            .search-loc-box input { border: none; outline: none; width: 100%; font-size: 14px; margin: 0; padding-left: 10px; }
+
+            /* Grid Chips (Property Type, etc) */
+            .chip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            .chip { 
+                border: 1px solid #e0e0e0; border-radius: 5px; padding: 10px; text-align: center; 
+                font-size: 13px; cursor: pointer; transition: 0.2s; color: #555; background: white;
+            }
+            .chip:hover { border-color: var(--primary); color: var(--primary); }
+            .chip.selected { background: var(--secondary); color: white; border-color: var(--secondary); }
+
+            /* Range Sliders */
+            .range-wrap { margin-top: 10px; }
+            .range-val { display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; color: var(--primary); margin-bottom: 5px; }
+            input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); height: 5px; }
+
+            /* Bottom Search Button */
+            .sticky-search-btn {
+                position: sticky; bottom: 0; background: white; padding-top: 10px; border-top: 1px solid #eee;
+            }
+
+            /* Right Map Area */
+            .map-container-full { flex: 1; position: relative; }
+            #tenant-map { width: 100%; height: 100%; }
+
+            /* Mobile Responsive */
+            @media (max-width: 768px) {
+                .search-layout { flex-direction: column; height: auto; }
+                .filter-sidebar { width: 100%; height: auto; order: 2; }
+                .map-container-full { height: 300px; order: 1; }
+            }
     </style>
 </head>
 <body>
@@ -600,25 +658,96 @@
         </div>
 
         <div id="tenant-section" class="hidden">
-            <div class="card">
-                <h2>Find Homes</h2>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <input type="text" id="search-query" placeholder="Search Area...">
-                    <select id="search-budget">
-                        <option value="">Budget</option>
-                        <option value="5000000">Max 50L</option>
-                        <option value="10000000">Max 1Cr</option>
-                    </select>
-                    <select id="search-bhk">
-                        <option value="">BHK</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
-                    <button class="btn btn-primary" style="width:auto;" onclick="searchProperties()">🔍</button>
+        <div class="search-layout">
+            
+            <div class="filter-sidebar">
+                
+                <div class="filter-tabs">
+                    <div class="ft-btn active" onclick="setSearchTab(this, 'Buy')">Buy</div>
+                    <div class="ft-btn" onclick="setSearchTab(this, 'Rent')">Rent</div>
+                    <div class="ft-btn" onclick="setSearchTab(this, 'Commercial')">Commercial</div>
+                </div>
+
+                <div class="search-loc-box">
+                    <i class="fas fa-search" style="color:#888;"></i>
+                    <input type="text" id="f-loc" placeholder="Search Locality (e.g. Anna Nagar)">
+                </div>
+
+                <div class="f-section">
+                    <div class="f-title">Looking To</div>
+                    <div class="chip-grid">
+                        <div class="chip selected" onclick="selectSingle('f-look', this, 'Rent')">Rent</div>
+                        <div class="chip" onclick="selectSingle('f-look', this, 'Buy')">Buy</div>
+                    </div>
+                </div>
+
+                <div class="f-section">
+                    <div class="f-title">Property Type</div>
+                    <div class="chip-grid" id="f-prop-grid">
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'Office Space')">Office Space</div>
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'Co-Working')">Co-Working</div>
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'Shop')">Shop</div>
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'Showroom')">Showroom</div>
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'Warehouse')">Warehouse</div>
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'Industrial')">Industrial</div>
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'Restaurant')">Restaurant</div>
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'House')">House/Villa</div>
+                        <div class="chip" onclick="selectSingle('f-prop-grid', this, 'Apartment')">Apartment</div>
+                    </div>
+                </div>
+
+                <div class="f-section">
+                    <div class="f-title">Price Range</div>
+                    <div class="range-wrap">
+                        <div class="range-val"><span>₹ 0</span><span id="disp-price">Any</span></div>
+                        <input type="range" min="0" max="100000000" step="500000" value="0" oninput="updateRangeLabel('disp-price', this.value, '₹ ')">
+                    </div>
+                </div>
+
+                <div class="f-section">
+                    <div class="f-title">Built-Up Area</div>
+                    <div class="range-wrap">
+                        <div class="range-val"><span>0 sq.ft</span><span id="disp-sqft">Any</span></div>
+                        <input type="range" min="0" max="10000" step="100" value="0" oninput="updateRangeLabel('disp-sqft', this.value, '', ' sqft')">
+                    </div>
+                </div>
+
+                <div class="f-section">
+                    <div class="f-title">Furnishing</div>
+                    <div class="chip-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <div class="chip" onclick="selectSingle('f-furnish-grid', this, 'Full')">Full</div>
+                        <div class="chip" onclick="selectSingle('f-furnish-grid', this, 'Semi')">Semi</div>
+                        <div class="chip" onclick="selectSingle('f-furnish-grid', this, 'None')">None</div>
+                    </div>
+                </div>
+
+                <div class="f-section">
+                    <div class="f-title">Building Type</div>
+                    <div class="chip-grid">
+                        <div class="chip" onclick="selectSingle('f-build-grid', this, 'Independent')">Independent</div>
+                        <div class="chip" onclick="selectSingle('f-build-grid', this, 'Mall')">Mall</div>
+                        <div class="chip" onclick="selectSingle('f-build-grid', this, 'Business Park')">Business Park</div>
+                        <div class="chip" onclick="selectSingle('f-build-grid', this, 'Standalone')">Standalone</div>
+                    </div>
+                </div>
+
+                <div class="f-section">
+                    <div class="f-title">Parking</div>
+                    <div class="chip-grid">
+                        <div class="chip" onclick="selectSingle('f-park-grid', this, 'Public')">Public</div>
+                        <div class="chip" onclick="selectSingle('f-park-grid', this, 'Reserved')">Reserved</div>
+                    </div>
+                </div>
+
+                <div class="sticky-search-btn">
+                    <button class="btn btn-primary" onclick="searchProperties()">SEARCH</button>
                 </div>
             </div>
-            <div class="card"><div id="tenant-map" class="map-box" style="height:500px;"></div></div>
+
+            <div class="map-container-full">
+                <div id="tenant-map"></div>
+                <button onclick="goHome()" style="position:absolute; top:20px; left:20px; z-index:1000; background:white; border:none; padding:10px 15px; border-radius:30px; box-shadow:0 2px 10px rgba(0,0,0,0.1); cursor:pointer; font-weight:600;">← Back</button>
+            </div>
         </div>
     </div>
 
@@ -716,6 +845,95 @@
         let currentImages = {}; // Stores the current photos while editing
         let allMyProperties = []; // Stores full property data
         let searchFilters = { listingType: '', propertyType: '', price: 0, sqft: 0 };
+
+        // --- ADVANCED FILTER STATE ---
+        let activeFilters = {
+            listingType: 'Buy', // Default
+            propertyType: '',
+            price: 0,
+            sqft: 0,
+            furnishing: '',
+            buildingType: '',
+            parking: ''
+        };
+
+        // 1. Tab Selection (Buy/Rent/Commercial)
+        function setSearchTab(el, val) {
+            document.querySelectorAll('.ft-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            activeFilters.listingType = val;
+        }
+
+        // 2. Chip Selection (Single Select Logic)
+        function selectSingle(containerId, el, val) {
+            const container = document.getElementById(containerId);
+            
+            // Deselect if clicking the same one
+            if (el.classList.contains('selected')) {
+                el.classList.remove('selected');
+                updateFilterState(containerId, '');
+                return;
+            }
+
+            // Deselect all others in this grid
+            container.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            updateFilterState(containerId, val);
+        }
+
+        // Map container ID to state variable
+        function updateFilterState(id, val) {
+            if(id.includes('prop')) activeFilters.propertyType = val;
+            if(id.includes('furnish')) activeFilters.furnishing = val;
+            if(id.includes('build')) activeFilters.buildingType = val;
+            if(id.includes('park')) activeFilters.parking = val;
+            if(id.includes('look')) activeFilters.listingType = val;
+        }
+
+        // 3. Slider Update
+        function updateRangeLabel(id, val, pre, post) {
+            document.getElementById(id).innerText = val == 0 ? "Any" : pre + Number(val).toLocaleString() + post;
+            if(id === 'disp-price') activeFilters.price = val;
+            if(id === 'disp-sqft') activeFilters.sqft = val;
+        }
+
+        // 4. Override existing searchProperties
+        async function searchProperties() {
+            if(typeof showLoading === 'function') showLoading("Applying Filters...");
+            
+            const q = document.getElementById('f-loc').value;
+            
+            // Build URL
+            let url = `${API_URL}/search-properties?query=${q}`;
+            if(activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
+            if(activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
+            if(activeFilters.furnishing) url += `&furnishing=${activeFilters.furnishing}`;
+            if(activeFilters.buildingType) url += `&buildingType=${activeFilters.buildingType}`;
+            if(activeFilters.parking) url += `&parking=${activeFilters.parking}`;
+            if(activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
+            if(activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                // Clear Map
+                tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
+                
+                if(data.properties.length > 0) {
+                    tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
+                    data.properties.forEach(p => { 
+                        const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                        m.on('click', () => openPropertyPage(p)); 
+                    });
+                    // Mobile: Show alert or scroll to map
+                    if(window.innerWidth < 768) alert(`Found ${data.properties.length} properties! View Map below.`);
+                } else { 
+                    alert("No properties found with these exact filters."); 
+                }
+            } catch(e) { console.error(e); }
+            finally { if(typeof hideLoading === 'function') hideLoading(); }
+        }
         // --- LOADING HELPERS ---
             function showLoading(msg = "Please wait...") {
                 document.getElementById('loading-msg').innerText = msg;
