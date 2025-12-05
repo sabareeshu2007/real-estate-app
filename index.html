@@ -403,7 +403,7 @@
 
             <div class="filter-section">
                 <h4>Max Price: <span id="price-val">Any</span></h4>
-                <input type="range" min="0" max="50000000" step="500000" value="0" oninput="updateRange('price-val', this.value, '₹ ')">
+                <input type="range" min="0" max="50000000" step="1000" value="0" oninput="updateRange('price-val', this.value, '₹ ')">
             </div>
 
             <div class="filter-section">
@@ -909,20 +909,21 @@
         }
 
         // 2. Chip Selection (Single Select Logic)
-        function selectSingle(containerId, el, val) {
+        function selectSingle(containerId, btn, value) {
             const container = document.getElementById(containerId);
             
-            // Deselect if clicking the same one
-            if (el.classList.contains('selected')) {
-                el.classList.remove('selected');
-                updateFilterState(containerId, '');
-                return;
-            }
-
-            // Deselect all others in this grid
+            // UI: Remove 'selected' from all siblings, add to clicked
             container.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            updateFilterState(containerId, val);
+            btn.classList.add('selected');
+
+            // LOGIC: Map the Container ID to the specific Filter Variable
+            if (containerId.includes('look')) activeFilters.listingType = value;
+            if (containerId.includes('prop')) activeFilters.propertyType = value;
+            if (containerId.includes('furnish')) activeFilters.furnishing = value;
+            if (containerId.includes('build')) activeFilters.buildingType = value;
+            if (containerId.includes('park')) activeFilters.parking = value;
+
+            console.log("Filter Updated:", activeFilters); // Debugging
         }
 
         // Map container ID to state variable
@@ -937,62 +938,69 @@
         // 3. Slider Update
         function updateRangeLabel(id, val, pre, post) {
             document.getElementById(id).innerText = val == 0 ? "Any" : pre + Number(val).toLocaleString() + post;
-            if(id === 'disp-price') activeFilters.price = val;
-            if(id === 'disp-sqft') activeFilters.sqft = val;
+            if (id === 'disp-price') activeFilters.price = val;
+            if (id === 'disp-sqft') activeFilters.sqft = val;
         }
 
         // 4. Override existing searchProperties
         async function searchProperties() {
-            // 1. Show Spinner
-            if(typeof showLoading === 'function') showLoading("Searching...");
-            
-            // 2. SMART INPUT DETECTION
-            // Tries to find the input box, whether it's named 'f-loc' (Sidebar) or 'search-query' (Top Bar)
-            const inputEl = document.getElementById('f-loc') || document.getElementById('search-query') || document.getElementById('home-search-input');
-            const q = inputEl ? inputEl.value : '';
-            
-            console.log("Searching for:", q); // Debugging: Check your console (F12) to see this
+            if(typeof showLoading === 'function') showLoading("Applying Filters...");
 
-            // 3. Build URL
+            // Get text from the Sidebar Input (f-loc) OR the Top Bar (search-query)
+            const inputEl = document.getElementById('f-loc') || document.getElementById('search-query');
+            const q = inputEl ? inputEl.value : '';
+
+            // Build URL
             let url = `${API_URL}/search-properties?query=${q}`;
             
-            // Add active filters if they exist
-            if(typeof activeFilters !== 'undefined') {
-                if(activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
-                if(activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
-                if(activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
-                if(activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
-            }
+            // Add Filters
+            if (activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
+            if (activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
+            if (activeFilters.furnishing) url += `&furnishing=${activeFilters.furnishing}`;
+            if (activeFilters.buildingType) url += `&buildingType=${activeFilters.buildingType}`;
+            if (activeFilters.parking) url += `&parking=${activeFilters.parking}`;
+            if (activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
+            if (activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
+
+            console.log("Fetching URL:", url); // Debugging
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
                 
-                // 4. Update Map
-                tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
-                
-                if(data.properties.length > 0) {
-                     // Move map to the first result's location
-                     const first = data.properties[0];
-                     if(first.lat && first.lng) {
-                         tenantMap.setView([first.lat, first.lng], 14);
-                     }
-                     
-                     data.properties.forEach(p => { 
-                         if(p.lat && p.lng) {
-                             const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
-                             m.on('click', () => openPropertyPage(p)); 
-                         }
-                     });
-                     
-                     // Optional: Show alert on mobile so they know it worked
-                     if(window.innerWidth < 768) alert(`Found ${data.properties.length} properties in ${q || 'All Areas'}`);
-                     
-                } else { 
-                    alert("No properties found in " + (q || "this area")); 
+                // Clear Map
+                if (tenantMap) {
+                    tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
                 }
-            } catch(e) { console.error(e); }
-            finally { if(typeof hideLoading === 'function') hideLoading(); }
+
+                const resultsContainer = document.getElementById('search-results'); // If you have a list view
+                if (resultsContainer) resultsContainer.innerHTML = '';
+
+                if (data.properties.length > 0) {
+                    // Move map to first result
+                    if(tenantMap && data.properties[0].lat) {
+                        tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
+                    }
+
+                    data.properties.forEach(p => { 
+                        // Add Marker
+                        if(tenantMap && p.lat) {
+                            const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                            m.on('click', () => openPropertyPage(p)); 
+                        }
+                    });
+                    
+                    // Alert for mobile users
+                    if(window.innerWidth < 768) alert(`Found ${data.properties.length} properties!`);
+                } else { 
+                    alert("No properties found with these exact filters."); 
+                }
+            } catch(e) { 
+                console.error(e);
+                alert("Search Error");
+            } finally { 
+                if(typeof hideLoading === 'function') hideLoading(); 
+            }
         }
         function checkPendingSearch() {
             // Check both storage keys (New vs Old)
