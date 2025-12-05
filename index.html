@@ -561,77 +561,70 @@
                     <input type="text" id="fname" placeholder="Owner Name">
                     <input type="tel" id="phone" placeholder="Contact Phone">
                     
+                    <div class="full-width">
+                        <label style="font-size:12px; font-weight:600; color:#666;">Listing Type</label>
+                        <select id="o-listingType" style="background:#eef2f3;">
+                            <option value="Rent">For Rent</option>
+                            <option value="Buy">For Sale</option>
+                        </select>
+                    </div>
+
                     <div class="full-width"><input type="text" id="house" placeholder="Full Address (House No, Street)"></div>
-                    
                     <input type="text" id="area" placeholder="Area / Neighborhood">
                     <input type="text" id="city" value="Chennai">
                     
-                    <input type="number" id="price" placeholder="Price (₹)">
+                    <input type="number" id="price" placeholder="Price / Rent (₹)">
                     <input type="number" id="sqft" placeholder="Size (Sq. Ft)">
                     
-                    <select id="beds"><option value="">Bedrooms</option><option>1</option><option>2</option><option>3</option><option>4</option></select>
-                    <select id="baths"><option value="">Bathrooms</option><option>1</option><option>2</option><option>3</option></select>
+                    <div>
+                        <label style="font-size:11px; font-weight:bold;">Property Type</label>
+                        <select id="o-propType">
+                            <option value="Apartment">Apartment</option>
+                            <option value="House">Independent House</option>
+                            <option value="Villa">Villa</option>
+                            <option value="Office Space">Office Space</option>
+                            <option value="Shop">Shop</option>
+                            <option value="Showroom">Showroom</option>
+                            <option value="Co-Working">Co-Working</option>
+                            <option value="Warehouse">Warehouse</option>
+                            <option value="Industrial">Industrial Bldg</option>
+                            <option value="Restaurant">Restaurant/Cafe</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:11px; font-weight:bold;">Building Type</label>
+                        <select id="o-buildType">
+                            <option value="Independent">Independent Building</option>
+                            <option value="Mall">Mall</option>
+                            <option value="Business Park">Business Park</option>
+                            <option value="Standalone">Standalone Commercial</option>
+                            <option value="Gated Community">Gated Community</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:11px; font-weight:bold;">Furnishing</label>
+                        <select id="o-furnish">
+                            <option value="Semi">Semi-Furnished</option>
+                            <option value="Full">Fully Furnished</option>
+                            <option value="None">Unfurnished</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:11px; font-weight:bold;">Parking</label>
+                        <select id="o-parking">
+                            <option value="Reserved">Reserved Parking</option>
+                            <option value="Public">Public / Street</option>
+                            <option value="None">No Parking</option>
+                        </select>
+                    </div>
+
+                    <select id="beds"><option value="">Beds (If House)</option><option value="1">1 BHK</option><option value="2">2 BHK</option><option value="3">3 BHK</option><option value="4">4+ BHK</option></select>
+                    <select id="baths"><option value="">Baths</option><option value="1">1 Bath</option><option value="2">2 Baths</option><option value="3">3+ Baths</option></select>
                     
-                    <div class="full-width">
-                        <label>Furnishing:</label>
-                        <select id="furnish"><option>Unfurnished</option><option>Semi-Furnished</option><option>Fully Furnished</option></select>
-                    </div>
-                    
-                    <div class="full-width">
-                        <label>Description:</label>
-                        <textarea id="desc" rows="3" placeholder="Describe the property..."></textarea>
-                    </div>
-
-                    <div class="full-width">
-                        <label>Upload / Manage Photos:</label>
-                        <div class="upload-grid">
-                            
-                            <div class="upload-item">
-                                <label>Outer</label>
-                                <input type="file" id="img-outer">
-                                <div id="preview-outer" class="img-preview-box">
-                                    <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('outer')">×</button>
-                                </div>
-                            </div>
-
-                            <div class="upload-item">
-                                <label>Hall</label>
-                                <input type="file" id="img-hall">
-                                <div id="preview-hall" class="img-preview-box">
-                                    <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('hall')">×</button>
-                                </div>
-                            </div>
-
-                            <div class="upload-item">
-                                <label>Bed</label>
-                                <input type="file" id="img-bed">
-                                <div id="preview-bed" class="img-preview-box">
-                                    <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('bed')">×</button>
-                                </div>
-                            </div>
-
-                            <div class="upload-item">
-                                <label>Kitchen</label>
-                                <input type="file" id="img-kitchen">
-                                <div id="preview-kitchen" class="img-preview-box">
-                                    <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('kitchen')">×</button>
-                                </div>
-                            </div>
-
-                            <div class="upload-item">
-                                <label>Bath</label>
-                                <input type="file" id="img-bath">
-                                <div id="preview-bath" class="img-preview-box">
-                                    <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('bath')">×</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="full-width"><textarea id="desc" rows="3" placeholder="Description (e.g. Near Metro, Sea Facing)"></textarea></div>
                 </div>
             </div>
 
@@ -1123,22 +1116,22 @@
                 // 5. Build Form Data
                 const form = {
                     ownerEmail: localStorage.getItem('email'),
-                    firstName: val('fname'),
-                    phone: val('phone'),
-                    houseNo: val('house'),
+                    firstName: document.getElementById('fname').value,
+                    phone: document.getElementById('phone').value,
+                    houseNo: document.getElementById('house').value,
                     street: val('house'), // fallback if street input missing
-                    area: val('area'),
-                    city: val('city'),
-                    price: val('price'),
-                    sqft: val('sqft'),
-                    bedrooms: val('beds'),
-                    bathrooms: val('baths'),
-                    furnishing: val('furnish'),
+                    area: document.getElementById('area').value,
+                    city: document.getElementById('city').value,
+                    price: document.getElementById('price').value,
+                    sqft: document.getElementById('sqft').value,
+                    bedrooms: document.getElementById('beds').value,
+                    bathrooms: document.getElementById('baths').value,
+                    furnishing: document.getElementById('o-furnish').value,
                     listingType: document.getElementById('o-listType').value,
                     propertyType: document.getElementById('o-propType').value,
                     buildingType: document.getElementById('o-buildType').value,
                     parking: document.getElementById('o-park').value,
-                    description: val('desc'),
+                    description: document.getElementById('desc').value,
                     amenities: amenities,
                     images: finalImages,
                     lat: selectedLat, 
@@ -1217,7 +1210,10 @@
             document.getElementById('baths').value = p.bathrooms || "";
             document.getElementById('furnish').value = p.furnishing || "";
             document.getElementById('desc').value = p.description || "";
-
+            document.getElementById('o-listingType').value = p.listingType || "Rent";
+            document.getElementById('o-propType').value = p.propertyType || "Apartment";
+            document.getElementById('o-buildType').value = p.buildingType || "Independent";
+            document.getElementById('o-parking').value = p.parking || "Reserved";    
             // 4. Handle Images (The "No File Chosen" Fix)
             // We cannot set the file input. We must show the PREVIEW instead.
             currentImages = p.images || {}; 
