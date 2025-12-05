@@ -11,6 +11,39 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
+        /* --- FORCE MOBILE MAP FIX --- */
+        @media (max-width: 768px) {
+            /* 1. Stack them vertically */
+            .search-layout { 
+                display: flex !important; 
+                flex-direction: column !important;
+                height: auto !important; 
+                overflow: visible !important;
+            }
+
+            /* 2. Map goes to the TOP with fixed height */
+            .map-container-full { 
+                order: -1 !important; /* Negative order moves it to the top */
+                height: 300px !important; /* Force height */
+                width: 100% !important;
+                position: relative;
+                z-index: 1;
+            }
+            
+            /* 3. Ensure the map div fills the container */
+            #tenant-map { 
+                height: 100% !important; 
+                width: 100% !important; 
+            }
+
+            /* 4. Filters go below */
+            .filter-sidebar { 
+                width: 100% !important; 
+                height: auto !important; 
+                order: 2; 
+                overflow-y: visible !important;
+            }
+        }
         /* --- FILTER MODAL STYLES --- */
         #filter-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .filter-box { background: white; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: 15px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
