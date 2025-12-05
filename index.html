@@ -943,41 +943,86 @@
 
         // 4. Override existing searchProperties
         async function searchProperties() {
-            if(typeof showLoading === 'function') showLoading("Applying Filters...");
+            // 1. Show Spinner
+            if(typeof showLoading === 'function') showLoading("Searching...");
             
-            const q = document.getElementById('f-loc').value;
+            // 2. SMART INPUT DETECTION
+            // Tries to find the input box, whether it's named 'f-loc' (Sidebar) or 'search-query' (Top Bar)
+            const inputEl = document.getElementById('f-loc') || document.getElementById('search-query') || document.getElementById('home-search-input');
+            const q = inputEl ? inputEl.value : '';
             
-            // Build URL
+            console.log("Searching for:", q); // Debugging: Check your console (F12) to see this
+
+            // 3. Build URL
             let url = `${API_URL}/search-properties?query=${q}`;
-            if(activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
-            if(activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
-            if(activeFilters.furnishing) url += `&furnishing=${activeFilters.furnishing}`;
-            if(activeFilters.buildingType) url += `&buildingType=${activeFilters.buildingType}`;
-            if(activeFilters.parking) url += `&parking=${activeFilters.parking}`;
-            if(activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
-            if(activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
+            
+            // Add active filters if they exist
+            if(typeof activeFilters !== 'undefined') {
+                if(activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
+                if(activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
+                if(activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
+                if(activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
+            }
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
                 
-                // Clear Map
+                // 4. Update Map
                 tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
                 
                 if(data.properties.length > 0) {
-                    tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                    data.properties.forEach(p => { 
-                        const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
-                        m.on('click', () => openPropertyPage(p)); 
-                    });
-                    // Mobile: Show alert or scroll to map
-                    if(window.innerWidth < 768) alert(`Found ${data.properties.length} properties! View Map below.`);
+                     // Move map to the first result's location
+                     const first = data.properties[0];
+                     if(first.lat && first.lng) {
+                         tenantMap.setView([first.lat, first.lng], 14);
+                     }
+                     
+                     data.properties.forEach(p => { 
+                         if(p.lat && p.lng) {
+                             const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                             m.on('click', () => openPropertyPage(p)); 
+                         }
+                     });
+                     
+                     // Optional: Show alert on mobile so they know it worked
+                     if(window.innerWidth < 768) alert(`Found ${data.properties.length} properties in ${q || 'All Areas'}`);
+                     
                 } else { 
-                    alert("No properties found with these exact filters."); 
+                    alert("No properties found in " + (q || "this area")); 
                 }
             } catch(e) { console.error(e); }
             finally { if(typeof hideLoading === 'function') hideLoading(); }
         }
+        function checkPendingSearch() {
+            // Check both storage keys (New vs Old)
+            const pending = localStorage.getItem('advSearch') || localStorage.getItem('pendingSearch');
+            
+            if(pending) {
+                try {
+                    // Parse data
+                    const data = JSON.parse(pending);
+                    const searchText = data.query || data.q || ''; // Handle different naming
+                    
+                    // 1. Put text into the correct box
+                    const inputEl = document.getElementById('f-loc') || document.getElementById('search-query');
+                    if(inputEl) inputEl.value = searchText;
+
+                    // 2. Run search automatically
+                    if(searchText) {
+                        setTimeout(searchProperties, 1000);
+                    }
+                } catch(e) { console.log("Search error", e); }
+                
+                // Clear storage so it doesn't run every time we refresh
+                localStorage.removeItem('advSearch');
+                localStorage.removeItem('pendingSearch');
+            }
+        }
+        
+        // CALL THIS AT THE END OF YOUR SCRIPT
+        checkSession(); // This calls checkPendingSearch internally usually, or call it explicitly:
+        // checkPendingSearch();
         // --- LOADING HELPERS ---
             function showLoading(msg = "Please wait...") {
                 document.getElementById('loading-msg').innerText = msg;
