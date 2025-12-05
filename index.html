@@ -455,7 +455,7 @@
                         <option>Bangalore</option>
                     </select>
 
-                    <input type="text" id="home-search-input" placeholder="Search up to 3 Localities or Landmarks" autocomplete="off" name="search_query_unique_123">
+                    <input type="text" id="home-search-input" placeholder="Search up to 3 Localities..." autocomplete="off" name="search_unique_xyz">
                     
                     <div class="filter-icon-btn" onclick="toggleFilter()" title="Advanced Filters">
                         <i class="fas fa-sliders-h"></i>
@@ -944,63 +944,58 @@
 
         // 4. Override existing searchProperties
         async function searchProperties() {
-            if(typeof showLoading === 'function') showLoading("Applying Filters...");
+            if(typeof showLoading === 'function') showLoading("Searching...");
+            
+            // 1. SMART INPUT DETECTION
+            // Try to find text in the Tenant Search Box first, then the Home Page box
+            let q = '';
+            if (document.getElementById('search-query') && document.getElementById('search-query').value) {
+                q = document.getElementById('search-query').value;
+            } else if (document.getElementById('home-search-input')) {
+                q = document.getElementById('home-search-input').value;
+            }
 
-            // Get text from the Sidebar Input (f-loc) OR the Top Bar (search-query)
-            const inputEl = document.getElementById('f-loc') || document.getElementById('search-query');
-            const q = inputEl ? inputEl.value : '';
-
-            // Build URL
+            // 2. BUILD URL
             let url = `${API_URL}/search-properties?query=${q}`;
             
-            // Add Filters
-            if (activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
-            if (activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
-            if (activeFilters.furnishing) url += `&furnishing=${activeFilters.furnishing}`;
-            if (activeFilters.buildingType) url += `&buildingType=${activeFilters.buildingType}`;
-            if (activeFilters.parking) url += `&parking=${activeFilters.parking}`;
-            if (activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
-            if (activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
-
-            console.log("Fetching URL:", url); // Debugging
+            // Add Filters if they exist
+            if(typeof activeFilters !== 'undefined') {
+                if(activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
+                if(activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
+                if(activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
+                if(activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
+                if(activeFilters.furnishing) url += `&furnishing=${activeFilters.furnishing}`;
+                if(activeFilters.parking) url += `&parking=${activeFilters.parking}`;
+                if(activeFilters.buildingType) url += `&buildingType=${activeFilters.buildingType}`;
+            }
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
                 
-                // Clear Map
                 if (tenantMap) {
                     tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
                 }
 
-                const resultsContainer = document.getElementById('search-results'); // If you have a list view
-                if (resultsContainer) resultsContainer.innerHTML = '';
-
-                if (data.properties.length > 0) {
-                    // Move map to first result
-                    if(tenantMap && data.properties[0].lat) {
-                        tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                    }
-
-                    data.properties.forEach(p => { 
-                        // Add Marker
-                        if(tenantMap && p.lat) {
-                            const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
-                            m.on('click', () => openPropertyPage(p)); 
-                        }
-                    });
-                    
-                    // Alert for mobile users
-                    if(window.innerWidth < 768) alert(`Found ${data.properties.length} properties!`);
+                if(data.properties.length > 0) {
+                     // Move map
+                     if(tenantMap && data.properties[0].lat) {
+                         tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
+                     }
+                     
+                     // Add Markers
+                     data.properties.forEach(p => { 
+                         if(tenantMap && p.lat) {
+                             const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                             m.on('click', () => openPropertyPage(p)); 
+                         }
+                     });
                 } else { 
-                    alert("No properties found with these exact filters."); 
+                    // Optional: Don't show alert if user hasn't typed anything yet
+                    if(q || activeFilters.price > 0) alert("No listings found."); 
                 }
-            } catch(e) { 
-                console.error(e);
-                alert("Search Error");
-            } finally { 
-                if(typeof hideLoading === 'function') hideLoading(); 
-            }
+            } catch(e) { console.error(e); } 
+            finally { if(typeof hideLoading === 'function') hideLoading(); }
         }
         function checkPendingSearch() {
             // Check both storage keys (New vs Old)
