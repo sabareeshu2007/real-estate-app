@@ -201,93 +201,94 @@
             
             /* Fix Search Bar */
             /* --- PRO SEARCH BAR CSS --- */
-            .search-wrapper {
-                background: white;
-                padding: 10px;
-                border-radius: 50px;
-                display: flex;
-                align-items: center;
-                width: 95%;
-                max-width: 850px;
-                box-shadow: 0 15px 40px rgba(0,0,0,0.2); /* Deep shadow for 3D effect */
-                transition: transform 0.3s;
-            }
-            .search-wrapper:hover {
-                transform: translateY(-2px); /* Slight lift on hover */
+            /* --- TABBED SEARCH BAR DESIGN --- */
+            .hero-search-container {
+                background: rgba(255, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                padding: 20px;
+                border-radius: 15px;
+                width: 90%;
+                max-width: 700px;
+                margin-top: 20px;
             }
 
-            /* Input Sections */
-            .search-group {
+            /* 1. The Tabs (Buy / Rent / Commercial) */
+            .search-tabs {
                 display: flex;
-                align-items: center;
-                flex: 1;
-                padding: 0 20px;
-                border-right: 1px solid #eee; /* Divider line */
-                position: relative;
-            }
-            .search-group:last-child {
-                border-right: none;
+                gap: 10px;
+                margin-bottom: 15px;
+                justify-content: center;
             }
             
-            .search-group i {
-                color: var(--primary);
-                font-size: 18px;
-                margin-right: 10px;
-            }
-
-            /* Inputs & Selects */
-            .search-wrapper input, .search-wrapper select {
-                border: none;
-                width: 100%;
-                font-size: 15px;
-                font-weight: 500;
-                color: #333;
-                outline: none;
-                background: transparent;
+            .tab-item {
+                color: white;
+                padding: 8px 20px;
                 cursor: pointer;
+                font-weight: 500;
+                opacity: 0.8;
+                border-bottom: 3px solid transparent;
+                transition: 0.3s;
             }
             
-            /* Placeholder styling */
-            ::placeholder { color: #999; font-weight: 400; }
+            .tab-item.active {
+                opacity: 1;
+                font-weight: 700;
+                border-bottom: 3px solid #ff4757; /* The Red Line */
+            }
 
-            /* The Search Button */
-            .search-btn-pro {
-                background: var(--primary);
+            /* 2. The Search Box */
+            .search-box-clean {
+                background: white;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                padding: 5px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            }
+
+            /* Location Dropdown / Icon */
+            .city-select {
+                border: none;
+                border-right: 1px solid #ddd;
+                padding: 10px 15px;
+                background: transparent;
+                font-weight: 600;
+                color: #333;
+                cursor: pointer;
+                outline: none;
+            }
+
+            /* The Input Field */
+            .search-box-clean input {
+                border: none;
+                flex: 1;
+                padding: 15px;
+                font-size: 15px;
+                outline: none;
+            }
+
+            /* The Red Search Button */
+            .search-btn-red {
+                background: #ff4757;
                 color: white;
                 border: none;
-                padding: 15px 35px;
-                border-radius: 40px;
+                padding: 12px 30px;
+                border-radius: 6px;
                 font-weight: 600;
                 font-size: 16px;
                 cursor: pointer;
-                box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
                 transition: 0.3s;
-                margin-left: 10px;
             }
-            .search-btn-pro:hover {
-                background: #5b54e0;
-                transform: scale(1.05);
+            .search-btn-red:hover { background: #e84118; }
+            
+            /* Filter Icon */
+            .filter-icon-btn {
+                padding: 10px 15px;
+                cursor: pointer;
+                color: #666;
+                border-left: 1px solid #eee;
             }
-
-            /* Mobile Fix */
-            @media (max-width: 768px) {
-                .search-wrapper {
-                    flex-direction: column;
-                    border-radius: 20px;
-                    padding: 20px;
-                    gap: 15px;
-                }
-                .search-group {
-                    width: 100%;
-                    border-right: none;
-                    border-bottom: 1px solid #eee;
-                    padding-bottom: 10px;
-                }
-                .search-btn-pro {
-                    width: 100%;
-                    margin-left: 0;
-                }
-            }
+            .filter-icon-btn:hover { color: var(--primary); }
             /* Fix Property Page */
             .highlights { flex-wrap: wrap; gap: 10px; }
             .highlight-item { flex: 1 1 40%; margin-bottom: 10px; }
@@ -381,50 +382,31 @@
 
     <div id="home-page">
         <header class="hero">
-            <h1>Find Your Dream Home in Chennai</h1>
-            <p>Search properties for buy & rent</p>
+            <h1 style="margin-bottom:5px;">Find Your Perfect Home</h1>
             
-            <div class="search-wrapper">
-                
-                <div class="search-group" style="flex: 2;">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <div>
-                        <label style="font-size:10px; font-weight:bold; color:#999; display:block;">LOCATION</label>
-                        <input type="text" id="home-search-input" placeholder="Search City, Area...">
-                    </div>
+            <div class="hero-search-container">
+                <div class="search-tabs">
+                    <div class="tab-item active" onclick="setSearchTab(this, 'Buy')">Buy</div>
+                    <div class="tab-item" onclick="setSearchTab(this, 'Rent')">Rent</div>
+                    <div class="tab-item" onclick="setSearchTab(this, 'Commercial')">Commercial</div>
                 </div>
 
-                <div class="search-group">
-                    <i class="fas fa-rupee-sign"></i>
-                    <div>
-                        <label style="font-size:10px; font-weight:bold; color:#999; display:block;">BUDGET</label>
-                        <select id="home-budget">
-                            <option value="">Max Price</option>
-                            <option value="5000000">₹ 50 Lakhs</option>
-                            <option value="10000000">₹ 1 Crore</option>
-                            <option value="20000000">₹ 2 Crores</option>
-                            <option value="50000000">₹ 5 Crores</option>
-                        </select>
-                    </div>
-                </div>
+                <div class="search-box-clean">
+                    <select class="city-select">
+                        <option>Chennai</option>
+                        <option>Bangalore</option>
+                    </select>
 
-                <div class="search-group">
-                    <i class="fas fa-bed"></i>
-                    <div>
-                        <label style="font-size:10px; font-weight:bold; color:#999; display:block;">BEDROOMS</label>
-                        <select id="home-bhk">
-                            <option value="">BHK</option>
-                            <option value="1">1 BHK</option>
-                            <option value="2">2 BHK</option>
-                            <option value="3">3 BHK</option>
-                            <option value="4">4+ BHK</option>
-                        </select>
+                    <input type="text" id="home-search-input" placeholder="Search up to 3 Localities or Landmarks">
+                    
+                    <div class="filter-icon-btn" onclick="toggleFilter()" title="Advanced Filters">
+                        <i class="fas fa-sliders-h"></i>
                     </div>
-                </div>
 
-                <button class="search-btn-pro" onclick="triggerTenantSearch()">
-                    Search
-                </button>
+                    <button class="search-btn-red" onclick="triggerTenantSearch()">
+                        Search
+                    </button>
+                </div>
             </div>
         </header>
 
