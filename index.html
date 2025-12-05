@@ -625,6 +625,57 @@
                     <select id="baths"><option value="">Baths</option><option value="1">1 Bath</option><option value="2">2 Baths</option><option value="3">3+ Baths</option></select>
                     
                     <div class="full-width"><textarea id="desc" rows="3" placeholder="Description (e.g. Near Metro, Sea Facing)"></textarea></div>
+                    <div class="full-width" style="margin-top:20px;">
+                        <label style="font-weight:600; color:#555;">Upload Photos:</label>
+                        <div class="upload-grid">
+                            
+                            <div class="upload-item">
+                                <label>Outer</label>
+                                <input type="file" id="img-outer">
+                                <div id="preview-outer" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('outer')">×</button>
+                                </div>
+                            </div>
+
+                            <div class="upload-item">
+                                <label>Hall</label>
+                                <input type="file" id="img-hall">
+                                <div id="preview-hall" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('hall')">×</button>
+                                </div>
+                            </div>
+
+                            <div class="upload-item">
+                                <label>Bed</label>
+                                <input type="file" id="img-bed">
+                                <div id="preview-bed" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('bed')">×</button>
+                                </div>
+                            </div>
+
+                            <div class="upload-item">
+                                <label>Kitchen</label>
+                                <input type="file" id="img-kitchen">
+                                <div id="preview-kitchen" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('kitchen')">×</button>
+                                </div>
+                            </div>
+
+                            <div class="upload-item">
+                                <label>Bath</label>
+                                <input type="file" id="img-bath">
+                                <div id="preview-bath" class="img-preview-box">
+                                    <img src="">
+                                    <button class="btn-remove-img" onclick="deleteSpecificImage('bath')">×</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
             </div>
 
