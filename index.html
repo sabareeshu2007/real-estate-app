@@ -942,61 +942,6 @@
             if (id === 'disp-sqft') activeFilters.sqft = val;
         }
 
-        // 4. Override existing searchProperties
-        async function searchProperties() {
-            if(typeof showLoading === 'function') showLoading("Searching...");
-            
-            // 1. SMART INPUT DETECTION
-            // Try to find text in the Tenant Search Box first, then the Home Page box
-            let q = '';
-            if (document.getElementById('search-query') && document.getElementById('search-query').value) {
-                q = document.getElementById('search-query').value;
-            } else if (document.getElementById('home-search-input')) {
-                q = document.getElementById('home-search-input').value;
-            }
-
-            // 2. BUILD URL
-            let url = `${API_URL}/search-properties?query=${q}`;
-            
-            // Add Filters if they exist
-            if(typeof activeFilters !== 'undefined') {
-                if(activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
-                if(activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
-                if(activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
-                if(activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
-                if(activeFilters.furnishing) url += `&furnishing=${activeFilters.furnishing}`;
-                if(activeFilters.parking) url += `&parking=${activeFilters.parking}`;
-                if(activeFilters.buildingType) url += `&buildingType=${activeFilters.buildingType}`;
-            }
-
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                if (tenantMap) {
-                    tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
-                }
-
-                if(data.properties.length > 0) {
-                     // Move map
-                     if(tenantMap && data.properties[0].lat) {
-                         tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                     }
-                     
-                     // Add Markers
-                     data.properties.forEach(p => { 
-                         if(tenantMap && p.lat) {
-                             const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
-                             m.on('click', () => openPropertyPage(p)); 
-                         }
-                     });
-                } else { 
-                    // Optional: Don't show alert if user hasn't typed anything yet
-                    if(q || activeFilters.price > 0) alert("No listings found."); 
-                }
-            } catch(e) { console.error(e); } 
-            finally { if(typeof hideLoading === 'function') hideLoading(); }
-        }
         function checkPendingSearch() {
             // Check both storage keys (New vs Old)
             const pending = localStorage.getItem('advSearch') || localStorage.getItem('pendingSearch');
@@ -1053,13 +998,26 @@
         }
 
         function triggerTenantSearch() {
-            const q = document.getElementById('home-search-input').value;
-            const price = document.getElementById('home-budget').value;
-            const bhk = document.getElementById('home-bhk').value;
-            
-            showAuth('tenant');
-            // Save filters as a JSON string
-            localStorage.setItem('pendingSearch', JSON.stringify({q, price, bhk}));
+            // 1. Get text from Home Page input
+            const homeInput = document.getElementById('home-search-input');
+            const term = homeInput ? homeInput.value : '';
+
+            if(!term) {
+                alert("Please enter an area name");
+                return;
+            }
+
+            // 2. Switch to Tenant View
+            showAuth('tenant'); 
+
+            // 3. Transfer text to Tenant Input (So the user sees what they searched)
+            const tenantInput = document.getElementById('search-query');
+            if(tenantInput) {
+                tenantInput.value = term;
+            }
+
+            // 4. Run the search immediately
+            searchProperties();
         }
 
         function closePropertyPage() {
@@ -1435,27 +1393,65 @@
         }
 
         async function searchProperties() {
-            const q = document.getElementById('search-query') ? document.getElementById('search-query').value : '';
-            // If called from Home Page, we might not have the input, so rely on filters
+            if(typeof showLoading === 'function') showLoading("Searching...");
             
-            let url = `${API_URL}/search-properties?query=${q}`;
-            if(searchFilters.listingType) url += `&listingType=${searchFilters.listingType}`;
-            if(searchFilters.propertyType) url += `&propertyType=${searchFilters.propertyType}`;
-            if(searchFilters.price > 0) url += `&maxPrice=${searchFilters.price}`;
-            if(searchFilters.sqft > 0) url += `&maxSqft=${searchFilters.sqft}`;
+            // 1. SMART INPUT DETECTION
+            // We check the Tenant Input box first. If empty, we check the Home Page Input box.
+            const tenantInput = document.getElementById('search-query');
+            const homeInput = document.getElementById('home-search-input');
+            
+            let q = '';
+            
+            // Priority: Tenant Search Bar > Home Search Bar > Empty
+            if (tenantInput && tenantInput.value.trim() !== '') {
+                q = tenantInput.value;
+            } else if (homeInput && homeInput.value.trim() !== '') {
+                q = homeInput.value;
+            }
 
-            const res = await fetch(url);
-            const data = await res.json();
+            console.log("Searching for:", q); 
+
+            // 2. BUILD URL
+            let url = `${API_URL}/search-properties?query=${q}`;
             
-            // ... (Rest of your existing map marker logic stays here) ...
-            tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
-            if(data.properties.length > 0) {
-                 tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
-                 data.properties.forEach(p => { 
-                     const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
-                     m.on('click', () => openPropertyPage(p)); 
-                 });
-            } else { alert("No listings match your filters."); }
+            // Add Filters (Safe check)
+            if(typeof activeFilters !== 'undefined') {
+                if(activeFilters.listingType) url += `&listingType=${activeFilters.listingType}`;
+                if(activeFilters.propertyType) url += `&propertyType=${activeFilters.propertyType}`;
+                if(activeFilters.price > 0) url += `&maxPrice=${activeFilters.price}`;
+                if(activeFilters.sqft > 0) url += `&maxSqft=${activeFilters.sqft}`;
+                if(activeFilters.furnishing) url += `&furnishing=${activeFilters.furnishing}`;
+                if(activeFilters.parking) url += `&parking=${activeFilters.parking}`;
+                if(activeFilters.buildingType) url += `&buildingType=${activeFilters.buildingType}`;
+            }
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                // 3. Clear Old Pins
+                if (tenantMap) {
+                    tenantMap.eachLayer(l => { if(l instanceof L.Marker) tenantMap.removeLayer(l); });
+                }
+
+                if(data.properties.length > 0) {
+                     // 4. Move map to the first result
+                     if(tenantMap && data.properties[0].lat) {
+                         tenantMap.setView([data.properties[0].lat, data.properties[0].lng], 14);
+                     }
+                     
+                     // 5. Add New Pins
+                     data.properties.forEach(p => { 
+                         if(tenantMap && p.lat) {
+                             const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                             m.on('click', () => openPropertyPage(p)); 
+                         }
+                     });
+                } else { 
+                    alert("No listings found for '" + q + "'"); 
+                }
+            } catch(e) { console.error(e); } 
+            finally { if(typeof hideLoading === 'function') hideLoading(); }
         }
         // --- PROPERTY PAGE LOGIC ---
         function openPropertyPage(p) {
