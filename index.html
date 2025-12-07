@@ -449,7 +449,7 @@
         <div class="filter-box">
             <div class="modal-header">
                 <h2>⚙️ Filters</h2>
-                <span onclick="toggleFilter()" class="close-btn">&times;</span>
+                <span id="filter-modal-close" class="close-btn">&times;</span>
             </div>
 
             <div class="filter-section">
@@ -480,7 +480,7 @@
                 <input type="range" min="0" max="10000" step="100" value="0" oninput="updateRange('sqft-val', this.value, '', ' sqft')">
             </div>
 
-            <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+            <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
         </div>
     </div>
     <div id="loading-overlay" class="hidden">
@@ -488,18 +488,18 @@
         <p id="loading-msg" style="margin-top:15px; font-weight:600; color:#666;">Processing...</p>
     </div>
     <div id="lightbox" class="hidden" onclick="closeLightbox()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column;">
-        <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer;">&times;</span>
+        <span id="lightbox-close" style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer;">&times;</span>
         <img id="lightbox-img" src="" style="max-width:90%; max-height:80vh; border-radius:5px; box-shadow:0 0 20px rgba(255,255,255,0.2);">
     </div>
 
     <nav>
-        <div class="logo" onclick="goHome()">🏠 EstatePro</div>
+        <div id="logo" class="logo">🏠 EstatePro</div>
         <div class="nav-links">
-            <a onclick="goHome()">Home</a>
-            <a onclick="showAuth('owner')">List Property</a>
-            <a onclick="showAuth('tenant')" class="btn-login">Login</a>
+            <a id="nav-home">Home</a>
+            <a id="nav-list-property">List Property</a>
+            <a id="nav-login" class="btn-login">Login</a>
         </div> 
-        <button id="logout-btn" class="hidden" style="margin-left:20px; background:none; border:none; color:red; cursor:pointer;" onclick="handleLogout()">Logout</button>
+        <button id="logout-btn" class="hidden" style="margin-left:20px; background:none; border:none; color:red; cursor:pointer;">Logout</button>
     </nav>
 
     <div id="home-page">
@@ -508,9 +508,9 @@
             
             <div class="hero-search-container">
                 <div class="search-tabs">
-                    <div class="tab-item active" onclick="setSearchTab(this, 'Buy')">Buy</div>
-                    <div class="tab-item" onclick="setSearchTab(this, 'Rent')">Rent</div>
-                    <div class="tab-item" onclick="setSearchTab(this, 'Commercial')">Commercial</div>
+                    <div class="tab-item active" data-value="Buy">Buy</div>
+                    <div class="tab-item" data-value="Rent">Rent</div>
+                    <div class="tab-item" data-value="Commercial">Commercial</div>
                 </div>
 
                 <div class="search-box-clean">
@@ -521,11 +521,11 @@
 
                     <input type="text" id="home-search-input" placeholder="Search up to 3 Localities..." autocomplete="off" name="search_unique_xyz">
                     
-                    <div class="filter-icon-btn" onclick="toggleFilter()" title="Advanced Filters">
+                    <div id="hero-filter-btn" class="filter-icon-btn" title="Advanced Filters">
                         <i class="fas fa-sliders-h"></i>
                     </div>
 
-                    <button class="search-btn-red" onclick="triggerTenantSearch()">
+                    <button id="hero-search-btn" class="search-btn-red">
                         Search
                     </button>
                 </div>
@@ -597,11 +597,11 @@
             <input type="email" id="email-input" placeholder="Email Address">
             <input type="password" id="pass-input" placeholder="Password">
             
-            <button class="btn btn-primary" onclick="handleAuth()">Login</button>
+            <button id="auth-btn" class="btn btn-primary">Login</button>
             
             <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:13px;">
-                <span onclick="toggleAuthMode()" style="color:var(--primary); cursor:pointer; font-weight:600;" id="switch-text">New here? Create Account</span>
-                <span onclick="goHome()" style="color:#666; cursor:pointer;">← Back to Home</span>
+                <span id="switch-text" style="color:var(--primary); cursor:pointer; font-weight:600;">New here? Create Account</span>
+                <span id="auth-back-home" style="color:#666; cursor:pointer;">← Back to Home</span>
             </div>
         </div>
 
@@ -611,7 +611,7 @@
                 <div style="overflow-x:auto;">
                     <table><thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead><tbody id="my-listings-body"></tbody></table>
                 </div>
-                <button class="btn btn-primary" style="width:auto; margin-top:15px;" onclick="loadMyListings()">Refresh Status</button>
+                <button id="refresh-listings-btn" class="btn btn-primary" style="width:auto; margin-top:15px;">Refresh Status</button>
             </div>
 
             <div class="card" id="listing-form-card">
@@ -691,45 +691,45 @@
                             <div class="upload-item">
                                 <label>Outer</label>
                                 <input type="file" id="img-outer">
-                                <div id="preview-outer" class="img-preview-box">
+                                <div id="preview-outer" class="img-preview-box" data-type="outer">
                                     <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('outer')">×</button>
+                                    <button class="btn-remove-img">×</button>
                                 </div>
                             </div>
 
                             <div class="upload-item">
                                 <label>Hall</label>
                                 <input type="file" id="img-hall">
-                                <div id="preview-hall" class="img-preview-box">
+                                <div id="preview-hall" class="img-preview-box" data-type="hall">
                                     <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('hall')">×</button>
+                                    <button class="btn-remove-img">×</button>
                                 </div>
                             </div>
 
                             <div class="upload-item">
                                 <label>Bed</label>
                                 <input type="file" id="img-bed">
-                                <div id="preview-bed" class="img-preview-box">
+                                <div id="preview-bed" class="img-preview-box" data-type="bed">
                                     <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('bed')">×</button>
+                                    <button class="btn-remove-img">×</button>
                                 </div>
                             </div>
 
                             <div class="upload-item">
                                 <label>Kitchen</label>
                                 <input type="file" id="img-kitchen">
-                                <div id="preview-kitchen" class="img-preview-box">
+                                <div id="preview-kitchen" class="img-preview-box" data-type="kitchen">
                                     <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('kitchen')">×</button>
+                                    <button class="btn-remove-img">×</button>
                                 </div>
                             </div>
 
                             <div class="upload-item">
                                 <label>Bath</label>
                                 <input type="file" id="img-bath">
-                                <div id="preview-bath" class="img-preview-box">
+                                <div id="preview-bath" class="img-preview-box" data-type="bath">
                                     <img src="">
-                                    <button class="btn-remove-img" onclick="deleteSpecificImage('bath')">×</button>
+                                    <button class="btn-remove-img">×</button>
                                 </div>
                             </div>
 
@@ -750,13 +750,13 @@
                 <h4 style="margin-top:20px;">Pin Exact Location</h4>
                 <div style="position:relative;">
                     <input type="text" id="owner-map-search" placeholder="Search Map (e.g. T Nagar)" style="position:absolute; top:10px; left:50px; z-index:999; width:200px;">
-                    <button onclick="searchOwnerMap()" style="position:absolute; top:10px; left:260px; z-index:999; width:40px; padding:10px;">🔍</button>
+                    <button id="owner-map-search-btn" style="position:absolute; top:10px; left:260px; z-index:999; width:40px; padding:10px; cursor:pointer;">🔍</button>
                     <div id="owner-map" class="map-box"></div>
                 </div>
                 <p id="coords-display" style="text-align:center; color:green; display:none; margin-top:5px;">✅ Location Pinned!</p>
 
-                <button class="btn btn-primary" id="submit-btn" onclick="submitListing()" style="margin-top:20px;">Submit Listing</button>
-                <button class="btn btn-outline hidden" id="cancel-edit-btn" onclick="cancelEdit()" style="margin-top:5px;">Cancel Edit</button>
+                <button class="btn btn-primary" id="submit-btn" style="margin-top:20px;">Submit Listing</button>
+                <button class="btn btn-outline hidden" id="cancel-edit-btn" style="margin-top:5px;">Cancel Edit</button>
             </div>
         </div>
 
@@ -766,9 +766,9 @@
             <div class="filter-sidebar">
                 
                 <div class="filter-tabs">
-                    <div class="ft-btn active" onclick="setSearchTab(this, 'Buy')">Buy</div>
-                    <div class="ft-btn" onclick="setSearchTab(this, 'Rent')">Rent</div>
-                    <div class="ft-btn" onclick="setSearchTab(this, 'Commercial')">Commercial</div>
+                    <div class="ft-btn active" data-value="Buy">Buy</div>
+                    <div class="ft-btn" data-value="Rent">Rent</div>
+                    <div class="ft-btn" data-value="Commercial">Commercial</div>
                 </div>
 
                 <div class="search-loc-box">
@@ -843,20 +843,20 @@
                 </div>
 
                 <div class="sticky-search-btn">
-                    <button class="btn btn-primary" onclick="searchProperties()">SEARCH</button>
+                    <button id="tenant-search-btn" class="btn btn-primary">SEARCH</button>
                 </div>
             </div>
 
             <div class="map-container-full">
                 <div id="tenant-map"></div>
-                <button onclick="goHome()" style="position:absolute; top:20px; left:20px; z-index:1000; background:white; border:none; padding:10px 15px; border-radius:30px; box-shadow:0 2px 10px rgba(0,0,0,0.1); cursor:pointer; font-weight:600;">← Back</button>
+                <button id="tenant-back-btn" style="position:absolute; top:20px; left:20px; z-index:1000; background:white; border:none; padding:10px 15px; border-radius:30px; box-shadow:0 2px 10px rgba(0,0,0,0.1); cursor:pointer; font-weight:600;">← Back</button>
             </div>
         </div>
     </div>
 
     <div id="property-page" class="hidden">
         <div class="container">
-            <button onclick="closePropertyPage()" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
+            <button id="property-page-back-btn" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
             
             <div class="gallery-desktop">
                 <img id="dt-img-1" class="gal-img" onclick="openLightbox(this.src)" 
@@ -937,6 +937,7 @@
     <script>
         // --- CONFIG ---
         // ⚠️ REPLACE WITH YOUR RENDER URL
+        // Note: I've added a setupEventListeners() function at the bottom of the script to centralize event handling.
         const API_URL = 'https://real-estate-app-925m.onrender.com/api'; // REPLACE
         const CLOUD_NAME = 'dfsotxfxg';      // REPLACE
         const UPLOAD_PRESET = 'estate'; // REPLACE 
@@ -963,17 +964,20 @@
         // 1. Tab Selection (Buy/Rent/Commercial)
         function setSearchTab(el, val) {
             // 1. Remove 'active' from ALL tabs
-            const allTabs = document.querySelectorAll('.tab-item, .ft-btn'); // Selects tabs on Home AND Tenant page
-            allTabs.forEach(b => {
-                b.classList.remove('active');
-                b.style.borderBottom = "3px solid transparent"; // Force reset style
-                b.style.opacity = "0.7";
-            });
+            document.querySelectorAll('.tab-item, .ft-btn').forEach(tab => tab.classList.remove('active'));
 
             // 2. Add 'active' to CLICKED tab
             el.classList.add('active');
-            el.style.borderBottom = "3px solid #ff4757"; // Force active style
-            el.style.opacity = "1";
+
+            // Also activate its counterpart on the other page if it exists
+            const otherTab = document.querySelector(`.tab-item[data-value="${val}"], .ft-btn[data-value="${val}"]`);
+            if (otherTab && otherTab !== el) {
+                otherTab.classList.add('active');
+            }
+
+            // Style is now handled by CSS, but we can force it if needed
+            // el.style.borderBottom = "3px solid #ff4757"; 
+            // el.style.opacity = "1";
 
             // 3. Update Logic
             activeFilters.listingType = val;
@@ -1396,10 +1400,10 @@
             document.getElementById('my-listings-body').innerHTML = data.properties.map(p => `
                 <tr>
                     <td><b>${p.area}</b></td>
-                    <td>${p.status}</td>
+                    <td><span class="status-badge">${p.status || 'Pending'}</span></td>
                     <td>
-                        <button class="btn-sm bg-orange" onclick="editProp('${p._id}')">Edit</button>
-                        <button class="btn-sm bg-red" onclick="delProp('${p._id}')">Del</button>
+                        <button class="btn-sm bg-orange btn-edit" data-id="${p._id}">Edit</button>
+                        <button class="btn-sm bg-red btn-delete" data-id="${p._id}">Del</button>
                     </td>
                 </tr>
             `).join('');
@@ -1602,6 +1606,83 @@
             document.getElementById('lightbox').style.display = 'none';
         }
 
+        function updateAuthUI() {
+            document.getElementById('auth-title').innerText = isLoginMode ? "Welcome Back" : "Create Account";
+            document.getElementById('signup-fields').classList.toggle('hidden', isLoginMode);
+            document.getElementById('switch-text').innerText = isLoginMode ? "New here? Create Account" : "Already have an account? Login";
+            document.getElementById('auth-btn').innerText = isLoginMode ? "Login" : "Create Account";
+        }
+
+        function setupEventListeners() {
+            // --- Navigation ---
+            document.getElementById('logo').addEventListener('click', goHome);
+            document.getElementById('nav-home').addEventListener('click', goHome);
+            document.getElementById('nav-list-property').addEventListener('click', () => showAuth('owner'));
+            document.getElementById('nav-login').addEventListener('click', () => showAuth('tenant'));
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+            // --- Home Page Search ---
+            document.getElementById('hero-filter-btn').addEventListener('click', toggleFilter);
+            document.getElementById('hero-search-btn').addEventListener('click', triggerTenantSearch);
+            document.querySelector('.search-tabs').addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab-item')) {
+                    setSearchTab(e.target, e.target.dataset.value);
+                }
+            });
+
+            // --- Auth Page ---
+            document.getElementById('auth-btn').addEventListener('click', handleAuth);
+            document.getElementById('switch-text').addEventListener('click', toggleAuthMode);
+            document.getElementById('auth-back-home').addEventListener('click', goHome);
+
+            // --- Owner Dashboard ---
+            document.getElementById('refresh-listings-btn').addEventListener('click', loadMyListings);
+            document.getElementById('submit-btn').addEventListener('click', submitListing);
+            document.getElementById('cancel-edit-btn').addEventListener('click', cancelEdit);
+            document.getElementById('owner-map-search-btn').addEventListener('click', searchOwnerMap);
+
+            // Event Delegation for "My Listings" table
+            document.getElementById('my-listings-body').addEventListener('click', (e) => {
+                const target = e.target.closest('button'); // Find the button that was clicked
+                if (!target) return;
+
+                const id = target.dataset.id;
+                if (target.classList.contains('btn-edit')) {
+                    editProp(id);
+                } else if (target.classList.contains('btn-delete')) {
+                    delProp(id);
+                }
+            });
+
+            // Event Delegation for Image Removal
+            document.querySelector('.upload-grid').addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn-remove-img')) {
+                    const previewBox = e.target.closest('.img-preview-box');
+                    if (previewBox && previewBox.dataset.type) {
+                        deleteSpecificImage(previewBox.dataset.type);
+                    }
+                }
+            });
+
+            // --- Tenant/Search Page ---
+            document.getElementById('tenant-search-btn').addEventListener('click', searchProperties);
+            document.getElementById('tenant-back-btn').addEventListener('click', goHome);
+            document.querySelector('.filter-tabs').addEventListener('click', (e) => {
+                if (e.target.classList.contains('ft-btn')) {
+                    setSearchTab(e.target, e.target.dataset.value);
+                }
+            });
+
+            // --- Property Detail Page ---
+            document.getElementById('property-page-back-btn').addEventListener('click', closePropertyPage);
+
+            // --- Modals (Lightbox & Filter) ---
+            document.getElementById('lightbox').addEventListener('click', closeLightbox);
+            document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+            document.getElementById('filter-modal-close').addEventListener('click', toggleFilter);
+            document.getElementById('apply-filters-btn').addEventListener('click', applyFilters);
+        }
+
         function deleteSpecificImage(type) {
             // 1. Remove from our memory
             currentImages[type] = ""; 
@@ -1650,6 +1731,7 @@
         }
 
         // INIT
+        setupEventListeners();
         loadFeatured();
         checkSession();
 
