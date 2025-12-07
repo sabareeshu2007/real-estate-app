@@ -376,6 +376,7 @@
                 .map-container-full { 
                     order: -1; /* Moves map to top */
                     height: 300px !important;
+                    min-height: 300px; /* Add a minimum height safeguard */
                     width: 100% !important;
                     position: relative; /* Ensure positioning context */
                     flex-shrink: 0; /* Prevent the map from shrinking */
@@ -744,7 +745,7 @@
                     <div class="f-title">Looking To</div>
                     <div class="chip-grid">
                         <div class="chip selected" onclick="selectSingle('f-look', this, 'Rent')">Rent</div>
-                        <div class="chip" onclick="selectSingle('f-look', this, 'Buy')">Buy</div>
+                        <div class="chip select" onclick="selectSingle('f-look', this, 'Buy')">Buy</div>
                     </div>
                 </div>
 
@@ -1000,12 +1001,30 @@
         }
 
         function showAuth(type) {
-            currentUserType = type;
+            // This is now the main view controller
+            currentUserType = type; // 'owner' or 'tenant'
+
+            // Hide all major page sections first
             document.getElementById('home-page').classList.add('hidden');
+            document.getElementById('property-page').classList.add('hidden');
             document.getElementById('app-section').classList.remove('hidden');
-            document.getElementById('auth-section').classList.remove('hidden');
             document.getElementById('owner-section').classList.add('hidden');
             document.getElementById('tenant-section').classList.add('hidden');
+            document.getElementById('auth-section').classList.add('hidden');
+
+            if (localStorage.getItem('token')) {
+                // User is logged in, show the correct dashboard
+                if (type === 'owner') {
+                    document.getElementById('owner-section').classList.remove('hidden');
+                    initOwnerMap();
+                } else { // tenant
+                    document.getElementById('tenant-section').classList.remove('hidden');
+                    initTenantMap();
+                }
+            } else {
+                // User is not logged in, always show the auth form
+                document.getElementById('auth-section').classList.remove('hidden');
+            }
         }
 
         function triggerTenantSearch() {
@@ -1074,20 +1093,24 @@
         }
 
         function checkSession() {
-            if(localStorage.getItem('token')) {
-                document.getElementById('home-page').classList.add('hidden');
-                document.getElementById('app-section').classList.remove('hidden');
-                document.getElementById('auth-section').classList.add('hidden');
+            const token = localStorage.getItem('token');
+            const type = localStorage.getItem('type');
+
+            if(token && type) {
+                // User is logged in. Show their dashboard.
+                showAuth(type);
+
+                // Update nav
                 document.getElementById('logout-btn').classList.remove('hidden');
                 document.querySelector('.nav-links').classList.add('hidden');
 
-                if(localStorage.getItem('type') === 'owner') {
-                    document.getElementById('owner-section').classList.remove('hidden');
-                    initOwnerMap();
+                // If owner, load their listings
+                if (type === 'owner') {
                     loadMyListings();
-                } else {
-                    document.getElementById('tenant-section').classList.remove('hidden');
-                    initTenantMap();
+                }
+
+                // If tenant, check for a pending search from the home page
+                if (type === 'tenant') {
                     const pending = localStorage.getItem('advSearch') || localStorage.getItem('pendingSearch');
                     if(pending) {
                         try {
@@ -1107,7 +1130,10 @@
                         localStorage.removeItem('advSearch');
                     }
                 }
-            } else { goHome(); }
+            } else { 
+                // Not logged in or missing data, go home.
+                goHome(); 
+            }
         }
         function handleLogout() { localStorage.clear(); location.reload(); }
 
@@ -1405,10 +1431,24 @@
 
         // --- TENANT FUNCTIONS ---
         function initTenantMap() {
-            if(tenantMap) return;
+            // If map already exists, just ensure its size is correct.
+            if (tenantMap) {
+                setTimeout(() => {
+                    if (tenantMap) tenantMap.invalidateSize();
+                }, 400); // A small delay to allow rendering
+                return;
+            }
+
+            // If map doesn't exist, create it.
+            if (!document.getElementById('tenant-map')) return; // Safety check
+
             tenantMap = L.map('tenant-map').setView([13.0827, 80.2707], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(tenantMap);
-            setTimeout(() => tenantMap.invalidateSize(), 500);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(tenantMap);
+            setTimeout(() => {
+                if (tenantMap) tenantMap.invalidateSize();
+            }, 400);
         }
 
         async function searchProperties() {
