@@ -377,6 +377,8 @@
                     order: -1; /* Moves map to top */
                     height: 300px !important;
                     width: 100% !important;
+                    position: relative; /* Ensure positioning context */
+                    flex-shrink: 0; /* Prevent the map from shrinking */
                 }
                 #tenant-map { height: 100% !important; width: 100% !important; }
                 .filter-sidebar { 
