@@ -1431,24 +1431,34 @@
 
         // --- TENANT FUNCTIONS ---
         function initTenantMap() {
-            // If map already exists, just ensure its size is correct.
-            if (tenantMap) {
+            const mapContainer = document.getElementById('tenant-map');
+            if (!mapContainer) return; // Safety check: exit if the map container element doesn't exist
+
+            const resizeMap = () => {
+                // This function will be called to resize the map.
+                // Using a timeout ensures this runs after the current JS execution stack is clear,
+                // giving the browser a chance to paint layout changes.
                 setTimeout(() => {
-                    if (tenantMap) tenantMap.invalidateSize();
-                }, 400); // A small delay to allow rendering
+                    if (tenantMap) {
+                        tenantMap.invalidateSize();
+                    }
+                }, 150); // A short delay is usually sufficient.
+            };
+
+            // If the map instance already exists, we just need to tell it to resize.
+            if (tenantMap) {
+                resizeMap();
                 return;
             }
 
-            // If map doesn't exist, create it.
-            if (!document.getElementById('tenant-map')) return; // Safety check
-
-            tenantMap = L.map('tenant-map').setView([13.0827, 80.2707], 12);
+            // If it's the first time, create the map.
+            tenantMap = L.map(mapContainer).setView([13.0827, 80.2707], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(tenantMap);
-            setTimeout(() => {
-                if (tenantMap) tenantMap.invalidateSize();
-            }, 400);
+
+            // After creating the map, we still need to resize it because its container was likely hidden.
+            resizeMap();
         }
 
         async function searchProperties() {
@@ -1566,6 +1576,12 @@
             detailMap = L.map('detail-map').setView([p.lat, p.lng], 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
             L.marker([p.lat, p.lng]).addTo(detailMap);
+            
+            // *** ADDED FIX ***
+            // The map is in a hidden container, so we must invalidate its size after it becomes visible.
+            setTimeout(() => {
+                if (detailMap) detailMap.invalidateSize();
+            }, 150);
         }
 
         // --- HOME PAGE LOGIC ---
