@@ -44,6 +44,11 @@
                 overflow-y: visible !important;
             }
         }
+        /* --- UTILITY CLASSES FROM INLINE STYLES --- */
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .modal-header h2 { margin:0; }
+        .modal-header .close-btn { font-size:24px; cursor:pointer; }
+
         /* --- FILTER MODAL STYLES --- */
         #filter-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .filter-box { background: white; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; border-radius: 15px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
@@ -442,13 +447,13 @@
 <body>
     <div id="filter-modal" class="hidden">
         <div class="filter-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="margin:0;">⚙️ Filters</h2>
-                <span onclick="toggleFilter()" style="font-size:24px; cursor:pointer;">&times;</span>
+            <div class="modal-header">
+                <h2>⚙️ Filters</h2>
+                <span onclick="toggleFilter()" class="close-btn">&times;</span>
             </div>
 
             <div class="filter-section">
-                <h4>Looking To</h4>
+                <h4>I want to...</h4>
                 <div class="filter-grid" id="f-listing">
                     <span class="filter-chip selected" onclick="selectOpt('f-listing', this, 'Buy')">Buy</span>
                     <span class="filter-chip" onclick="selectOpt('f-listing', this, 'Rent')">Rent</span>
@@ -485,11 +490,6 @@
     <div id="lightbox" class="hidden" onclick="closeLightbox()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column;">
         <span style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer;">&times;</span>
         <img id="lightbox-img" src="" style="max-width:90%; max-height:80vh; border-radius:5px; box-shadow:0 0 20px rgba(255,255,255,0.2);">
-        <p style="color:#ccc; margin-top:10px;">Tap anywhere to close</p>
-    </div>
-    <div id="lightbox" class="hidden" onclick="this.classList.add('hidden')">
-        <span class="close-lb">&times;</span>
-        <img id="lightbox-img" src="">
     </div>
 
     <nav>
@@ -498,7 +498,7 @@
             <a onclick="goHome()">Home</a>
             <a onclick="showAuth('owner')">List Property</a>
             <a onclick="showAuth('tenant')" class="btn-login">Login</a>
-        </div>
+        </div> 
         <button id="logout-btn" class="hidden" style="margin-left:20px; background:none; border:none; color:red; cursor:pointer;" onclick="handleLogout()">Logout</button>
     </nav>
 
@@ -616,11 +616,6 @@
 
             <div class="card" id="listing-form-card">
                 <h2 id="form-title">📍 List New Property</h2>
-                <select id="o-listType"><option value="Buy">Sell</option><option value="Rent">Rent</option></select>
-                <select id="o-propType"><option value="House">House</option><option value="Apartment">Apartment</option><option value="Office">Office</option><option value="Shop">Shop</option></select>
-                <select id="o-buildType"><option value="Independent">Independent</option><option value="Mall">Mall</option><option value="Complex">Complex</option></select>
-                <select id="o-park"><option value="Public">Public Parking</option><option value="Reserved">Reserved Parking</option></select>
-                
                 <div class="form-grid">
                     <input type="text" id="fname" placeholder="Owner Name">
                     <input type="tel" id="phone" placeholder="Contact Phone">
@@ -1019,35 +1014,6 @@
             if (id === 'disp-sqft') activeFilters.sqft = val;
         }
 
-        function checkPendingSearch() {
-            // Check both storage keys (New vs Old)
-            const pending = localStorage.getItem('advSearch') || localStorage.getItem('pendingSearch');
-            
-            if(pending) {
-                try {
-                    // Parse data
-                    const data = JSON.parse(pending);
-                    const searchText = data.query || data.q || ''; // Handle different naming
-                    
-                    // 1. Put text into the correct box
-                    const inputEl = document.getElementById('f-loc') || document.getElementById('search-query');
-                    if(inputEl) inputEl.value = searchText;
-
-                    // 2. Run search automatically
-                    if(searchText) {
-                        setTimeout(searchProperties, 1000);
-                    }
-                } catch(e) { console.log("Search error", e); }
-                
-                // Clear storage so it doesn't run every time we refresh
-                localStorage.removeItem('advSearch');
-                localStorage.removeItem('pendingSearch');
-            }
-        }
-        
-        // CALL THIS AT THE END OF YOUR SCRIPT
-        checkSession(); // This calls checkPendingSearch internally usually, or call it explicitly:
-        // checkPendingSearch();
         // --- LOADING HELPERS ---
             function showLoading(msg = "Please wait...") {
                 document.getElementById('loading-msg').innerText = msg;
@@ -1154,20 +1120,23 @@
                 } else {
                     document.getElementById('tenant-section').classList.remove('hidden');
                     initTenantMap();
-                    const pending = localStorage.getItem('pendingSearch');
+                    const pending = localStorage.getItem('advSearch') || localStorage.getItem('pendingSearch');
                     if(pending) {
-                        // Parse the JSON object
                         try {
-                            const {q, price, bhk} = JSON.parse(pending);
-                            document.getElementById('search-query').value = q || '';
-                            document.getElementById('search-budget').value = price || '';
-                            document.getElementById('search-bhk').value = bhk || '';
+                            const data = JSON.parse(pending);
+                            const searchText = data.query || data.q || '';
+                            const inputEl = document.getElementById('f-loc');
+                            if(inputEl) inputEl.value = searchText;
+
                             setTimeout(searchProperties, 1000);
                         } catch(e) {
-                            // Fallback for old string searches
-                            document.getElementById('search-query').value = pending;
+                            console.log("Search error", e);
+                            const inputEl = document.getElementById('f-loc');
+                            if(inputEl) inputEl.value = pending; // Fallback for old string format
                         }
+                        // Clear storage so it doesn't run every time
                         localStorage.removeItem('pendingSearch');
+                        localStorage.removeItem('advSearch');
                     }
                 }
             } else { goHome(); }
@@ -1260,7 +1229,7 @@
                     area: document.getElementById('area').value,
                     city: document.getElementById('city').value,
                     price: document.getElementById('price').value,
-                    sqft: document.getElementById('sqft').value,
+                    sqft: document.getElementById('sqft').value, 
                     bedrooms: document.getElementById('beds').value,
                     bathrooms: document.getElementById('baths').value,
                     furnishing: document.getElementById('o-furnish').value,
@@ -1304,7 +1273,9 @@
                 
                 if(result.success) {
                     alert("Success! Saved successfully.");
-                    location.reload(); 
+                    cancelEdit(); // Reset form
+                    loadMyListings(); // Refresh list without reloading page
+                    document.getElementById('my-listings-body').scrollIntoView({behavior: "smooth"});
                 } else {
                     throw new Error(result.error || "Server rejected request");
                 }
@@ -1343,7 +1314,7 @@
             document.getElementById('sqft').value = p.sqft || "";
             
             // Dropdowns need to match the <option> values exactly
-            document.getElementById('beds').value = p.bedrooms || "";
+            document.getElementById('beds').value = p.bedrooms || ""; 
             document.getElementById('baths').value = p.bathrooms || "";
             document.getElementById('furnish').value = p.furnishing || "";
             document.getElementById('desc').value = p.description || "";
@@ -1615,13 +1586,7 @@
             const emi = P * R * (Math.pow(1+R, N) / (Math.pow(1+R, N)-1));
             document.getElementById('emi-val').innerText = "₹ " + Math.round(emi).toLocaleString();
         }
-        function openLight(src) {
-            if(src) {
-                document.getElementById('lightbox-img').src = src;
-                document.getElementById('lightbox').classList.remove('hidden');
-            }
-        }
-        // --- LIGHTBOX FUNCTIONS ---
+
         function openLightbox(src) {
             // Only open if it's a valid image link
             if(src && src.includes('http')) {
