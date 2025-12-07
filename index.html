@@ -6,44 +6,11 @@
     <title>EstatePro - Full Platform</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
-        /* --- FORCE MOBILE MAP FIX --- */
-        @media (max-width: 768px) {
-            /* 1. Stack them vertically */
-            .search-layout { 
-                display: flex !important; 
-                flex-direction: column !important;
-                height: auto !important; 
-                overflow: visible !important;
-            }
-
-            /* 2. Map goes to the TOP with fixed height */
-            .map-container-full { 
-                order: -1 !important; /* Negative order moves it to the top */
-                height: 300px !important; /* Force height */
-                width: 100% !important;
-                position: relative;
-                z-index: 1;
-            }
-            
-            /* 3. Ensure the map div fills the container */
-            #tenant-map { 
-                height: 100% !important; 
-                width: 100% !important; 
-            }
-
-            /* 4. Filters go below */
-            .filter-sidebar { 
-                width: 100% !important; 
-                height: auto !important; 
-                order: 2; 
-                overflow-y: visible !important;
-            }
-        }
         /* --- UTILITY CLASSES FROM INLINE STYLES --- */
         .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
         .modal-header h2 { margin:0; }
@@ -65,10 +32,21 @@
         /* --- PROFESSIONAL DESIGN VARIABLES --- */
         :root { 
             --primary: #6C63FF; 
-            --secondary: #2A2A72; 
+            --secondary: #2A2A72;
+            --danger: #e74c3c;
             --bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             --glass: rgba(255, 255, 255, 0.95);
             --shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        /* --- NEW UTILITY CLASSES --- */
+        .text-center { text-align: center; }
+        .w-auto { width: auto !important; }
+        .mt-15 { margin-top: 15px; }
+        .mt-50 { margin-top: 50px; }
+        .mb-0 { margin-bottom: 0 !important; }
+        .auth-card {
+            max-width: 450px; margin: 50px auto; text-align: center;
         }
         
         * { box-sizing: border-box; }
@@ -87,6 +65,7 @@
         .nav-links a { text-decoration: none; color: #636e72; font-weight: 500; cursor: pointer; transition: 0.3s; }
         .nav-links a:hover { color: var(--primary); }
         .btn-login { border: 2px solid var(--primary); color: var(--primary) !important; padding: 8px 25px; border-radius: 30px; font-weight: 600; }
+        .btn-logout { margin-left: 20px; background: none; border: none; color: var(--danger); cursor: pointer; font-weight: 600; }
         .btn-login:hover { background: var(--primary); color: white !important; }
 
         /* UTILS */
@@ -106,7 +85,7 @@
         
         /* --- HOME PAGE SPECIFIC --- */
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
             background-size: cover; background-position: center; height: 500px;
             display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white;
         }
@@ -164,12 +143,6 @@
         .price-card { position: sticky; top: 100px; border: 1px solid #eee; }
         .emi-box { background: #e3f2fd; padding: 20px; border-radius: 15px; margin-top: 30px; }
 
-        @media (max-width: 768px) { 
-            .form-grid, .details-layout, .gallery-grid { grid-template-columns: 1fr; } 
-            .side-imgs { display: none; } 
-            .full-width { grid-column: span 1; }
-            .gallery-grid { height: 250px; }
-        }
         /* --- NEW STYLES FOR MOBILE & LIGHTBOX --- */
         
         /* 1. Lightbox (Full Screen Zoom) */
@@ -216,28 +189,6 @@
 
         .gallery-mobile { display: none; } /* Hidden on Desktop */
 
-        /* 3. Mobile Responsiveness */
-        /* --- MOBILE FIXES --- */
-        @media (max-width: 768px) {
-            /* Fix Navigation */
-            nav { padding: 15px; flex-direction: column; gap: 10px; }
-            .nav-links { width: 100%; justify-content: center; gap: 15px; }
-            .logo { margin-bottom: 5px; }
-
-            /* Fix Gallery */
-            .gallery-desktop { display: none; }
-            .gallery-mobile { 
-                display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; scroll-snap-type: x mandatory; 
-            }
-            .gallery-mobile img { 
-                width: 85vw; height: 250px; object-fit: cover; border-radius: 10px; flex-shrink: 0; scroll-snap-align: center; 
-            }
-
-            /* Fix Forms & Layout */
-            .form-grid, .details-layout, .upload-grid { grid-template-columns: 1fr !important; }
-            .full-width { grid-column: span 1 !important; }
-            
-            /* Fix Search Bar */
             /* --- PRO SEARCH BAR CSS --- */
             /* --- TABBED SEARCH BAR DESIGN --- */
             .hero-search-container {
@@ -271,7 +222,7 @@
             .tab-item.active {
                 opacity: 1;
                 font-weight: 700;
-                border-bottom: 3px solid #ff4757; /* The Red Line */
+                border-bottom: 3px solid var(--primary); /* Use brand color */
             }
 
             /* 2. The Search Box */
@@ -307,7 +258,7 @@
 
             /* The Red Search Button */
             .search-btn-red {
-                background: #ff4757;
+                background: var(--primary);
                 color: white;
                 border: none;
                 padding: 12px 30px;
@@ -317,7 +268,7 @@
                 cursor: pointer;
                 transition: 0.3s;
             }
-            .search-btn-red:hover { background: #e84118; }
+            .search-btn-red:hover { background: var(--secondary); }
             
             /* Filter Icon */
             .filter-icon-btn {
@@ -326,12 +277,6 @@
                 color: #666;
                 border-left: 1px solid #eee;
             }
-            .filter-icon-btn:hover { color: var(--primary); }
-            /* Fix Property Page */
-            .highlights { flex-wrap: wrap; gap: 10px; }
-            .highlight-item { flex: 1 1 40%; margin-bottom: 10px; }
-            .price-card { position: static; margin-top: 20px; }
-        }
             /* --- LOADING SPINNER CSS --- */
             #loading-overlay {
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -404,43 +349,62 @@
             /* Right Map Area */
             .map-container-full { flex: 1; position: relative; }
             #tenant-map { width: 100%; height: 100%; }
+            .btn-map-back {
+                position: absolute; top: 20px; left: 20px; z-index: 1000;
+                background: white; border: none; padding: 10px 15px; border-radius: 30px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; font-weight: 600;
+            }
 
-            /* Mobile Responsive */
-            /* --- MOBILE MAP FIX --- */
+            /* --- CONSOLIDATED MEDIA QUERY --- */
             @media (max-width: 768px) {
-                /* 1. Force Column Layout */
+                /* Layouts */
+                .form-grid, .details-layout, .gallery-grid, footer { grid-template-columns: 1fr; }
+                .full-width { grid-column: span 1; }
+
+                /* Navigation */
+                nav { padding: 15px; flex-direction: column; gap: 10px; }
+                .nav-links { width: 100%; justify-content: center; gap: 15px; }
+                .logo { margin-bottom: 5px; }
+
+                /* Search Page (Tenant View) */
                 .search-layout { 
-                    display: flex; 
-                    flex-direction: column; 
+                    display: flex !important;
+                    flex-direction: column !important;
                     height: auto !important; /* Allow scrolling */
                     overflow: visible !important;
                 }
-
-                /* 2. Map Goes Top (Order 1) */
                 .map-container-full { 
-                    order: 1; 
-                    height: 350px !important; /* Fixed height for map */
-                    width: 100%;
-                    position: relative;
+                    order: -1; /* Moves map to top */
+                    height: 300px !important;
+                    width: 100% !important;
                 }
-
-                /* 3. Filters Go Bottom (Order 2) */
+                #tenant-map { height: 100% !important; width: 100% !important; }
                 .filter-sidebar { 
-                    order: 2; 
-                    width: 100%; 
-                    height: auto; 
-                    border-right: none;
-                    border-top: 1px solid #eee;
-                    padding-bottom: 80px; /* Space for search button */
+                    order: 2; /* Filters below map */
+                    width: 100% !important; 
+                    height: auto !important;
+                    overflow-y: visible !important;
+                    padding-bottom: 80px;
                 }
-
-                /* 4. Sticky Search Button */
                 .sticky-search-btn {
                     position: fixed; 
                     bottom: 0; left: 0; width: 100%; 
                     padding: 15px; background: white; 
                     border-top: 1px solid #ddd; z-index: 1000;
                 }
+
+                /* Property Detail Page */
+                .gallery-desktop { display: none; }
+                .gallery-mobile { 
+                    display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; scroll-snap-type: x mandatory; 
+                }
+                .gallery-mobile img { 
+                    width: 85vw; height: 250px; object-fit: cover; border-radius: 10px; flex-shrink: 0; scroll-snap-align: center; 
+                }
+                .gallery-grid { height: 250px; }
+                .highlights { flex-wrap: wrap; gap: 10px; }
+                .highlight-item { flex: 1 1 40%; margin-bottom: 10px; }
+                .price-card { position: static; margin-top: 20px; }
             }
     </style>
 </head>
@@ -499,16 +463,16 @@
             <a id="nav-list-property">List Property</a>
             <a id="nav-login" class="btn-login">Login</a>
         </div> 
-        <button id="logout-btn" class="hidden" style="margin-left:20px; background:none; border:none; color:red; cursor:pointer;">Logout</button>
+        <button id="logout-btn" class="hidden btn-logout">Logout</button>
     </nav>
 
     <div id="home-page">
         <header class="hero">
-            <h1 style="margin-bottom:5px;">Find Your Perfect Home</h1>
+            <h1 class="mb-0">Find Your Perfect Home</h1>
             
             <div class="hero-search-container">
                 <div class="search-tabs">
-                    <div class="tab-item active" data-value="Buy">Buy</div>
+                    <div class="tab-item active" data-value="Buy">Buy</div> 
                     <div class="tab-item" data-value="Rent">Rent</div>
                     <div class="tab-item" data-value="Commercial">Commercial</div>
                 </div>
@@ -533,33 +497,32 @@
         </header>
 
         <div class="container">
-            <h2 style="text-align:center; margin-top:50px;">Featured Properties</h2>
+            <h2 class="text-center mt-50">Featured Properties</h2>
             <div class="grid-container" id="featured-list">
                 <p style="text-align:center; width:100%;">Loading latest properties...</p>
             </div>
 
-            <h2 style="text-align:center; margin-top:60px;">Latest Real Estate News</h2>
+            <h2 class="text-center" style="margin-top: 60px;">Latest Real Estate News</h2>
             <div class="grid-container">
                 <div class="card blog-card">
                     <h4>📈 Top 5 Areas to Invest</h4>
                     <p style="font-size:12px; color:#999;">Oct 12, 2025</p>
-                    <p style="color:#666; font-size:14px;">Anna Nagar and OMR are seeing highest appreciation...</p>
+                    <p style="color:#666; font-size:14px;">Anna Nagar and OMR are seeing the highest appreciation...</p>
                 </div>
                 <div class="card blog-card">
                     <h4>💰 Home Loan Rates Drop</h4>
                     <p style="font-size:12px; color:#999;">Nov 01, 2025</p>
-                    <p style="color:#666; font-size:14px;">New RBI policies make buying affordable...</p>
+                    <p style="color:#666; font-size:14px;">New RBI policies make buying more affordable...</p>
                 </div>
                 <div class="card blog-card">
                     <h4>🏡 Interior Design Trends</h4>
                     <p style="font-size:12px; color:#999;">Nov 20, 2025</p>
-                    <p style="color:#666; font-size:14px;">Minimalist designs are taking over in 2025...</p>
+                    <p style="color:#666; font-size:14px;">Minimalist designs are taking over the 2025 scene...</p>
                 </div>
             </div>
         </div>
 
         <footer>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:30px;">
                 <div>
                     <h4>EstatePro</h4>
                     <p style="font-size:13px; opacity:0.8;">The #1 Real Estate platform in Chennai.</p>
@@ -580,13 +543,12 @@
                     <a href="#">Facebook</a>
                     <a href="#">Instagram</a>
                 </div>
-            </div>
         </footer>
     </div>
 
     <div id="app-section" class="container hidden">
         
-        <div id="auth-section" class="card" style="max-width:450px; margin:50px auto; text-align:center;">
+        <div id="auth-section" class="card auth-card">
             <h2 id="auth-title">Welcome Back</h2>
             
             <div id="signup-fields" class="hidden">
@@ -611,7 +573,7 @@
                 <div style="overflow-x:auto;">
                     <table><thead><tr><th>Property</th><th>Status</th><th>Actions</th></tr></thead><tbody id="my-listings-body"></tbody></table>
                 </div>
-                <button id="refresh-listings-btn" class="btn btn-primary" style="width:auto; margin-top:15px;">Refresh Status</button>
+                <button id="refresh-listings-btn" class="btn btn-primary w-auto mt-15">Refresh Status</button>
             </div>
 
             <div class="card" id="listing-form-card">
@@ -849,7 +811,7 @@
 
             <div class="map-container-full">
                 <div id="tenant-map"></div>
-                <button id="tenant-back-btn" style="position:absolute; top:20px; left:20px; z-index:1000; background:white; border:none; padding:10px 15px; border-radius:30px; box-shadow:0 2px 10px rgba(0,0,0,0.1); cursor:pointer; font-weight:600;">← Back</button>
+                <button id="tenant-back-btn" class="btn-map-back">← Back</button>
             </div>
         </div>
     </div>
