@@ -251,7 +251,7 @@
             /* The Input Field */
             .search-box-clean input {
                 border: none;
-                /*flex: 1;*/
+                width: 100%;
                 padding: 15px;
                 font-size: 15px;
                 outline: none;
@@ -348,7 +348,7 @@
             }
 
             /* Right Map Area */
-            .map-container-full {position: relative; }
+            .map-container-full { position: relative; flex: 1; }
             #tenant-map { width: 100%; height: 100%; }
             .btn-map-back {
                 position: absolute; top: 20px; left: 20px; z-index: 1000;
@@ -379,7 +379,7 @@
                     height: 300px !important;
                     min-height: 300px; /* Add a minimum height safeguard */
                     width: 100% !important;
-                    position: relative; /* Ensure positioning context */
+                    position:relative; /* Ensure positioning context */
                     flex-shrink: 0; /* Prevent the map from shrinking */
                 }
                 #tenant-map { height: 100% !important; width: 100% !important; }
