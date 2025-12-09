@@ -1,9 +1,15 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const twilio = require('twilio');
+const accountSid = process.env.TWILIO_SID; // <--- Reads from .env
+const authToken = process.env.TWILIO_AUTH; // <--- Reads from .env
+const twilioClient = require('twilio')(accountSid, authToken);
+const TWILIO_PHONE = process.env.TWILIO_PHONE; // <--- Reads from .env
 
 const app = express();
 app.use(cors());
@@ -12,7 +18,7 @@ app.use(bodyParser.json());
 // --- CONFIGURATION ---
 const JWT_SECRET = 'secret_key_123';
 // ⚠️ PASTE YOUR MONGODB CONNECTION STRING HERE
-const dbURL = 'mongodb+srv://sabareeshu2007_db_user:Sabareesh$2007@cluster0.nanwaap.mongodb.net/?appName=Cluster0';
+const dbURL = process.env.MONGO_URL;
 
 mongoose.connect(dbURL)
 .then(() => console.log("✅ Database Connected"))
@@ -171,6 +177,44 @@ app.get('/api/featured-properties', async (req, res) => {
         const props = await Property.find().sort({ createdAt: -1 }).limit(3);
         res.json({ success: true, properties: props });
     } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+cron.schedule('* * * * *', async () => {
+    console.log('⏳ [AI SYSTEM] Checking for properties to call...');
+
+    // 1. Find properties (In real life, check dates. For demo, check all active)
+    const properties = await Property.find({ status: 'Pending Verification' });
+
+    if (properties.length === 0) return console.log("   ✅ No calls needed.");
+
+    properties.forEach(async (prop) => {
+        if (!prop.phone) return;
+
+        console.log(`   📞 Initiating Call to ${prop.firstName} (${prop.phone})...`);
+
+        try {
+            // 2. Make the Real Phone Call
+            const call = await twilioClient.calls.create({
+                // The message the robot will speak (TwiML)
+                twiml: `<Response>
+                            <Say voice="alice">Hello ${prop.firstName}. This is Estate Pro. 
+                            We are checking if your property at ${prop.area} is still available? 
+                            Please log in to your dashboard to update the status. Thank you.</Say>
+                        </Response>`,
+                to: prop.phone,         // The Owner's real number
+                from: TWILIO_PHONE      // Your Twilio number
+            });
+
+            console.log(`   ✅ Call Started! SID: ${call.sid}`);
+            
+            // 3. Update Last Checked Time
+            prop.lastChecked = new Date();
+            await prop.save();
+
+        } catch (error) {
+            console.error("   ❌ Call Failed:", error.message);
+        }
+    });
 });
 
 const PORT = process.env.PORT || 3000;
