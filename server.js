@@ -4,6 +4,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto'); // Built-in Node tool
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
@@ -25,6 +27,8 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     userType: { type: String, required: true },
     role: { type: String, default: 'user' },
+    resetToken: String,
+    resetTokenExpiry: Date
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -66,6 +70,15 @@ const PropertySchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 const Property = mongoose.model('Property', PropertySchema);
+
+// EMAIL CONFIGURATION
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'your-email@gmail.com', // Replace or use process.env.EMAIL_USER
+        pass: 'your-app-password'     // Replace or use process.env.EMAIL_PASS
+    }
+});
 
 // --- ROUTES ---
 
@@ -210,6 +223,71 @@ app.put('/api/admin/verify/:id', async (req, res) => {
         prop.status = prop.isVerified ? 'Verified' : 'Pending';
         await prop.save();
         res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 9. FORGOT PASSWORD REQUEST
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        if (!user) return res.json({ success: false, message: "User not found" });
+
+        // Generate Token
+        const token = crypto.randomBytes(20).toString('hex');
+
+        // Save to DB (Expires in 1 hour)
+        user.resetToken = token;
+        user.resetTokenExpiry = Date.now() + 3600000; 
+        await user.save();
+
+        // Create Link (Points to your frontend)
+        // NOTE: In production, change http://localhost... to your Render URL
+        const resetLink = `https://real-estate-app-nine-sepia.vercel.app/?resetToken=${token}`;
+
+        // Send Email
+        const mailOptions = {
+            from: 'EstatePro Security',
+            to: user.email,
+            subject: 'Password Reset Request',
+            text: `Click this link to reset your password: ${resetLink}\n\nIf you didn't ask for this, ignore it.`
+        };
+
+        // Try to send email, log to console if it fails (so you can still test)
+        try {
+            await transporter.sendMail(mailOptions);
+        } catch (err) {
+            console.log("Email failed (Check credentials). Link is:", resetLink);
+        }
+
+        res.json({ success: true, message: "Check your email (or server logs) for the link!" });
+
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 10. RESET PASSWORD ACTION
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        // Find user with this token AND make sure it hasn't expired ($gt = Greater Than now)
+        const user = await User.findOne({ 
+            resetToken: token, 
+            resetTokenExpiry: { $gt: Date.now() } 
+        });
+
+        if (!user) return res.json({ success: false, message: "Invalid or Expired Token" });
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update User
+        user.password = hashedPassword;
+        user.resetToken = undefined;       // Clear token
+        user.resetTokenExpiry = undefined;
+        await user.save();
+
+        res.json({ success: true, message: "Password Changed! Please Login." });
+
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 const PORT = process.env.PORT || 3000;

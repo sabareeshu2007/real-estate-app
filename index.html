@@ -459,6 +459,25 @@
             <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
         </div>
     </div>
+    <div id="forgot-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:3000;display:flex;justify-content:center;align-items:center;">
+        <div class="card" style="width:90%;max-width:400px;text-align:center;">
+            <h3>Reset Password</h3>
+
+            <div id="forgot-step-1">
+                <p style="color:#666; font-size:13px; margin-bottom:15px;">Enter your email to receive a reset link.</p>
+                <input type="email" id="forgot-email" placeholder="Enter Email">
+                <button class="btn btn-primary" onclick="requestReset()">Send Link</button>
+            </div>
+
+            <div id="forgot-step-2" class="hidden">
+                <p style="color:#666; font-size:13px; margin-bottom:15px;">Enter your new password below.</p>
+                <input type="password" id="new-pass" placeholder="New Password">
+                <button class="btn btn-primary" onclick="confirmReset()">Change Password</button>
+            </div>
+
+            <p style="margin-top:15px; cursor:pointer; font-size:12px; color:#888;" onclick="closeForgot()">Cancel</p>
+        </div>
+    </div>
     <div id="loading-overlay" class="hidden">
         <div class="spinner"></div>
         <p id="loading-msg" style="margin-top:15px; font-weight:600; color:#666;">Processing...</p>
@@ -602,7 +621,9 @@
 
             <input type="email" id="email-input" placeholder="Email Address">
             <input type="password" id="pass-input" placeholder="Password">
-            
+            <div style="text-align:right; margin-bottom:15px;">
+                <span style="font-size:12px; color:#666; cursor:pointer;" onclick="openForgot()">Forgot Password?</span>
+            </div>
             <button id="auth-btn" class="btn btn-primary">Login</button>
             
             <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:13px;">
@@ -1854,11 +1875,77 @@
             await fetch(`${API_URL}/admin/verify/${id}`, { method: 'PUT' });
             loadAdminData();
         }
+        // --- FORGOT PASSWORD LOGIC ---
+        let pendingToken = null;
+
+        function openForgot() {
+            document.getElementById('forgot-modal').classList.remove('hidden');
+            document.getElementById('forgot-step-1').classList.remove('hidden');
+            document.getElementById('forgot-step-2').classList.add('hidden');
+        }
+        function closeForgot() { document.getElementById('forgot-modal').classList.add('hidden'); }
+
+        async function requestReset() {
+            const email = document.getElementById('forgot-email').value;
+            if(!email) return alert("Enter email");
+
+            showLoading("Sending...");
+            try {
+                const res = await fetch(`${API_URL}/forgot-password`, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                alert(data.message);
+                if(data.success) closeForgot();
+            } catch(e) { alert("Error sending email"); } 
+            finally { hideLoading(); }
+        }
+
+        async function confirmReset() {
+            const pass = document.getElementById('new-pass').value;
+            if(!pass) return alert("Enter new password");
+
+            showLoading("Updating...");
+            try {
+                const res = await fetch(`${API_URL}/reset-password`, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ token: pendingToken, newPassword: pass })
+                });
+                const data = await res.json();
+                alert(data.message);
+                if(data.success) {
+                    closeForgot();
+                    window.location.href = window.location.origin; // Clear URL
+                }
+            } catch(e) { alert("Error resetting"); }
+            finally { hideLoading(); }
+        }
+
+        // CHECK URL FOR RESET TOKEN
+        function checkResetUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('resetToken');
+
+            if (token) {
+                console.log("Reset Token Found:", token);
+                pendingToken = token;
+
+                // Open Modal directly to Step 2
+                document.getElementById('forgot-modal').classList.remove('hidden');
+                document.getElementById('forgot-step-1').classList.add('hidden');
+                document.getElementById('forgot-step-2').classList.remove('hidden');
+
+                // If user is logged in, log them out for safety
+                if(localStorage.getItem('token')) handleLogout();
+            }
+        }
         
         // Re-using your existing deleteProp function, make sure it calls loadAdminData() if admin
         // (You can just use the delete button to call deleteProp, it works for both)
 
         // INIT
+        checkResetUrl();
         setupEventListeners();
         loadFeatured();
         checkSession();
