@@ -421,6 +421,14 @@
     </style>
 </head>
 <body>
+    <div id="otp-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:3000;display:flex;justify-content:center;align-items:center;">
+        <div class="card" style="width:300px; text-align:center;">
+            <h3>Enter Code</h3>
+            <p style="font-size:12px; color:#666;">We sent a code to your email.</p>
+            <input type="text" id="otp-input" placeholder="123456" style="text-align:center; letter-spacing:5px; font-size:20px;">
+            <button class="btn btn-primary" onclick="submitOtp()">Verify</button>
+        </div>
+    </div>
     <div id="filter-modal" class="hidden">
         <div class="filter-box">
             <div class="modal-header">
@@ -978,6 +986,7 @@
         let allMyProperties = []; // Stores full property data
         let searchFilters = { listingType: '', propertyType: '', price: 0, sqft: 0 };
         let adminChart = null; // Global variable to hold chart instance
+        let tempEmail = "";
 
         // --- ADVANCED FILTER STATE ---
         let activeFilters = {
@@ -1134,27 +1143,54 @@
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
             const endpoint = isLoginMode ? '/login' : '/register';
-            let payload = { email, password, userType: currentUserType };
             
-            if(!isLoginMode) {
-                payload.firstName = document.getElementById('reg-name').value;
-                payload.phone = document.getElementById('reg-phone').value;
-                if(!payload.firstName) return alert("Fill Name");
+            let payload = { email, password, userType: currentUserType };
+            if(!isLoginMode) { 
+                payload.firstName = document.getElementById('reg-name').value; 
+                payload.phone = document.getElementById('reg-phone').value; 
             }
 
             try {
-                const res = await fetch(`${API_URL}${endpoint}`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+                showLoading(isLoginMode ? "Logging in..." : "Sending Code...");
+                const res = await fetch(`${API_URL}${endpoint}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                
+                if(data.success) {
+                    // CHECK IF OTP IS REQUIRED
+                    if (data.requireOtp) {
+                        tempEmail = data.email;
+                        document.getElementById('otp-modal').classList.remove('hidden');
+                    } else {
+                        // Normal Login
+                        localStorage.setItem('token', data.token); 
+                        localStorage.setItem('role', data.role || 'user');
+                        localStorage.setItem('email', email);
+                        checkSession(); 
+                    }
+                } else { alert(data.message); }
+            } catch(e) { alert("Error"); } finally { hideLoading(); }
+        }
+
+        async function submitOtp() {
+            const otp = document.getElementById('otp-input').value;
+            try {
+                const res = await fetch(`${API_URL}/verify-otp`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ email: tempEmail, otp }) 
                 });
                 const data = await res.json();
                 if(data.success) {
+                    alert("Verified!");
+                    document.getElementById('otp-modal').classList.add('hidden');
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('role', data.role || 'user');
-                    localStorage.setItem('type', currentUserType);
-                    localStorage.setItem('email', email);
+                    localStorage.setItem('role', data.role);
+                    localStorage.setItem('email', tempEmail);
                     checkSession();
-                } else { alert(data.message); }
-            } catch(e) { alert("Error"); }
+                } else {
+                    alert("Invalid Code");
+                }
+            } catch(e) { console.error(e); }
         }
 
         function checkSession() {

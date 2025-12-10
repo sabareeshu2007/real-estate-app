@@ -28,7 +28,9 @@ const UserSchema = new mongoose.Schema({
     userType: { type: String, required: true },
     role: { type: String, default: 'user' },
     resetToken: String,
-    resetTokenExpiry: Date
+    resetTokenExpiry: Date,
+    isVerified: { type: Boolean, default: false },
+    otp: String
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -84,54 +86,82 @@ const transporter = nodemailer.createTransport({
 
 // 1. REGISTER
 // 1. REGISTER (Updated with Admin Rule)
+// 1. REGISTER (Send OTP)
 app.post('/api/register', async (req, res) => {
     const { firstName, lastName, phone, email, password, userType } = req.body;
     try {
         let user = await User.findOne({ email });
-        if (user) return res.json({ success: false, message: "User already exists." });
+        if (user) return res.json({ success: false, message: "User exists." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // --- PASTE STARTS HERE ---
-        // MAGIC ADMIN RULE: Check if email matches, assign 'admin' role
         const role = (email === 'admin@estatepro.com') ? 'admin' : 'user';
 
-        // Create User WITH role
         user = new User({ 
-            firstName, 
-            lastName, 
-            phone, 
-            email, 
-            password: hashedPassword, 
-            userType, 
-            role // <--- Added here
+            firstName, lastName, phone, email, 
+            password: hashedPassword, userType, role,
+            otp: otp, // Save OTP to DB
+            isVerified: false 
         });
         await user.save();
 
-        // Add role to Token
-        const token = jwt.sign({ id: user._id, email: user.email, role: role }, JWT_SECRET);
+        // Send Email
+        const mailOptions = {
+            from: '"EstatePro Team" <no-reply@estatepro.com>',
+            to: email,
+            subject: 'Verify your Account',
+            text: `Your Verification Code is: ${otp}`
+        };
         
-        // Send role back to frontend
-        res.json({ success: true, message: "Account Created!", token, role });
-        // --- PASTE ENDS HERE ---
+        // Use your existing transporter
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: "OTP Sent to Email!", requireOtp: true, email: email });
 
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// 1.5 VERIFY OTP
+app.post('/api/verify-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) return res.json({ success: false, message: "User not found" });
+        
+        if (user.otp === otp) {
+            user.isVerified = true;
+            user.otp = undefined; // Clear OTP after use
+            await user.save();
+
+            // Login successful now
+            const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET);
+            res.json({ success: true, message: "Account Verified!", token, role: user.role });
+        } else {
+            res.json({ success: false, message: "Invalid Code" });
+        }
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // 2. LOGIN
+// 2. LOGIN (Check Verification)
 app.post('/api/login', async (req, res) => {
-    const { email, password, userType } = req.body;
+    const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
         if (!user) return res.json({ success: false, message: "User not found." });
 
+        // BLOCK IF NOT VERIFIED
+        if (!user.isVerified) return res.json({ success: false, message: "Please verify your email first." });
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.json({ success: false, message: "Invalid Password" });
 
-        if(user.userType !== userType) return res.json({ success: false, message: `Please login as ${user.userType}` });
-
-        const token = jwt.sign({ id: user._id, email: user.email, type: user.userType }, JWT_SECRET);
-        res.json({ success: true, message: "Login Successful", token });
+        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET);
+        res.json({ success: true, message: "Login Successful", token, role: user.role });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
