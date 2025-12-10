@@ -1751,20 +1751,6 @@
             // Trigger search immediately
             setTimeout(searchProperties, 500); 
         }
-        function setSearchTab(el, type) {
-            // 1. Reset all tabs
-            document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
-            
-            // 2. Activate clicked tab
-            el.classList.add('active');
-            
-            // 3. Update Global Filter
-            // Make sure 'activeFilters' is defined at the top of your script!
-            if(typeof activeFilters !== 'undefined') {
-                activeFilters.listingType = type;
-                console.log("Switched Search Mode to:", type);
-            }
-        }
 
         // INIT
         setupEventListeners();
