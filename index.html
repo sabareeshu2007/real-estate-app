@@ -411,89 +411,6 @@
                 .highlight-item { flex: 1 1 40%; margin-bottom: 10px; }
                 .price-card { position: static; margin-top: 20px; }
             }
-            /* --- TABBED SEARCH BAR CSS --- */
-            .hero-search-container {
-                background: rgba(255, 255, 255, 0.2);
-                backdrop-filter: blur(10px);
-                padding: 20px;
-                border-radius: 15px;
-                width: 90%;
-                max-width: 700px;
-                margin-top: 20px;
-            }
-
-            /* 1. The Tabs */
-            .search-tabs {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 15px;
-                justify-content: center;
-            }
-            
-            .tab-item {
-                color: white;
-                padding: 8px 20px;
-                cursor: pointer;
-                font-weight: 500;
-                opacity: 0.8;
-                border-bottom: 3px solid transparent;
-                transition: 0.3s;
-            }
-            
-            .tab-item.active {
-                opacity: 1;
-                font-weight: 700;
-                border-bottom: 3px solid #ff4757;
-            }
-
-            /* 2. The Search Box */
-            .search-box-clean {
-                background: white;
-                border-radius: 8px;
-                display: flex;
-                align-items: center;
-                padding: 5px;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            }
-
-            .city-select {
-                border: none;
-                border-right: 1px solid #ddd;
-                padding: 10px 15px;
-                background: transparent;
-                font-weight: 600;
-                color: #333;
-                cursor: pointer;
-                outline: none;
-            }
-
-            .search-box-clean input {
-                border: none;
-                flex: 1;
-                padding: 15px;
-                font-size: 15px;
-                outline: none;
-            }
-
-            .search-btn-red {
-                background: #ff4757;
-                color: white;
-                border: none;
-                padding: 12px 30px;
-                border-radius: 6px;
-                font-weight: 600;
-                font-size: 16px;
-                cursor: pointer;
-                transition: 0.3s;
-            }
-            .search-btn-red:hover { background: #e84118; }
-            
-            .filter-icon-btn {
-                padding: 10px 15px;
-                cursor: pointer;
-                color: #666;
-                border-left: 1px solid #eee;
-            }
     </style>
 </head>
 <body>
@@ -556,13 +473,13 @@
 
     <div id="home-page">
         <header class="hero">
-            <h1 style="margin-bottom:5px;">Find Your Perfect Home</h1>
+            <h1 class="mb-0">Find Your Perfect Home</h1>
             
             <div class="hero-search-container">
                 <div class="search-tabs">
-                    <div class="tab-item active" onclick="setSearchTab(this, 'Buy')">Buy</div>
-                    <div class="tab-item" onclick="setSearchTab(this, 'Rent')">Rent</div>
-                    <div class="tab-item" onclick="setSearchTab(this, 'Commercial')">Commercial</div>
+                    <div class="tab-item active" data-value="Buy">Buy</div> 
+                    <div class="tab-item" data-value="Rent">Rent</div>
+                    <div class="tab-item" data-value="Commercial">Commercial</div>
                 </div>
 
                 <div class="search-box-clean">
@@ -571,13 +488,13 @@
                         <option>Bangalore</option>
                     </select>
 
-                    <input type="text" id="home-search-input" placeholder="Search Locality..." autocomplete="off" name="search_q_unique">
+                    <input type="text" id="home-search-input" placeholder="Search up to 3 Localities..." autocomplete="off" name="search_unique_xyz">
                     
-                    <div class="filter-icon-btn" onclick="toggleFilter()" title="Advanced Filters">
+                    <div id="hero-filter-btn" class="filter-icon-btn" title="Advanced Filters">
                         <i class="fas fa-sliders-h"></i>
                     </div>
 
-                    <button class="search-btn-red" onclick="triggerTenantSearch()">
+                    <button id="hero-search-btn" class="search-btn-red">
                         Search
                     </button>
                 </div>
