@@ -23,7 +23,8 @@ const UserSchema = new mongoose.Schema({
     firstName: String, lastName: String, phone: String,
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    userType: { type: String, required: true }
+    userType: { type: String, required: true },
+    role: { type: String, default: 'user' },
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -60,6 +61,7 @@ const PropertySchema = new mongoose.Schema({
     // Map Location
     lat: Number, lng: Number,
     // System Status
+    isVerified: { type: Boolean, default: false },
     status: { type: String, default: 'Pending Verification' },
     createdAt: { type: Date, default: Date.now }
 });
@@ -68,6 +70,7 @@ const Property = mongoose.model('Property', PropertySchema);
 // --- ROUTES ---
 
 // 1. REGISTER
+// 1. REGISTER (Updated with Admin Rule)
 app.post('/api/register', async (req, res) => {
     const { firstName, lastName, phone, email, password, userType } = req.body;
     try {
@@ -75,11 +78,30 @@ app.post('/api/register', async (req, res) => {
         if (user) return res.json({ success: false, message: "User already exists." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        user = new User({ firstName, lastName, phone, email, password: hashedPassword, userType });
+
+        // --- PASTE STARTS HERE ---
+        // MAGIC ADMIN RULE: Check if email matches, assign 'admin' role
+        const role = (email === 'admin@estatepro.com') ? 'admin' : 'user';
+
+        // Create User WITH role
+        user = new User({ 
+            firstName, 
+            lastName, 
+            phone, 
+            email, 
+            password: hashedPassword, 
+            userType, 
+            role // <--- Added here
+        });
         await user.save();
 
-        const token = jwt.sign({ id: user._id, email: user.email, type: userType }, JWT_SECRET);
-        res.json({ success: true, message: "Account Created!", token });
+        // Add role to Token
+        const token = jwt.sign({ id: user._id, email: user.email, role: role }, JWT_SECRET);
+        
+        // Send role back to frontend
+        res.json({ success: true, message: "Account Created!", token, role });
+        // --- PASTE ENDS HERE ---
+
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -172,6 +194,23 @@ app.get('/api/featured-properties', async (req, res) => {
         res.json({ success: true, properties: props });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+// --- ADMIN ROUTES ---
+app.get('/api/admin/all-properties', async (req, res) => {
+    try {
+        const props = await Property.find().sort({ createdAt: -1 });
+        const userCount = await User.countDocuments();
+        res.json({ success: true, properties: props, stats: { users: userCount, listings: props.length } });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
+app.put('/api/admin/verify/:id', async (req, res) => {
+    try {
+        const prop = await Property.findById(req.params.id);
+        prop.isVerified = !prop.isVerified; // Toggle
+        prop.status = prop.isVerified ? 'Verified' : 'Pending';
+        await prop.save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
