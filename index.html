@@ -920,6 +920,7 @@
                 <div class="sidebar">
                     <div class="card price-card">
                         <div style="font-size:32px; font-weight:700; color:var(--secondary);">₹ <span id="dt-price"></span></div>
+                        <p id="dt-ver-badge" class="hidden" style="color:green; font-weight:600; margin-top:5px;">✅ Verified Property</p>
                         <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
                         <h4>Owner Details</h4>
                         <p style="font-size:18px; font-weight:600;"><span id="dt-owner"></span></p>
@@ -1613,6 +1614,12 @@
             setTimeout(() => {
                 if (detailMap) detailMap.invalidateSize();
             }, 150);
+
+            const badge = document.getElementById('dt-ver-badge');
+            if(badge) {
+                if(p.isVerified) badge.classList.remove('hidden'); 
+                else badge.classList.add('hidden');
+            }
         }
 
         // --- HOME PAGE LOGIC ---
