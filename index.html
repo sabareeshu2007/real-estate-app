@@ -427,6 +427,8 @@
             <p style="font-size:12px; color:#666;">We sent a code to your email.</p>
             <input type="text" id="otp-input" placeholder="123456" style="text-align:center; letter-spacing:5px; font-size:20px;">
             <button class="btn btn-primary" onclick="submitOtp()">Verify</button>
+            <p onclick="resendOtp()" style="margin-top:15px; font-size:12px; color:var(--primary); cursor:pointer; text-decoration:underline;">Resend Code</p>
+            <p onclick="document.getElementById('otp-modal').classList.add('hidden')" style="margin-top:10px; font-size:12px; cursor:pointer;">Cancel</p>
         </div>
     </div>
     <div id="filter-modal" class="hidden">
@@ -1156,19 +1158,48 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    // CHECK IF OTP IS REQUIRED
                     if (data.requireOtp) {
-                        tempEmail = data.email;
+                        // Registration success, waiting for OTP
+                        tempEmail = data.email; // Save email globally
                         document.getElementById('otp-modal').classList.remove('hidden');
                     } else {
-                        // Normal Login
+                        // Login success
                         localStorage.setItem('token', data.token); 
                         localStorage.setItem('role', data.role || 'user');
                         localStorage.setItem('email', email);
                         checkSession(); 
                     }
-                } else { alert(data.message); }
-            } catch(e) { alert("Error"); } finally { hideLoading(); }
+                } else { 
+                    // HANDLE STUCK USER
+                    if(data.message.includes("verify your email")) {
+                        alert("Your account exists but is not verified. Sending new code...");
+                        tempEmail = email; // Save the email
+                        resendOtp(); // Automatically trigger resend
+                    } else {
+                        alert(data.message); 
+                    }
+                }
+            } catch(e) { alert("Connection Error"); } finally { hideLoading(); }
+        }
+
+        // Add this new function
+        async function resendOtp() {
+            if(!tempEmail) return alert("No email found.");
+            showLoading("Resending Code...");
+            try {
+                const res = await fetch(`${API_URL}/resend-otp`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ email: tempEmail }) 
+                });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('otp-modal').classList.remove('hidden');
+                    alert("New code sent to " + tempEmail);
+                } else {
+                    alert(data.message);
+                }
+            } catch(e) { alert("Error sending code"); } finally { hideLoading(); }
         }
 
         async function submitOtp() {

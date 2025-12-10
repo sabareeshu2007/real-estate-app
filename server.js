@@ -124,6 +124,34 @@ app.post('/api/register', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// 1.2 RESEND OTP
+app.post('/api/resend-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) return res.json({ success: false, message: "User not found" });
+        if (user.isVerified) return res.json({ success: false, message: "Account already verified. Please Login." });
+
+        // Generate New OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.otp = otp;
+        await user.save();
+
+        // Send Email
+        const mailOptions = {
+            from: '"EstatePro Team" <no-reply@estatepro.com>',
+            to: email,
+            subject: 'New Verification Code',
+            text: `Your New Code is: ${otp}`
+        };
+        await transporter.sendMail(mailOptions);
+
+        res.json({ success: true, message: "New Code Sent!" });
+
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // 1.5 VERIFY OTP
 app.post('/api/verify-otp', async (req, res) => {
     try {
