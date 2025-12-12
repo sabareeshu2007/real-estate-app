@@ -77,8 +77,8 @@ const Property = mongoose.model('Property', PropertySchema);
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'your-email@gmail.com', // Replace or use process.env.EMAIL_USER
-        pass: 'your-app-password'     // Replace or use process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
@@ -128,28 +128,52 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/resend-otp', async (req, res) => {
     try {
         const { email } = req.body;
-        const user = await User.findOne({ email });
+        
+        // 1. Check if Environment Variables are actually there
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            console.error("❌ MISSING EMAIL CREDENTIALS IN ENV");
+            return res.json({ success: false, message: "Server Error: Email configuration missing." });
+        }
 
+        const user = await User.findOne({ email });
         if (!user) return res.json({ success: false, message: "User not found" });
         if (user.isVerified) return res.json({ success: false, message: "Account already verified. Please Login." });
 
-        // Generate New OTP
+        // 2. Generate Code
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.otp = otp;
         await user.save();
 
-        // Send Email
+        // 3. Prepare Email
         const mailOptions = {
-            from: '"EstatePro Team" <no-reply@estatepro.com>',
+            from: `EstatePro Security <${process.env.EMAIL_USER}>`, // EXACT MATCH REQUIRED
             to: email,
             subject: 'New Verification Code',
-            text: `Your New Code is: ${otp}`
+            text: `Your Verification Code is: ${otp}`
         };
-        await transporter.sendMail(mailOptions);
 
-        res.json({ success: true, message: "New Code Sent!" });
+        // 4. Send with Timeout Protection
+        console.log(`⏳ Attempting to send email to ${email}...`);
+        
+        await new Promise((resolve, reject) => {
+            transporter.sendMail(mailOptions, (err, info) => {
+                if (err) {
+                    console.error("❌ SMTP ERROR:", err); // THIS WILL SHOW IN LOGS
+                    reject(err);
+                } else {
+                    console.log("✅ Email Sent:", info.response);
+                    resolve(info);
+                }
+            });
+        });
 
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        res.json({ success: true, message: "New Code Sent to Email!" });
+
+    } catch (e) { 
+        console.error("CRITICAL ERROR:", e.message);
+        // Send a readable error back to the frontend instead of "undefined"
+        res.json({ success: false, message: "Email Failed: " + e.message }); 
+    }
 });
 
 // 1.5 VERIFY OTP
