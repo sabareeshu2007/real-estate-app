@@ -5,7 +5,6 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto'); // Built-in Node tool
-const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(cors());
@@ -22,15 +21,15 @@ mongoose.connect(dbURL)
 
 // --- SCHEMAS ---
 const UserSchema = new mongoose.Schema({
-    firstName: String, lastName: String, phone: String,
-    email: { type: String, required: true, unique: true },
+    firstName: String, 
+    lastName: String, 
+    // Phone is now REQUIRED and UNIQUE
+    phone: { type: String, required: true, unique: true }, 
+    email: { type: String }, // Email is now optional
     password: { type: String, required: true },
     userType: { type: String, required: true },
     role: { type: String, default: 'user' },
-    resetToken: String,
-    resetTokenExpiry: Date,
-    isVerified: { type: Boolean, default: false },
-    otp: String
+    isVerified: { type: Boolean, default: true } // Auto-verify since we aren't doing SMS yet
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -73,150 +72,55 @@ const PropertySchema = new mongoose.Schema({
 });
 const Property = mongoose.model('Property', PropertySchema);
 
-// EMAIL CONFIGURATION
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+
 
 // --- ROUTES ---
 
 // 1. REGISTER
 // 1. REGISTER (Updated with Admin Rule)
 // 1. REGISTER (Send OTP)
+// 1. REGISTER (Phone Based)
 app.post('/api/register', async (req, res) => {
     const { firstName, lastName, phone, email, password, userType } = req.body;
     try {
-        let user = await User.findOne({ email });
-        if (user) return res.json({ success: false, message: "User exists." });
+        // Check if PHONE exists (not email)
+        let user = await User.findOne({ phone });
+        if (user) return res.json({ success: false, message: "Phone number already registered." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // Generate 6-digit OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const role = (email === 'admin@estatepro.com') ? 'admin' : 'user';
+        // MAGIC ADMIN RULE: This specific phone number becomes Admin
+        const role = (phone === '9999999999') ? 'admin' : 'user';
 
         user = new User({ 
             firstName, lastName, phone, email, 
             password: hashedPassword, userType, role,
-            otp: otp, // Save OTP to DB
-            isVerified: false 
+            isVerified: true // Skip verification for now (Stability First)
         });
         await user.save();
 
-        // Send Email
-        const mailOptions = {
-            from: '"EstatePro Team" <no-reply@estatepro.com>',
-            to: email,
-            subject: 'Verify your Account',
-            text: `Your Verification Code is: ${otp}`
-        };
-        
-        // Use your existing transporter
-        await transporter.sendMail(mailOptions);
+        const token = jwt.sign({ id: user._id, phone: user.phone, role: role }, JWT_SECRET);
+        res.json({ success: true, message: "Account Created!", token, role });
 
-        res.json({ success: true, message: "OTP Sent to Email!", requireOtp: true, email: email });
-
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// 1.2 RESEND OTP
-app.post('/api/resend-otp', async (req, res) => {
-    try {
-        const { email } = req.body;
-        
-        // 1. Check if Environment Variables are actually there
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.error("❌ MISSING EMAIL CREDENTIALS IN ENV");
-            return res.json({ success: false, message: "Server Error: Email configuration missing." });
-        }
-
-        const user = await User.findOne({ email });
-        if (!user) return res.json({ success: false, message: "User not found" });
-        if (user.isVerified) return res.json({ success: false, message: "Account already verified. Please Login." });
-
-        // 2. Generate Code
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        user.otp = otp;
-        await user.save();
-
-        // 3. Prepare Email
-        const mailOptions = {
-            from: `EstatePro Security <${process.env.EMAIL_USER}>`, // EXACT MATCH REQUIRED
-            to: email,
-            subject: 'New Verification Code',
-            text: `Your Verification Code is: ${otp}`
-        };
-
-        // 4. Send with Timeout Protection
-        console.log(`⏳ Attempting to send email to ${email}...`);
-        
-        await new Promise((resolve, reject) => {
-            transporter.sendMail(mailOptions, (err, info) => {
-                if (err) {
-                    console.error("❌ SMTP ERROR:", err); // THIS WILL SHOW IN LOGS
-                    reject(err);
-                } else {
-                    console.log("✅ Email Sent:", info.response);
-                    resolve(info);
-                }
-            });
-        });
-
-        res.json({ success: true, message: "New Code Sent to Email!" });
-
-    } catch (e) { 
-        console.error("CRITICAL ERROR:", e.message);
-        // Send a readable error back to the frontend instead of "undefined"
-        res.json({ success: false, message: "Email Failed: " + e.message }); 
-    }
-});
-
-// 1.5 VERIFY OTP
-app.post('/api/verify-otp', async (req, res) => {
-    try {
-        const { email, otp } = req.body;
-        const user = await User.findOne({ email });
-
-        if (!user) return res.json({ success: false, message: "User not found" });
-        
-        if (user.otp === otp) {
-            user.isVerified = true;
-            user.otp = undefined; // Clear OTP after use
-            await user.save();
-
-            // Login successful now
-            const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET);
-            res.json({ success: true, message: "Account Verified!", token, role: user.role });
-        } else {
-            res.json({ success: false, message: "Invalid Code" });
-        }
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // 2. LOGIN
 // 2. LOGIN (Check Verification)
+// 2. LOGIN (Phone Based)
 app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { phone, password } = req.body; // Expect phone, not email
     try {
-        const user = await User.findOne({ email });
-        if (!user) return res.json({ success: false, message: "User not found." });
-
-        // BLOCK IF NOT VERIFIED
-        if (!user.isVerified) return res.json({ success: false, message: "Please verify your email first." });
+        const user = await User.findOne({ phone });
+        if (!user) return res.json({ success: false, message: "Phone number not found." });
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.json({ success: false, message: "Invalid Password" });
 
-        const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET);
-        res.json({ success: true, message: "Login Successful", token, role: user.role });
+        const token = jwt.sign({ id: user._id, phone: user.phone, role: user.role }, JWT_SECRET);
+        res.json({ success: true, message: "Login Successful", token, role: user.role, userType: user.userType });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-
 // 3. CREATE LISTING
 app.post('/api/list-property', async (req, res) => {
     try {
@@ -308,69 +212,5 @@ app.put('/api/admin/verify/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 9. FORGOT PASSWORD REQUEST
-app.post('/api/forgot-password', async (req, res) => {
-    try {
-        const user = await User.findOne({ email: req.body.email });
-        if (!user) return res.json({ success: false, message: "User not found" });
-
-        // Generate Token
-        const token = crypto.randomBytes(20).toString('hex');
-
-        // Save to DB (Expires in 1 hour)
-        user.resetToken = token;
-        user.resetTokenExpiry = Date.now() + 3600000; 
-        await user.save();
-
-        // Create Link (Points to your frontend)
-        // NOTE: In production, change http://localhost... to your Render URL
-        const resetLink = `https://real-estate-app-nine-sepia.vercel.app/?resetToken=${token}`;
-
-        // Send Email
-        const mailOptions = {
-            from: 'EstatePro Security',
-            to: user.email,
-            subject: 'Password Reset Request',
-            text: `Click this link to reset your password: ${resetLink}\n\nIf you didn't ask for this, ignore it.`
-        };
-
-        // Try to send email, log to console if it fails (so you can still test)
-        try {
-            await transporter.sendMail(mailOptions);
-        } catch (err) {
-            console.log("Email failed (Check credentials). Link is:", resetLink);
-        }
-
-        res.json({ success: true, message: "Check your email (or server logs) for the link!" });
-
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// 10. RESET PASSWORD ACTION
-app.post('/api/reset-password', async (req, res) => {
-    try {
-        const { token, newPassword } = req.body;
-
-        // Find user with this token AND make sure it hasn't expired ($gt = Greater Than now)
-        const user = await User.findOne({ 
-            resetToken: token, 
-            resetTokenExpiry: { $gt: Date.now() } 
-        });
-
-        if (!user) return res.json({ success: false, message: "Invalid or Expired Token" });
-
-        // Hash new password
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        // Update User
-        user.password = hashedPassword;
-        user.resetToken = undefined;       // Clear token
-        user.resetTokenExpiry = undefined;
-        await user.save();
-
-        res.json({ success: true, message: "Password Changed! Please Login." });
-
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

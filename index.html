@@ -421,16 +421,7 @@
     </style>
 </head>
 <body>
-    <div id="otp-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:3000;display:flex;justify-content:center;align-items:center;">
-        <div class="card" style="width:300px; text-align:center;">
-            <h3>Enter Code</h3>
-            <p style="font-size:12px; color:#666;">We sent a code to your email.</p>
-            <input type="text" id="otp-input" placeholder="123456" style="text-align:center; letter-spacing:5px; font-size:20px;">
-            <button class="btn btn-primary" onclick="submitOtp()">Verify</button>
-            <p onclick="resendOtp()" style="margin-top:15px; font-size:12px; color:var(--primary); cursor:pointer; text-decoration:underline;">Resend Code</p>
-            <p onclick="document.getElementById('otp-modal').classList.add('hidden')" style="margin-top:10px; font-size:12px; cursor:pointer;">Cancel</p>
-        </div>
-    </div>
+    
     <div id="filter-modal" class="hidden">
         <div class="filter-box">
             <div class="modal-header">
@@ -469,25 +460,7 @@
             <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
         </div>
     </div>
-    <div id="forgot-modal" class="hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:3000;display:flex;justify-content:center;align-items:center;">
-        <div class="card" style="width:90%;max-width:400px;text-align:center;">
-            <h3>Reset Password</h3>
-
-            <div id="forgot-step-1">
-                <p style="color:#666; font-size:13px; margin-bottom:15px;">Enter your email to receive a reset link.</p>
-                <input type="email" id="forgot-email" placeholder="Enter Email">
-                <button class="btn btn-primary" onclick="requestReset()">Send Link</button>
-            </div>
-
-            <div id="forgot-step-2" class="hidden">
-                <p style="color:#666; font-size:13px; margin-bottom:15px;">Enter your new password below.</p>
-                <input type="password" id="new-pass" placeholder="New Password">
-                <button class="btn btn-primary" onclick="confirmReset()">Change Password</button>
-            </div>
-
-            <p style="margin-top:15px; cursor:pointer; font-size:12px; color:#888;" onclick="closeForgot()">Cancel</p>
-        </div>
-    </div>
+    
     <div id="loading-overlay" class="hidden">
         <div class="spinner"></div>
         <p id="loading-msg" style="margin-top:15px; font-weight:600; color:#666;">Processing...</p>
@@ -619,27 +592,19 @@
         </div>
     </div>
 
-    <div id="app-section" class="container hidden">
-        
-        <div id="auth-section" class="card auth-card">
-            <h2 id="auth-title">Welcome Back</h2>
+    <div id="auth-section" class="card" style="max-width:400px; margin:20px auto;">
+            <h2 id="auth-title">Welcome</h2>
             
             <div id="signup-fields" class="hidden">
                 <input type="text" id="reg-name" placeholder="Full Name">
-                <input type="tel" id="reg-phone" placeholder="Phone Number">
+                <input type="email" id="reg-email" placeholder="Email (Optional)">
             </div>
 
-            <input type="email" id="email-input" placeholder="Email Address">
+            <input type="tel" id="login-phone" placeholder="Phone Number (Login ID)" maxlength="10">
             <input type="password" id="pass-input" placeholder="Password">
-            <div style="text-align:right; margin-bottom:15px;">
-                <span style="font-size:12px; color:#666; cursor:pointer;" onclick="openForgot()">Forgot Password?</span>
-            </div>
-            <button id="auth-btn" class="btn btn-primary">Login</button>
             
-            <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:13px;">
-                <span id="switch-text" style="color:var(--primary); cursor:pointer; font-weight:600;">New here? Create Account</span>
-                <span id="auth-back-home" style="color:#666; cursor:pointer;">← Back to Home</span>
-            </div>
+            <button class="btn btn-primary" id="auth-btn" onclick="handleAuth()">Login</button>
+            <p onclick="toggleAuthMode()" style="text-align:center;margin-top:15px;cursor:pointer;color:var(--primary);" id="switch-text">New here? Create Account</p>
         </div>
 
         <div id="owner-section" class="hidden">
@@ -1142,86 +1107,39 @@
         }
 
         async function handleAuth() {
-            const email = document.getElementById('email-input').value;
+            const phone = document.getElementById('login-phone').value;
             const password = document.getElementById('pass-input').value;
+            
+            if(!phone || phone.length < 10) return alert("Enter valid phone number");
+            if(!password) return alert("Enter password");
+
             const endpoint = isLoginMode ? '/login' : '/register';
             
-            let payload = { email, password, userType: currentUserType };
+            let payload = { phone, password, userType: currentUserType };
             if(!isLoginMode) { 
-                payload.firstName = document.getElementById('reg-name').value; 
-                payload.phone = document.getElementById('reg-phone').value; 
+                payload.firstName = document.getElementById('reg-name').value;
+                // Note: We don't send email anymore, just phone/name
             }
 
             try {
-                showLoading(isLoginMode ? "Logging in..." : "Sending Code...");
-                const res = await fetch(`${API_URL}${endpoint}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                showLoading("Processing...");
+                const res = await fetch(`${API_URL}${endpoint}`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
+                });
                 const data = await res.json();
                 
-                if(data.success) {
-                    if (data.requireOtp) {
-                        // Registration success, waiting for OTP
-                        tempEmail = data.email; // Save email globally
-                        document.getElementById('otp-modal').classList.remove('hidden');
-                    } else {
-                        // Login success
-                        localStorage.setItem('token', data.token); 
-                        localStorage.setItem('role', data.role || 'user');
-                        localStorage.setItem('email', email);
-                        checkSession(); 
-                    }
-                } else { 
-                    // HANDLE STUCK USER
-                    if(data.message.includes("verify your email")) {
-                        alert("Your account exists but is not verified. Sending new code...");
-                        tempEmail = email; // Save the email
-                        resendOtp(); // Automatically trigger resend
-                    } else {
-                        alert(data.message); 
-                    }
-                }
-            } catch(e) { alert("Connection Error"); } finally { hideLoading(); }
-        }
-
-        // Add this new function
-        async function resendOtp() {
-            if(!tempEmail) return alert("No email found.");
-            showLoading("Resending Code...");
-            try {
-                const res = await fetch(`${API_URL}/resend-otp`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ email: tempEmail }) 
-                });
-                const data = await res.json();
-                if(data.success) {
-                    document.getElementById('otp-modal').classList.remove('hidden');
-                    alert("New code sent to " + tempEmail);
-                } else {
-                    alert(data.message);
-                }
-            } catch(e) { alert("Error sending code"); } finally { hideLoading(); }
-        }
-
-        async function submitOtp() {
-            const otp = document.getElementById('otp-input').value;
-            try {
-                const res = await fetch(`${API_URL}/verify-otp`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ email: tempEmail, otp }) 
-                });
-                const data = await res.json();
-                if(data.success) {
-                    alert("Verified!");
-                    document.getElementById('otp-modal').classList.add('hidden');
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('role', data.role);
-                    localStorage.setItem('email', tempEmail);
-                    checkSession();
-                } else {
-                    alert("Invalid Code");
-                }
-            } catch(e) { console.error(e); }
+                if(data.success) { 
+                    localStorage.setItem('token', data.token); 
+                    localStorage.setItem('role', data.role || 'user');
+                    localStorage.setItem('phone', phone);
+                    // Legacy support for functions expecting 'email' key
+                    localStorage.setItem('email', phone); 
+                    checkSession(); 
+                } else { alert(data.message); }
+            } catch(e) { alert("Connection Error"); } 
+            finally { hideLoading(); }
         }
 
         function checkSession() {
@@ -1942,77 +1860,14 @@
             await fetch(`${API_URL}/admin/verify/${id}`, { method: 'PUT' });
             loadAdminData();
         }
-        // --- FORGOT PASSWORD LOGIC ---
-        let pendingToken = null;
-
-        function openForgot() {
-            document.getElementById('forgot-modal').classList.remove('hidden');
-            document.getElementById('forgot-step-1').classList.remove('hidden');
-            document.getElementById('forgot-step-2').classList.add('hidden');
-        }
-        function closeForgot() { document.getElementById('forgot-modal').classList.add('hidden'); }
-
-        async function requestReset() {
-            const email = document.getElementById('forgot-email').value;
-            if(!email) return alert("Enter email");
-
-            showLoading("Sending...");
-            try {
-                const res = await fetch(`${API_URL}/forgot-password`, {
-                    method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ email })
-                });
-                const data = await res.json();
-                alert(data.message);
-                if(data.success) closeForgot();
-            } catch(e) { alert("Error sending email"); } 
-            finally { hideLoading(); }
-        }
-
-        async function confirmReset() {
-            const pass = document.getElementById('new-pass').value;
-            if(!pass) return alert("Enter new password");
-
-            showLoading("Updating...");
-            try {
-                const res = await fetch(`${API_URL}/reset-password`, {
-                    method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ token: pendingToken, newPassword: pass })
-                });
-                const data = await res.json();
-                alert(data.message);
-                if(data.success) {
-                    closeForgot();
-                    window.location.href = window.location.origin; // Clear URL
-                }
-            } catch(e) { alert("Error resetting"); }
-            finally { hideLoading(); }
-        }
 
         // CHECK URL FOR RESET TOKEN
-        function checkResetUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('resetToken');
-
-            if (token) {
-                console.log("Reset Token Found:", token);
-                pendingToken = token;
-
-                // Open Modal directly to Step 2
-                document.getElementById('forgot-modal').classList.remove('hidden');
-                document.getElementById('forgot-step-1').classList.add('hidden');
-                document.getElementById('forgot-step-2').classList.remove('hidden');
-
-                // If user is logged in, log them out for safety
-                if(localStorage.getItem('token')) handleLogout();
-            }
-        }
+        
         
         // Re-using your existing deleteProp function, make sure it calls loadAdminData() if admin
         // (You can just use the delete button to call deleteProp, it works for both)
 
         // INIT
-        checkResetUrl();
         setupEventListeners();
         loadFeatured();
         checkSession();
