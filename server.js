@@ -137,15 +137,20 @@ app.post('/api/resend-otp', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         user.otp = otp;
         await user.save();
+        
+        // --- BYPASS EMAIL: LOG TO CONSOLE ---
+        console.log("========================================");
+        console.log(`🔐 RESEND OTP FOR ${email}: ${otp}`);
+        console.log("========================================");
 
-        // Send Email
+        /*// Send Email
         const mailOptions = {
             from: '"EstatePro Team" <no-reply@estatepro.com>',
             to: email,
             subject: 'New Verification Code',
             text: `Your New Code is: ${otp}`
         };
-        await transporter.sendMail(mailOptions);
+        await transporter.sendMail(mailOptions); */
 
         res.json({ success: true, message: "New Code Sent!" });
 
