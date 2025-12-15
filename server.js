@@ -78,7 +78,7 @@ app.post('/api/register', async (req, res) => {
         if (user) return res.json({ success: false, message: "User already exists." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
         // --- PASTE STARTS HERE ---
         // MAGIC ADMIN RULE: Check if email matches, assign 'admin' role
         const role = (email === 'admin@estatepro.com') ? 'admin' : 'user';
