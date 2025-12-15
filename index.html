@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* ADMIN STYLES */
@@ -421,7 +420,6 @@
     </style>
 </head>
 <body>
-    
     <div id="filter-modal" class="hidden">
         <div class="filter-box">
             <div class="modal-header">
@@ -460,7 +458,6 @@
             <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
         </div>
     </div>
-    
     <div id="loading-overlay" class="hidden">
         <div class="spinner"></div>
         <p id="loading-msg" style="margin-top:15px; font-weight:600; color:#666;">Processing...</p>
@@ -564,12 +561,6 @@
         <h2 style="margin-bottom:20px;">👮‍♂️ Admin Control Panel</h2>
         
         <div class="admin-header">
-            <div class="card" style="margin-bottom: 25px;">
-                <h3>Platform Analytics</h3>
-                <div style="height: 300px; width: 100%; display: flex; justify-content: center;">
-                    <canvas id="listingChart"></canvas>
-                </div>
-            </div>
             <div class="stat-card">
                 <h4>Total Users</h4>
                 <div class="stat-num" id="stat-users">0</div>
@@ -592,19 +583,25 @@
         </div>
     </div>
 
-    <div id="auth-section" class="card" style="max-width:400px; margin:20px auto;">
-            <h2 id="auth-title">Welcome</h2>
+    <div id="app-section" class="container hidden">
+        
+        <div id="auth-section" class="card auth-card">
+            <h2 id="auth-title">Welcome Back</h2>
             
             <div id="signup-fields" class="hidden">
                 <input type="text" id="reg-name" placeholder="Full Name">
-                <input type="email" id="reg-email" placeholder="Email (Optional)">
+                <input type="tel" id="reg-phone" placeholder="Phone Number">
             </div>
 
-            <input type="tel" id="login-phone" placeholder="Phone Number (Login ID)" maxlength="10">
+            <input type="email" id="email-input" placeholder="Email Address">
             <input type="password" id="pass-input" placeholder="Password">
             
-            <button class="btn btn-primary" id="auth-btn" onclick="handleAuth()">Login</button>
-            <p onclick="toggleAuthMode()" style="text-align:center;margin-top:15px;cursor:pointer;color:var(--primary);" id="switch-text">New here? Create Account</p>
+            <button id="auth-btn" class="btn btn-primary">Login</button>
+            
+            <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:13px;">
+                <span id="switch-text" style="color:var(--primary); cursor:pointer; font-weight:600;">New here? Create Account</span>
+                <span id="auth-back-home" style="color:#666; cursor:pointer;">← Back to Home</span>
+            </div>
         </div>
 
         <div id="owner-section" class="hidden">
@@ -916,7 +913,6 @@
                 <div class="sidebar">
                     <div class="card price-card">
                         <div style="font-size:32px; font-weight:700; color:var(--secondary);">₹ <span id="dt-price"></span></div>
-                        <p id="dt-ver-badge" class="hidden" style="color:green; font-weight:600; margin-top:5px;">✅ Verified Property</p>
                         <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
                         <h4>Owner Details</h4>
                         <p style="font-size:18px; font-weight:600;"><span id="dt-owner"></span></p>
@@ -952,8 +948,6 @@
         let currentImages = {}; // Stores the current photos while editing
         let allMyProperties = []; // Stores full property data
         let searchFilters = { listingType: '', propertyType: '', price: 0, sqft: 0 };
-        let adminChart = null; // Global variable to hold chart instance
-        let tempEmail = "";
 
         // --- ADVANCED FILTER STATE ---
         let activeFilters = {
@@ -1107,39 +1101,30 @@
         }
 
         async function handleAuth() {
-            const phone = document.getElementById('login-phone').value;
+            const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
-            
-            if(!phone || phone.length < 10) return alert("Enter valid phone number");
-            if(!password) return alert("Enter password");
-
             const endpoint = isLoginMode ? '/login' : '/register';
+            let payload = { email, password, userType: currentUserType };
             
-            let payload = { phone, password, userType: currentUserType };
             if(!isLoginMode) { 
                 payload.firstName = document.getElementById('reg-name').value;
-                // Note: We don't send email anymore, just phone/name
+                payload.phone = document.getElementById('reg-phone').value;
+                if(!payload.firstName) return alert("Fill Name");
             }
 
             try {
-                showLoading("Processing...");
                 const res = await fetch(`${API_URL}${endpoint}`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(payload) 
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                
                 if(data.success) { 
                     localStorage.setItem('token', data.token); 
                     localStorage.setItem('role', data.role || 'user');
-                    localStorage.setItem('phone', phone);
-                    // Legacy support for functions expecting 'email' key
-                    localStorage.setItem('email', phone); 
+                    localStorage.setItem('type', currentUserType);
+                    localStorage.setItem('email', email);
                     checkSession(); 
                 } else { alert(data.message); }
-            } catch(e) { alert("Connection Error"); } 
-            finally { hideLoading(); }
+            } catch(e) { alert("Error"); }
         }
 
         function checkSession() {
@@ -1620,12 +1605,6 @@
             setTimeout(() => {
                 if (detailMap) detailMap.invalidateSize();
             }, 150);
-
-            const badge = document.getElementById('dt-ver-badge');
-            if(badge) {
-                if(p.isVerified) badge.classList.remove('hidden'); 
-                else badge.classList.add('hidden');
-            }
         }
 
         // --- HOME PAGE LOGIC ---
@@ -1799,59 +1778,22 @@
                 const res = await fetch(`${API_URL}/admin/all-properties`);
                 const data = await res.json();
                 
-                // 1. Update Text Stats
                 document.getElementById('stat-users').innerText = data.stats.users;
                 document.getElementById('stat-props').innerText = data.stats.listings;
 
-                // 2. Populate Table
-                const tbody = document.getElementById('admin-table-body');
-                tbody.innerHTML = data.properties.map(p => {
-                    const img = (p.images && p.images.outer) ? `<img src="${p.images.outer}" width="50" style="border-radius:4px;">` : 'No Img';
+                document.getElementById('admin-table-body').innerHTML = data.properties.map(p => {
                     const verifyBtn = p.isVerified 
-                        ? `<span class="status-badge" style="background:#def7ec; color:green;">Verified</span>` 
-                        : `<button class="btn-sm bg-orange" onclick="verifyProp('${p._id}')">Verify</button>`;
+                        ? `<span class="verified-badge">Verified</span>` 
+                        : `<button class="verify-btn" onclick="verifyProp('${p._id}')">Verify</button>`;
                     
                     return `
                     <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:10px;">${img}</td>
-                        <td>
-                            <b>${p.area}</b><br>
-                            <span style="font-size:12px; color:#666;">${p.listingType} • ₹${p.price}</span>
-                        </td>
+                        <td style="padding:10px;"><b>${p.area}</b><br>₹${p.price}</td>
                         <td>${p.firstName}<br><small>${p.ownerEmail}</small></td>
                         <td>${verifyBtn}</td>
-                        <td><button style="color:red; background:none; border:none; cursor:pointer;" onclick="deleteProp('${p._id}')"><i class="fas fa-trash"></i></button></td>
+                        <td><button style="color:red; background:none; border:none; cursor:pointer;" onclick="deleteProp('${p._id}')">🗑</button></td>
                     </tr>`;
                 }).join('');
-
-                // 3. DRAW CHART (New Logic)
-                const rentCount = data.properties.filter(p => p.listingType === 'Rent').length;
-                const buyCount = data.properties.filter(p => p.listingType === 'Buy').length;
-
-                const ctx = document.getElementById('listingChart').getContext('2d');
-                
-                // Destroy old chart if refreshing
-                if(adminChart) adminChart.destroy();
-
-                adminChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['For Rent', 'For Sale'],
-                        datasets: [{
-                            data: [rentCount, buyCount],
-                            backgroundColor: ['#6C63FF', '#2A2A72'],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom' }
-                        }
-                    }
-                });
-
             } catch(e) { console.error(e); }
         }
 
@@ -1861,9 +1803,6 @@
             loadAdminData();
         }
 
-        // CHECK URL FOR RESET TOKEN
-        
-        
         // Re-using your existing deleteProp function, make sure it calls loadAdminData() if admin
         // (You can just use the delete button to call deleteProp, it works for both)
 

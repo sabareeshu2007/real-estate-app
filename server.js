@@ -4,7 +4,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto'); // Built-in Node tool
 
 const app = express();
 app.use(cors());
@@ -13,7 +12,6 @@ app.use(bodyParser.json());
 // --- CONFIGURATION ---
 const JWT_SECRET = 'secret_key_123';
 // ⚠️ PASTE YOUR MONGODB CONNECTION STRING HERE
-// Database Connection String (Hardcoded)
 const dbURL = 'mongodb+srv://sabareeshu2007_db_user:Sabareesh$2007@cluster0.nanwaap.mongodb.net/?appName=Cluster0';
 
 mongoose.connect(dbURL)
@@ -22,15 +20,11 @@ mongoose.connect(dbURL)
 
 // --- SCHEMAS ---
 const UserSchema = new mongoose.Schema({
-    firstName: String, 
-    lastName: String, 
-    // Phone is now REQUIRED and UNIQUE
-    phone: { type: String, required: true, unique: true }, 
-    email: { type: String }, // Email is now optional
+    firstName: String, lastName: String, phone: String,
+    email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     userType: { type: String, required: true },
     role: { type: String, default: 'user' },
-    isVerified: { type: Boolean, default: true } // Auto-verify since we aren't doing SMS yet
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -73,55 +67,61 @@ const PropertySchema = new mongoose.Schema({
 });
 const Property = mongoose.model('Property', PropertySchema);
 
-
-
 // --- ROUTES ---
 
 // 1. REGISTER
 // 1. REGISTER (Updated with Admin Rule)
-// 1. REGISTER (Send OTP)
-// 1. REGISTER (Phone Based)
 app.post('/api/register', async (req, res) => {
     const { firstName, lastName, phone, email, password, userType } = req.body;
     try {
-        // Check if PHONE exists (not email)
-        let user = await User.findOne({ phone });
-        if (user) return res.json({ success: false, message: "Phone number already registered." });
+        let user = await User.findOne({ email });
+        if (user) return res.json({ success: false, message: "User already exists." });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        // MAGIC ADMIN RULE: This specific phone number becomes Admin
-        const role = (phone === '9999999999') ? 'admin' : 'user';
+        // --- PASTE STARTS HERE ---
+        // MAGIC ADMIN RULE: Check if email matches, assign 'admin' role
+        const role = (email === 'admin@estatepro.com') ? 'admin' : 'user';
 
+        // Create User WITH role
         user = new User({ 
-            firstName, lastName, phone, email, 
-            password: hashedPassword, userType, role,
-            isVerified: true // Skip verification for now (Stability First)
+            firstName, 
+            lastName, 
+            phone, 
+            email, 
+            password: hashedPassword, 
+            userType, 
+            role // <--- Added here
         });
         await user.save();
 
-        const token = jwt.sign({ id: user._id, phone: user.phone, role: role }, JWT_SECRET);
+        // Add role to Token
+        const token = jwt.sign({ id: user._id, email: user.email, role: role }, JWT_SECRET);
+        
+        // Send role back to frontend
         res.json({ success: true, message: "Account Created!", token, role });
+        // --- PASTE ENDS HERE ---
 
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // 2. LOGIN
-// 2. LOGIN (Check Verification)
-// 2. LOGIN (Phone Based)
 app.post('/api/login', async (req, res) => {
-    const { phone, password } = req.body; // Expect phone, not email
+    const { email, password, userType } = req.body;
     try {
-        const user = await User.findOne({ phone });
-        if (!user) return res.json({ success: false, message: "Phone number not found." });
+        const user = await User.findOne({ email });
+        if (!user) return res.json({ success: false, message: "User not found." });
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.json({ success: false, message: "Invalid Password" });
 
-        const token = jwt.sign({ id: user._id, phone: user.phone, role: user.role }, JWT_SECRET);
-        res.json({ success: true, message: "Login Successful", token, role: user.role, userType: user.userType });
+        if(user.userType !== userType) return res.json({ success: false, message: `Please login as ${user.userType}` });
+
+        const token = jwt.sign({ id: user._id, email: user.email, type: user.userType }, JWT_SECRET);
+        res.json({ success: true, message: "Login Successful", token });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
 // 3. CREATE LISTING
 app.post('/api/list-property', async (req, res) => {
     try {
@@ -212,6 +212,5 @@ app.put('/api/admin/verify/:id', async (req, res) => {
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
