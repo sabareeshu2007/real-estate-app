@@ -1109,30 +1109,44 @@
         }
 
         async function handleAuth() {
+            // 1. Get EMAIL instead of Phone
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
+            
+            // 2. Validate Email
+            if(!email || !email.includes('@')) return alert("Please enter a valid email");
+            if(!password) return alert("Please enter password");
+
             const endpoint = isLoginMode ? '/login' : '/register';
+            
+            // 3. Build Payload with Email
             let payload = { email, password, userType: currentUserType };
             
-            if(!isLoginMode) {
+            if(!isLoginMode) { 
                 payload.firstName = document.getElementById('reg-name').value;
-                payload.phone = document.getElementById('reg-phone').value;
-                if(!payload.firstName) return alert("Fill Name");
+                payload.phone = document.getElementById('reg-phone').value; // Contact phone
+                if(!payload.firstName) return alert("Enter Name");
             }
 
             try {
-                const res = await fetch(`${API_URL}${endpoint}`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+                showLoading(isLoginMode ? "Logging in..." : "Creating Account...");
+                const res = await fetch(`${API_URL}${endpoint}`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
                 });
                 const data = await res.json();
-                if(data.success) {
-                    localStorage.setItem('token', data.token);
+                
+                if(data.success) { 
+                    localStorage.setItem('token', data.token); 
                     localStorage.setItem('role', data.role || 'user');
-                    localStorage.setItem('type', currentUserType);
-                    localStorage.setItem('email', email);
-                    checkSession();
-                } else { alert(data.message); }
-            } catch(e) { alert("Error"); }
+                    localStorage.setItem('email', email); // Save Email
+                    checkSession(); 
+                } else { 
+                    alert(data.message); 
+                }
+            } catch(e) { alert("Connection Error"); } 
+            finally { hideLoading(); }
         }
 
         function checkSession() {
