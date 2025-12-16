@@ -1313,13 +1313,13 @@
                     return el ? el.value : "";
                 };
 
-                // 5. Build Form Data
+                // 5. Build Form Data (CORRECTED IDs)
                 const form = {
                     ownerEmail: localStorage.getItem('email'),
                     firstName: document.getElementById('fname').value,
                     phone: document.getElementById('phone').value,
                     houseNo: document.getElementById('house').value,
-                    street: val('house'), // fallback if street input missing
+                    street: val('house'), 
                     area: document.getElementById('area').value,
                     city: document.getElementById('city').value,
                     price: document.getElementById('price').value,
@@ -1327,10 +1327,11 @@
                     bedrooms: document.getElementById('beds').value,
                     bathrooms: document.getElementById('baths').value,
                     furnishing: document.getElementById('o-furnish').value,
-                    listingType: document.getElementById('o-listType').value,
+                    // ✅ FIXED THESE TWO LINES:
+                    listingType: document.getElementById('o-listingType').value, // Was 'o-listType'
+                    parking: document.getElementById('o-parking').value,         // Was 'o-park'
                     propertyType: document.getElementById('o-propType').value,
                     buildingType: document.getElementById('o-buildType').value,
-                    parking: document.getElementById('o-park').value,
                     description: document.getElementById('desc').value,
                     amenities: amenities,
                     images: finalImages,
