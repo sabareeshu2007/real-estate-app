@@ -501,7 +501,7 @@
             
             <div class="hero-search-container">
                 <div class="search-tabs">
-                    <div class="tab-item active" data-value="Buy">Buy</div> 
+                    <div class="tab-item" onclick="setSearchTab(this,'Buy')">Buy</div> 
                     <div class="tab-item" data-value="Rent">Rent</div>
                     <div class="tab-item" data-value="Commercial">Commercial</div>
                 </div>
@@ -976,7 +976,7 @@
 
         // --- ADVANCED FILTER STATE ---
         let activeFilters = {
-            listingType: 'Buy', // Default
+            listingType: '', // Default
             propertyType: '',
             price: 0,
             sqft: 0,
