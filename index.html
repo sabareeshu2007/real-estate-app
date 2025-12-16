@@ -1231,7 +1231,6 @@
                     } else {
                         document.getElementById('tenant-section').classList.remove('hidden');
                         initTenantMap();
-                        checkPendingSearch();
                     }
                 }
             } else { goHome(); }
@@ -1917,7 +1916,9 @@
             await fetch(`${API_URL}/admin/verify/${id}`, { method: 'PUT' });
             loadAdminData();
         }
-        
+        function checkPendingSearch() { 
+            console.log("Search checked"); 
+        }
         // Re-using your existing deleteProp function, make sure it calls loadAdminData() if admin
         // (You can just use the delete button to call deleteProp, it works for both)
 
