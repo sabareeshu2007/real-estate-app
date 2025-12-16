@@ -832,7 +832,7 @@
 
                 <div class="f-section">
                     <div class="f-title">Furnishing</div>
-                    <div class="chip-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="chip-grid" id="f-furnish-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                         <div class="chip" onclick="selectSingle('f-furnish-grid', this, 'Full')">Full</div>
                         <div class="chip" onclick="selectSingle('f-furnish-grid', this, 'Semi')">Semi</div>
                         <div class="chip" onclick="selectSingle('f-furnish-grid', this, 'None')">None</div>
@@ -841,7 +841,7 @@
 
                 <div class="f-section">
                     <div class="f-title">Building Type</div>
-                    <div class="chip-grid">
+                    <div class="chip-grid" id="f-build-grid">
                         <div class="chip" onclick="selectSingle('f-build-grid', this, 'Independent')">Independent</div>
                         <div class="chip" onclick="selectSingle('f-build-grid', this, 'Mall')">Mall</div>
                         <div class="chip" onclick="selectSingle('f-build-grid', this, 'Business Park')">Business Park</div>
@@ -851,7 +851,7 @@
 
                 <div class="f-section">
                     <div class="f-title">Parking</div>
-                    <div class="chip-grid">
+                    <div class="chip-grid" id="f-park-grid">
                         <div class="chip" onclick="selectSingle('f-park-grid', this, 'Public')">Public</div>
                         <div class="chip" onclick="selectSingle('f-park-grid', this, 'Reserved')">Reserved</div>
                     </div>
