@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 // --- CONFIGURATION ---
 const JWT_SECRET = 'secret_key_123';
 // ⚠️ PASTE YOUR MONGODB CONNECTION STRING HERE
-const dbURL = 'mongodb+srv://sabareeshu2007_db_user:Sabareesh$2007@cluster0.nanwaap.mongodb.net/?appName=Cluster0';
+const dbURL = 'mongodb+srv://sabareeshu2007_db_user:Sabareesh%242007@cluster0.nanwaap.mongodb.net/?appName=Cluster0';
 
 mongoose.connect(dbURL)
 .then(() => console.log("✅ Database Connected"))
