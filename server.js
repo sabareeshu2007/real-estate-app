@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -8,10 +9,8 @@ const jwt = require('jsonwebtoken');
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(__dirname));
 
 // --- CONFIGURATION ---
-require('dotenv').config();
 const JWT_SECRET = 'secret_key_123';
 // ⚠️ PASTE YOUR MONGODB CONNECTION STRING HERE
 const dbURL = process.env.MONGO_URL; // Read the secret key
