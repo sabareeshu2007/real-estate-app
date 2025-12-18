@@ -1521,6 +1521,36 @@
                 alert("Network Error: Could not reach server.");
             }
         }
+        // --- ADMIN DELETE FUNCTION ---
+        async function deleteProp(id) {
+            // 1. Confirm the action
+            if(!confirm("⚠️ ADMIN ACTION: Are you sure you want to permanently delete this property?")) return;
+
+            // 2. Show loading (optional)
+            if(typeof showLoading === 'function') showLoading("Deleting...");
+
+            try {
+                // 3. Send Delete Request to Server
+                const res = await fetch(`${API_URL}/delete-property/${id}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+
+                // 4. Handle Response
+                if (data.success) {
+                    alert("✅ Property deleted by Admin.");
+                    loadAdminData(); // IMPORTANT: Refresh the Admin Table
+                } else {
+                    alert("❌ Error: " + (data.error || "Could not delete"));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Network Error: Could not reach server.");
+            } finally {
+                if(typeof hideLoading === 'function') hideLoading();
+            }
+        }
+
 
         // --- TENANT FUNCTIONS ---
         function initTenantMap() {

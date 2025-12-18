@@ -143,11 +143,20 @@ app.get('/api/my-properties', async (req, res) => {
 // 5. DELETE PROPERTY
 app.delete('/api/delete-property/:id', async (req, res) => {
     try {
-        await Property.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: "Deleted" });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        const id = req.params.id;
+        // Assuming you are using MongoDB/Mongoose
+        const result = await Property.findByIdAndDelete(id);
+        
+        if (result) {
+            res.json({ success: true, message: "Property deleted successfully" });
+        } else {
+            res.status(404).json({ success: false, error: "Property not found" });
+        }
+    } catch (error) {
+        console.error("Delete Error:", error);
+        res.status(500).json({ success: false, error: "Server error during deletion" });
+    }
 });
-
 // 6. UPDATE PROPERTY
 app.put('/api/update-property/:id', async (req, res) => {
     try {
