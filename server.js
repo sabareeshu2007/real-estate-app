@@ -108,6 +108,7 @@ app.post('/api/register', async (req, res) => {
 
 // 2. LOGIN
 // SEARCH FOR THIS IN SERVER.JS
+// 2. LOGIN (CORRECTED)
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password, userType } = req.body;
@@ -116,20 +117,22 @@ app.post('/api/login', async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.json({ success: false, message: "User not found" });
 
-        // 2. Check Password (simple comparison for now, or bcrypt if you use it)
-        if (user.password !== password) { 
+        // 2. Check Password using BCRYPT
+        // We compare the typed password with the hashed password in the DB
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if (!isMatch) { 
             return res.json({ success: false, message: "Wrong password" });
         }
 
-        // 3. Generate Token (Optional, just using dummy string if you don't have JWT set up)
-        const token = "dummy-token-" + user._id;
+        // 3. Generate Token
+        const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET);
 
-        // --- THE FIX IS HERE ---
-        // You MUST send 'role: user.role' back to the frontend
+        // 4. Send Response
         res.json({ 
             success: true, 
             token: token, 
-            role: user.role, // <--- MAKE SURE THIS IS INCLUDED
+            role: user.role, 
             name: user.firstName 
         });
 
