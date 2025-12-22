@@ -238,5 +238,22 @@ app.put('/api/admin/verify/:id', async (req, res) => {
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// --- TEMPORARY ADMIN FIX ---
+// Visit this URL in your browser to turn any user into an admin
+app.get('/api/admin-fix/:email', async (req, res) => {
+    try {
+        const email = req.params.email;
+        // Find user and force role to 'admin'
+        const updatedUser = await User.findOneAndUpdate(
+            { email: email },
+            { role: 'admin' },
+            { new: true }
+        );
+        res.json({ success: true, message: "User is now an ADMIN!", user: updatedUser });
+    } catch (e) {
+        res.json({ success: false, error: e.message });
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
