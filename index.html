@@ -1761,7 +1761,18 @@
             document.getElementById('logo').addEventListener('click', goHome);
             document.getElementById('nav-home').addEventListener('click', goHome);
             document.getElementById('nav-list-property').addEventListener('click', () => showAuth('owner'));
-            document.getElementById('nav-login').addEventListener('click', () => showAuth('tenant'));
+            document.getElementById('nav-login').addEventListener('click', () => {
+                // Check if user is already logged in
+                const token = localStorage.getItem('token');
+                
+                if (token) {
+                    // If logged in, let checkSession() decide where to go (Admin, Owner, or Tenant)
+                    checkSession();
+                } else {
+                    // If NOT logged in, show the standard login form
+                    showAuth('tenant');
+                }
+            });
             document.getElementById('logout-btn').addEventListener('click', handleLogout);
 
             // --- Home Page Search ---
