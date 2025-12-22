@@ -1182,7 +1182,9 @@
                     localStorage.setItem('role', data.role || 'user');
                     localStorage.setItem('type', currentUserType); // Force save the type we just used
                     localStorage.setItem('email', email);
-                    
+                    if(data.userType) {
+                        localStorage.setItem('type', data.userType); 
+                    }
                     // Redirect
                     checkSession(); 
                 } else { 
@@ -1199,7 +1201,8 @@
 
         function checkSession() {
             const token = localStorage.getItem('token');
-            const role = localStorage.getItem('role');
+            const role = localStorage.getItem('role'); // 'admin' or 'user'
+            const type = localStorage.getItem('type'); // 'owner' or 'tenant' (from DB)
             
             if(token) {
                 // Hide Home/Auth
@@ -1207,25 +1210,37 @@
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('logout-btn').classList.remove('hidden');
 
-                // CHECK ROLE
+                // 1. ADMIN CHECK
                 if (role === 'admin') {
-                    // Show Admin Dashboard
                     document.getElementById('admin-dashboard').classList.remove('hidden');
-                    document.getElementById('app-section').classList.add('hidden'); // Hide normal app
+                    document.getElementById('app-section').classList.add('hidden');
                     loadAdminData();
+                    return;
+                } 
+                
+                // 2. SHOW APP SECTION
+                document.getElementById('app-section').classList.remove('hidden');
+
+                // 3. OWNER VS TENANT CHECK (Based on DB data)
+                // Note: The value saved in DB is usually "Owner" or "Tenant" (capitalized) 
+                // or whatever you typed in the dropdown during registration.
+                // Let's handle case-insensitivity just to be safe.
+                
+                if(type && type.toLowerCase() === 'owner') {
+                    // Force Owner View
+                    document.getElementById('owner-section').classList.remove('hidden');
+                    document.getElementById('tenant-section').classList.add('hidden'); // Ensure Tenant is hidden
+                    initOwnerMap();
+                    loadMyListings();
                 } else {
-                    // Show Normal App
-                    document.getElementById('app-section').classList.remove('hidden');
-                    if(localStorage.getItem('type') === 'owner') {
-                        document.getElementById('owner-section').classList.remove('hidden');
-                        initOwnerMap();
-                        loadMyListings();
-                    } else {
-                        document.getElementById('tenant-section').classList.remove('hidden');
-                        initTenantMap();
-                    }
+                    // Default to Tenant View
+                    document.getElementById('tenant-section').classList.remove('hidden');
+                    document.getElementById('owner-section').classList.add('hidden'); // Ensure Owner is hidden
+                    initTenantMap();
                 }
-            } else { goHome(); }
+            } else { 
+                goHome(); 
+            }
         }
         function handleLogout() { localStorage.clear(); location.reload(); }
 

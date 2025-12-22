@@ -132,7 +132,8 @@ app.post('/api/login', async (req, res) => {
         res.json({ 
             success: true, 
             token: token, 
-            role: user.role, 
+            role: user.role,       // Admin or User
+            userType: user.userType, // <--- ADD THIS LINE (Owner or Tenant)
             name: user.firstName 
         });
 
