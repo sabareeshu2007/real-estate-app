@@ -298,5 +298,22 @@ app.get('/api/user-favorites/:email', async (req, res) => {
         res.json({ success: true, favorites: user ? user.favorites : [] });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// GET FULL FAVORITE PROPERTIES
+app.post('/api/get-favorites-details', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user || !user.favorites || user.favorites.length === 0) {
+            return res.json({ success: true, properties: [] });
+        }
+
+        // Find all properties whose ID is IN the user's favorite list
+        const favProps = await Property.find({ _id: { $in: user.favorites } });
+        res.json({ success: true, properties: favProps });
+
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

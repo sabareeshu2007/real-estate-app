@@ -569,6 +569,7 @@
         <div class="nav-links">
             <a id="nav-home">Home</a>
             <a id="nav-list-property">List Property</a>
+            <a id="nav-saved" onclick="loadFavoritesPage()">Saved</a>
             <a id="nav-login" class="btn-login">Login</a>
         </div> 
         <button id="logout-btn" class="hidden btn-logout">Logout</button>
@@ -861,6 +862,16 @@
                 <button class="btn btn-outline hidden" id="cancel-edit-btn" style="margin-top:5px;">Cancel Edit</button>
             </div>
         </div>
+        
+        <div id="favorites-section" class="container hidden">
+            <h2 class="text-center mt-50">❤️ My Saved Homes</h2>
+            
+            <button onclick="showAuth('tenant')" class="btn-outline" style="width:auto; margin-bottom:20px; padding: 5px 15px;">← Back to Search</button>
+
+            <div class="grid-container" id="fav-list-container">
+                <p class="text-center">Loading your favorites...</p>
+            </div>
+        </div>
 
         <div id="tenant-section" class="hidden">
         <div class="search-layout">
@@ -1056,6 +1067,62 @@
             parking: ''
         };
 
+        // --- LOAD FAVORITES PAGE ---
+        async function loadFavoritesPage() {
+            // 1. Show the section
+            document.querySelectorAll('.container, #home-page, #tenant-section').forEach(el => el.classList.add('hidden'));
+            const section = document.getElementById('favorites-section');
+            section.classList.remove('hidden');
+            section.classList.add('animate-view');
+
+            // 2. Fetch Data
+            const email = localStorage.getItem('email');
+            if(!email) return showToast("Please login first", "error");
+
+            const container = document.getElementById('fav-list-container');
+            container.innerHTML = '<p style="text-align:center;">Loading...</p>';
+
+            try {
+                const res = await fetch(`${API_URL}/get-favorites-details`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+
+                if (data.properties.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; width:100%; grid-column: 1/-1;">
+                            <h3>No favorites yet 💔</h3>
+                            <p>Go back and heart some properties!</p>
+                        </div>`;
+                    return;
+                }
+
+                // 3. Render Cards
+                container.innerHTML = data.properties.map(p => {
+                    const img = (p.images && p.images.outer) ? p.images.outer : 'https://via.placeholder.com/300x200';
+                    const safeProp = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
+                    return `
+                    <div class="prop-card" style="position:relative;">
+                        
+                        <div class="fav-btn active" onclick="toggleFav(this, '${p._id}', event); setTimeout(loadFavoritesPage, 500);" data-id="${p._id}">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+
+                        <div style="cursor:pointer;" onclick='openPropertyPage(${safeProp})'>
+                            <img src="${img}" class="prop-img">
+                            <div class="prop-info">
+                                <h3 style="margin:0; color:var(--primary);">₹ ${Number(p.price).toLocaleString()}</h3>
+                                <p style="color:#666;">${p.bedrooms || 2} BHK in ${p.area}</p>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+
+            } catch (e) { console.error(e); }
+        }
         async function refreshFavorites() {
             const email = localStorage.getItem('email');
             if (!email) return;
