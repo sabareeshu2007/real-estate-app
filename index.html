@@ -471,35 +471,46 @@
             .sk-line { height: 20px; margin-bottom: 10px; width: 80%; }
             .sk-line-sm { height: 15px; width: 50%; }
 
-            /* --- FAVORITE BUTTON STYLES --- */
+            /* --- FIXED FAVORITE BUTTON CSS --- */
             .fav-btn {
                 position: absolute;
-                top: 10px;
+                top: 10px; 
                 right: 10px;
-                background: white;
-                width: 35px;
+                background: #ffffff !important; /* Force White Background */
+                width: 35px; 
                 height: 35px;
                 border-radius: 50%;
-                display: flex;
-                justify-content: center;
+                display: flex; 
+                justify-content: center; 
                 align-items: center;
                 cursor: pointer;
-                box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-                transition: 0.2s;
-                z-index: 10; /* Ensure it sits on top of the image */
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                z-index: 100 !important; /* Force it to be on TOP of the card */
+                transition: transform 0.2s ease;
             }
-            .fav-btn:hover { transform: scale(1.1); }
 
-            /* When Active (Red Heart) */
-            .fav-btn.active i {
-                color: #e74c3c; /* Red color */
-                font-weight: 900; /* Solid heart */
+            /* Hover Animation */
+            .fav-btn:hover { 
+                transform: scale(1.1); 
+                background: #f8f9fa !important; /* Slight grey bg on hover */
             }
-            /* When Inactive (Grey Outline) */
+
+            /* Icon Default State */
             .fav-btn i {
-                color: #ccc;
+                color: #ccc !important; /* Grey by default */
                 font-size: 18px;
-                transition: 0.2s;
+                pointer-events: none; /* Allows click to pass through icon to the button */
+            }
+
+            /* Icon Hover State (When hovering the BUTTON, not just the icon) */
+            .fav-btn:hover i {
+                color: #e74c3c !important; /* Turn Red on Hover */
+            }
+
+            /* Active State (Saved) */
+            .fav-btn.active i {
+                color: #e74c3c !important; /* Force Red */
+                font-weight: 900 !important; /* Solid Heart */
             }
     </style>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -1921,35 +1932,35 @@
         // --- HOME PAGE LOGIC ---
         async function loadFeatured() {
             try {
-                // 1. Show Skeletons BEFORE fetching
                 showSkeletons('featured-list', 3); 
 
                 const res = await fetch(`${API_URL}/featured-properties`);
                 const data = await res.json();
                 
-                // 2. Replace Skeletons with Real Data
                 document.getElementById('featured-list').innerHTML = data.properties.map(p => {
                     const img = (p.images && p.images.outer) ? p.images.outer : 'https://via.placeholder.com/300x200';
                     
-                    // Note: We used to call showAuth('tenant'), now we call openPropertyPage(p)
-                    // so users can see details. The Heart button handles its own click event.
-                    
+                    // Clean the JSON string for the onclick handler
+                    const safeProp = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+
                     return `
-                    <div class="prop-card" onclick='openPropertyPage(${JSON.stringify(p).replace(/'/g, "&#39;")})'>
+                    <div class="prop-card" style="position:relative;">
                         
-                        <div class="fav-btn" onclick="toggleFav(this, '${p._id}', event)" data-id="${p._id}">
+                        <div class="fav-btn" onclick="toggleFav(this, '${p._id}', event)">
                             <i class="fa-regular fa-heart"></i>
                         </div>
 
-                        <img src="${img}" class="prop-img">
-                        <div class="prop-info">
-                            <h3 style="margin:0; color:var(--primary);">₹ ${Number(p.price).toLocaleString()}</h3>
-                            <p style="color:#666;">${p.bedrooms || 2} BHK in ${p.area}</p>
+                        <div style="cursor:pointer;" onclick='openPropertyPage(${safeProp})'>
+                            <img src="${img}" class="prop-img">
+                            <div class="prop-info">
+                                <h3 style="margin:0; color:var(--primary);">₹ ${Number(p.price).toLocaleString()}</h3>
+                                <p style="color:#666;">${p.bedrooms || 2} BHK in ${p.area}</p>
+                            </div>
                         </div>
+
                     </div>`;
                 }).join('');
                 
-                // 3. Update hearts to red if they are already in favorites
                 updateHeartIcons();
 
             } catch(e) { console.error(e); }
