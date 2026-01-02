@@ -1059,79 +1059,63 @@
 
         // --- REPLACE YOUR EXISTING showAuth FUNCTION WITH THIS ---
         // REPLACE your existing handleAuth function with this one
-        async function handleAuth() {
-            // 1. Get Inputs
-            const email = document.getElementById('email-input').value;
-            const password = document.getElementById('pass-input').value;
+        // --- REPLACE YOUR EXISTING showAuth FUNCTION WITH THIS ---
+        function showAuth(type) {
+            console.log("showAuth called for:", type); // Debugging line
+            currentUserType = type; // 'owner' or 'tenant'
+
+            // 1. Hide ALL Sections first
+            const sections = ['home-page', 'property-page', 'app-section', 'owner-section', 'tenant-section', 'auth-section', 'admin-dashboard'];
+            sections.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+
+            // 2. Decide what to show
+            const token = localStorage.getItem('token');
+            const savedType = localStorage.getItem('type'); // Get 'owner' or 'tenant' from DB
             
-            // 2. Validate
-            if(!email || !email.includes('@')) return alert("Please enter a valid email");
-            if(!password) return alert("Please enter password");
+            // Always show the App Container (Parent of auth-section)
+            const appSection = document.getElementById('app-section');
+            appSection.classList.remove('hidden');
+            appSection.classList.add('animate-view'); 
 
-            const endpoint = isLoginMode ? '/login' : '/register';
-            
-            // 3. Build Payload
-            let payload = { email, password, userType: currentUserType };
-            
-            if(!isLoginMode) { 
-                payload.firstName = document.getElementById('reg-name').value;
-                payload.phone = document.getElementById('reg-phone').value;
-                if(!payload.firstName) return alert("Enter Name");
-            }
-
-            try {
-                showLoading(isLoginMode ? "Logging in..." : "Creating Account...");
+            // 3. CHECK: Are we logged in AND is the account type correct?
+            if (token && savedType === type) {
                 
-                const res = await fetch(`${API_URL}${endpoint}`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(payload) 
-                });
-                
-                const data = await res.json();
-                
-                if(data.success) { 
-                    // --- 🛑 NEW VALIDATION LOGIC HERE 🛑 ---
-                    
-                    // Normalize types to lowercase to avoid case issues (e.g. "Tenant" vs "tenant")
-                    const accountType = (data.userType || '').toLowerCase(); // Type from Database
-                    const pageType = (currentUserType || '').toLowerCase();  // Page we are on
-
-                    // CHECK 1: If I am on Owner Login, but account is Tenant
-                    if (pageType === 'owner' && accountType === 'tenant') {
-                        alert("⚠️ This account is registered as a Tenant.\n\nKindly go to the Tenant Login page.");
-                        return; // Stop! Do not save token.
-                    }
-
-                    // CHECK 2: If I am on Tenant Login, but account is Owner
-                    if (pageType === 'tenant' && accountType === 'owner') {
-                        alert("⚠️ This account is an Owner account.\n\nKindly use the 'List Property' login.");
-                        return; // Stop! Do not save token.
-                    }
-
-                    // --- VALIDATION PASSED ---
-
-                    // SUCCESS: Save credentials
-                    localStorage.setItem('token', data.token); 
-                    localStorage.setItem('role', data.role || 'user');
-                    localStorage.setItem('email', email);
-                    
-                    // Save the REAL type from the database
-                    if(data.userType) {
-                        localStorage.setItem('type', data.userType); 
-                    }
-                    
-                    // Redirect
-                    checkSession(); 
+                // --- LOGGED IN & CORRECT ROLE -> GO TO DASHBOARD ---
+                if (type === 'owner') {
+                    document.getElementById('owner-section').classList.remove('hidden');
+                    if(typeof initOwnerMap === 'function') initOwnerMap();
+                    if(typeof loadMyListings === 'function') loadMyListings();
                 } else { 
-                    // FAILURE
-                    alert(data.message); 
+                    // Tenant
+                    document.getElementById('tenant-section').classList.remove('hidden');
+                    if(typeof initTenantMap === 'function') initTenantMap();
                 }
-            } catch(e) { 
-                console.error(e); 
-                alert("Connection Error. Check console."); 
-            } 
-            finally { hideLoading(); }
+
+            } else {
+                // --- NOT LOGGED IN (or Wrong Role) -> SHOW LOGIN FORM ---
+                const authSection = document.getElementById('auth-section');
+                authSection.classList.remove('hidden');
+                authSection.classList.add('animate-view');
+                
+                // Reset the form state to "Login" (not Register)
+                isLoginMode = true;
+                document.getElementById('signup-fields').classList.add('hidden');
+                document.getElementById('switch-text').innerText = "New here? Create Account";
+                document.getElementById('auth-btn').innerText = "Login";
+
+                // Custom Title
+                const title = document.getElementById('auth-title');
+                if(type === 'owner') {
+                    title.innerText = "Owner Login";
+                    title.style.color = "#e67e22"; // Orange
+                } else {
+                    title.innerText = "Tenant Login";
+                    title.style.color = "#6C63FF"; // Purple
+                }
+            }
         }
 
         function triggerTenantSearch() {
