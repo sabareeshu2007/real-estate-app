@@ -436,6 +436,8 @@
                 .price-card { position: static; margin-top: 20px; }
             }
     </style>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body>
     <div id="filter-modal" class="hidden">
@@ -977,6 +979,28 @@
             parking: ''
         };
 
+        // --- TOAST NOTIFICATION FUNCTION ---
+        function showToast(message, type = "success") {
+            // Choose color: Green for success, Red for error
+            const bg = type === "success" 
+                ? "linear-gradient(to right, #00b09b, #96c93d)" // Green
+                : "linear-gradient(to right, #ff5f6d, #ffc371)"; // Red
+
+            Toastify({
+                text: message,
+                duration: 3000,      // Disappears after 3 seconds
+                close: true,         // Show 'x' close button
+                gravity: "top",      // Show at the top
+                position: "right",   // Show on the right
+                stopOnFocus: true,   // Pause timer if mouse hovers
+                style: {
+                    background: bg,
+                    borderRadius: "10px",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
+                }
+            }).showToast();
+        }
+
         // 1. Tab Selection (Buy/Rent/Commercial)
         function setSearchTab(el, val) {
             // 1. Remove 'active' from ALL tabs
@@ -1191,6 +1215,7 @@
                 const data = await res.json();
                 
                 if(data.success) { 
+                    showToast("✅ Successfully Logged In!", "success");
                     // SUCCESS: Save credentials
                     localStorage.setItem('token', data.token); 
                     
@@ -1204,8 +1229,8 @@
                     // Redirect
                     checkSession(); 
                 } else { 
-                    // FAILURE: Show error and STOP
-                    alert(data.message); 
+                    showToast("❌ " + data.message, "error"); // <--- REPLACE
+                    // FAILURE: Show error and STOP 
                     // Do NOT call checkSession() here
                 }
             } catch(e) { 
@@ -1390,7 +1415,7 @@
                 const result = await res.json();
                 
                 if(result.success) {
-                    alert("Success! Saved successfully.");
+                    showToast("🎉 Property Listed Successfully!", "success");
                     cancelEdit(); // Reset form
                     loadMyListings(); // Refresh list without reloading page
                     document.getElementById('my-listings-body').scrollIntoView({behavior: "smooth"});
@@ -1542,14 +1567,14 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    alert("🗑️ Property Deleted Successfully");
+                    showToast("🗑️ Item Deleted", "success");
                     loadMyListings(); // Refresh the table
                 } else {
                     alert("Server Error: " + (data.error || "Unknown error"));
                 }
             } catch (e) {
                 console.error(e);
-                alert("Network Error: Could not reach server.");
+                showToast("⚠️ " + data.error, "error");
             }
         }
         // --- ADMIN DELETE FUNCTION ---
@@ -1569,10 +1594,10 @@
 
                 // 4. Handle Response
                 if (data.success) {
-                    alert("✅ Property deleted by Admin.");
+                    showToast("🗑️ Item Deleted", "success");
                     loadAdminData(); // IMPORTANT: Refresh the Admin Table
                 } else {
-                    alert("❌ Error: " + (data.error || "Could not delete"));
+                    showToast("⚠️ " + data.error, "error");
                 }
             } catch (e) {
                 console.error(e);
