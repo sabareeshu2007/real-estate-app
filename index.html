@@ -1057,6 +1057,7 @@
             loadFeatured();
         }
 
+        // --- REPLACE YOUR EXISTING showAuth FUNCTION WITH THIS ---
         function showAuth(type) {
             currentUserType = type; // 'owner' or 'tenant'
 
@@ -1066,31 +1067,37 @@
 
             // 2. Decide what to show
             const token = localStorage.getItem('token');
+            const savedType = localStorage.getItem('type'); // <--- GET THE SAVED USER TYPE ('owner' or 'tenant')
             
             // Always show the App Container
             const appSection = document.getElementById('app-section');
             appSection.classList.remove('hidden');
-            appSection.classList.add('animate-view'); // <--- ADD ANIMATION HERE
+            appSection.classList.add('animate-view'); 
 
-            if (token) {
-                // --- LOGGED IN ---
+            // 3. CRITICAL FIX: Only auto-login if Token exists AND Types match
+            // (e.g., If I am a Tenant, but 'type' is 'owner', this will be false)
+            if (token && savedType === type) {
+                
+                // --- LOGGED IN & CORRECT ROLE ---
                 if (type === 'owner') {
                     document.getElementById('owner-section').classList.remove('hidden');
-                    document.getElementById('owner-section').classList.add('animate-view'); // Animate Dashboard
+                    document.getElementById('owner-section').classList.add('animate-view');
                     initOwnerMap();
                     loadMyListings();
                 } else { // Tenant
                     document.getElementById('tenant-section').classList.remove('hidden');
-                    document.getElementById('tenant-section').classList.add('animate-view'); // Animate Search
+                    document.getElementById('tenant-section').classList.add('animate-view');
                     initTenantMap();
                 }
+
             } else {
-                // --- NOT LOGGED IN (Show Login Form) ---
+                // --- WRONG ROLE (or Logged Out) -> SHOW LOGIN FORM ---
+                // This forces a Tenant to see the Login Screen if they try to access Owner pages
                 const authSection = document.getElementById('auth-section');
                 authSection.classList.remove('hidden');
-                authSection.classList.add('animate-view'); // Animate Login Form
+                authSection.classList.add('animate-view');
                 
-                // Change Title based on what they clicked to make it obvious
+                // Custom Title to explain why they are here
                 const title = document.getElementById('auth-title');
                 if(type === 'owner') {
                     title.innerText = "Owner Login / List Property";
