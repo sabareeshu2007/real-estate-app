@@ -470,6 +470,37 @@
             .sk-info { padding: 20px; }
             .sk-line { height: 20px; margin-bottom: 10px; width: 80%; }
             .sk-line-sm { height: 15px; width: 50%; }
+
+            /* --- FAVORITE BUTTON STYLES --- */
+            .fav-btn {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: white;
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+                transition: 0.2s;
+                z-index: 10; /* Ensure it sits on top of the image */
+            }
+            .fav-btn:hover { transform: scale(1.1); }
+
+            /* When Active (Red Heart) */
+            .fav-btn.active i {
+                color: #e74c3c; /* Red color */
+                font-weight: 900; /* Solid heart */
+            }
+            /* When Inactive (Grey Outline) */
+            .fav-btn i {
+                color: #ccc;
+                font-size: 18px;
+                transition: 0.2s;
+            }
     </style>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -1002,7 +1033,7 @@
         let allMyProperties = []; // Stores full property data
         let searchFilters = { listingType: '', propertyType: '', price: 0, sqft: 0 };
         let adminChart = null; // Global variable to hold chart instance
-
+        let myFavorites = []; // Store IDs locally for quick UI checks
         // --- ADVANCED FILTER STATE ---
         let activeFilters = {
             listingType: '', // Default
@@ -1013,6 +1044,75 @@
             buildingType: '',
             parking: ''
         };
+
+        async function refreshFavorites() {
+            const email = localStorage.getItem('email');
+            if (!email) return;
+
+            try {
+                const res = await fetch(`${API_URL}/user-favorites/${email}`);
+                const data = await res.json();
+                if (data.success) {
+                    myFavorites = data.favorites || [];
+                    updateHeartIcons(); // Helper to color hearts on page
+                }
+            } catch (e) { console.error("Fav Error", e); }
+        }
+        async function toggleFav(btn, propId, event) {
+            event.stopPropagation(); // Stop the card click (which opens details)
+            
+            const email = localStorage.getItem('email');
+            if (!email) return showToast("⚠️ Please Login to save favorites", "error");
+
+            // 1. Optimistic UI Update (Change color immediately)
+            const icon = btn.querySelector('i');
+            const isNowActive = !btn.classList.contains('active');
+            
+            if (isNowActive) {
+                btn.classList.add('active');
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid');
+            } else {
+                btn.classList.remove('active');
+                icon.classList.add('fa-regular');
+                icon.classList.remove('fa-solid');
+            }
+
+            // 2. Send to Server
+            try {
+                const res = await fetch(`${API_URL}/toggle-favorite`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, propertyId: propId })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast(data.action === 'added' ? "❤️ Added to Favorites" : "💔 Removed from Favorites");
+                    myFavorites = data.favorites; // Sync list
+                } else {
+                    // Revert UI if server failed
+                    btn.classList.toggle('active'); 
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function updateHeartIcons() {
+            // Finds all heart buttons and colors them if they are in 'myFavorites'
+            document.querySelectorAll('.fav-btn').forEach(btn => {
+                const id = btn.dataset.id;
+                const icon = btn.querySelector('i');
+                if (myFavorites.includes(id)) {
+                    btn.classList.add('active');
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                } else {
+                    btn.classList.remove('active');
+                    icon.classList.add('fa-regular');
+                    icon.classList.remove('fa-solid');
+                }
+            });
+        }
 
         // --- SKELETON LOADER FUNCTION ---
         function showSkeletons(containerId, count = 3) {
@@ -1304,7 +1404,7 @@
                 document.getElementById('home-page').classList.add('hidden');
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('logout-btn').classList.remove('hidden');
-
+                 
                 // 1. ADMIN CHECK
                 if (role === 'admin') {
                     document.getElementById('admin-dashboard').classList.remove('hidden');
@@ -1333,6 +1433,7 @@
                     document.getElementById('owner-section').classList.add('hidden'); // Ensure Owner is hidden
                     initTenantMap();
                 }
+                refreshFavorites();
             } else { 
                 goHome(); 
             }
@@ -1829,7 +1930,17 @@
                 // 2. Replace Skeletons with Real Data
                 document.getElementById('featured-list').innerHTML = data.properties.map(p => {
                     const img = (p.images && p.images.outer) ? p.images.outer : 'https://via.placeholder.com/300x200';
-                    return `<div class="prop-card" onclick="showAuth('tenant')">
+                    
+                    // Note: We used to call showAuth('tenant'), now we call openPropertyPage(p)
+                    // so users can see details. The Heart button handles its own click event.
+                    
+                    return `
+                    <div class="prop-card" onclick='openPropertyPage(${JSON.stringify(p).replace(/'/g, "&#39;")})'>
+                        
+                        <div class="fav-btn" onclick="toggleFav(this, '${p._id}', event)" data-id="${p._id}">
+                            <i class="fa-regular fa-heart"></i>
+                        </div>
+
                         <img src="${img}" class="prop-img">
                         <div class="prop-info">
                             <h3 style="margin:0; color:var(--primary);">₹ ${Number(p.price).toLocaleString()}</h3>
@@ -1837,6 +1948,10 @@
                         </div>
                     </div>`;
                 }).join('');
+                
+                // 3. Update hearts to red if they are already in favorites
+                updateHeartIcons();
+
             } catch(e) { console.error(e); }
         }
 

@@ -26,6 +26,7 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true },
     userType: { type: String, required: true },
     role: { type: String, default: 'user' },
+    favorites: [String] // <--- ADD THIS LINE (Stores Property IDs)
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -258,6 +259,44 @@ app.get('/api/admin-fix/:email', async (req, res) => {
     } catch (e) {
         res.json({ success: false, error: e.message });
     }
+});
+
+// TOGGLE FAVORITE (Add/Remove)
+app.post('/api/toggle-favorite', async (req, res) => {
+    try {
+        const { email, propertyId } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user) return res.json({ success: false, message: "User not found" });
+
+        // Initialize array if it doesn't exist
+        if (!user.favorites) user.favorites = [];
+
+        const index = user.favorites.indexOf(propertyId);
+        let action = '';
+
+        if (index === -1) {
+            // Not in list -> ADD it
+            user.favorites.push(propertyId);
+            action = 'added';
+        } else {
+            // Already in list -> REMOVE it
+            user.favorites.splice(index, 1);
+            action = 'removed';
+        }
+
+        await user.save();
+        res.json({ success: true, action: action, favorites: user.favorites });
+
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET USER FAVORITES
+app.get('/api/user-favorites/:email', async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.params.email });
+        res.json({ success: true, favorites: user ? user.favorites : [] });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
