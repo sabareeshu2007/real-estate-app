@@ -1942,58 +1942,64 @@
             } catch(e) { console.error(e); } 
             finally { if(typeof hideLoading === 'function') hideLoading(); }
         }
-        // --- PROPERTY PAGE LOGIC ---
+        // --- UPDATE THIS FUNCTION ---
         function openPropertyPage(p) {
-            document.getElementById('app-section').classList.add('hidden');
-            document.getElementById('property-page').classList.remove('hidden');
+            // 1. Hide ALL view sections (Home, App, Favorites, etc.)
+            const views = ['app-section', 'favorites-section', 'home-page', 'tenant-section', 'owner-section'];
+            views.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+
+            // 2. Show the Property Page
+            const page = document.getElementById('property-page');
+            page.classList.remove('hidden');
             window.scrollTo(0,0);
 
+            // 3. Fill Data
             document.getElementById('dt-title').innerText = `${p.bedrooms || 2} BHK in ${p.area}`;
             document.getElementById('dt-addr').innerText = `📍 ${p.houseNo || ''}, ${p.area}, ${p.city}`;
             document.getElementById('dt-price').innerText = Number(p.price).toLocaleString();
             document.getElementById('dt-owner').innerText = p.firstName;
             document.getElementById('dt-sqft').innerText = p.sqft || '-';
             document.getElementById('dt-beds').innerText = p.bedrooms || '-';
-            document.getElementById('dt-baths').innerText = p.baths || '-';
+            document.getElementById('dt-baths').innerText = p.bathrooms || '-';
+            document.getElementById('dt-furnish').innerText = p.furnishing || '-';
             document.getElementById('dt-desc').innerText = p.description || "";
+            
+            // Links
             document.getElementById('dt-call').href = `tel:${p.phone}`;
-            const message = `Hi ${p.firstName}, I saw your ${p.bedrooms || 2} BHK property in ${p.area} listed on EstatePro for ₹${Number(p.price).toLocaleString()}. Is it still available?`;
-            const encodedMsg = encodeURIComponent(message);
-            document.getElementById('dt-wa').href = `https://wa.me/91${p.phone}?text=${encodedMsg}`;
-            document.getElementById('dt-sv').href = `https://www.google.com/maps?layer=c&cbll=${p.lat},${p.lng}`;
-
-            // --- NEW 5-IMAGE LOGIC (PASTED HERE) ---
+            const msg = `Hi ${p.firstName}, I saw your ${p.bedrooms} BHK in ${p.area} on EstatePro. Is it available?`;
+            document.getElementById('dt-wa').href = `https://wa.me/91${p.phone}?text=${encodeURIComponent(msg)}`;
+            
+            // Images
             const i = p.images || {};
             const def = 'https://via.placeholder.com/800x600?text=No+Image';
-
-            // Fill Desktop Grid
             document.getElementById('dt-img-1').src = i.outer || (p.imageUrl || def);
             document.getElementById('dt-img-2').src = i.hall || def;
             document.getElementById('dt-img-3').src = i.bedroom || def;
             document.getElementById('dt-img-4').src = i.kitchen || def;
             document.getElementById('dt-img-5').src = i.bathroom || def;
-
-            // Fill Mobile Scroll
+            
+            // Mobile Images
             document.getElementById('m-img-1').src = i.outer || (p.imageUrl || def);
             document.getElementById('m-img-2').src = i.hall || def;
             document.getElementById('m-img-3').src = i.bedroom || def;
             document.getElementById('m-img-4').src = i.kitchen || def;
             document.getElementById('m-img-5').src = i.bathroom || def;
-            // ---------------------------------------
 
-            const am = document.getElementById('dt-amenities'); am.innerHTML = '';
+            // Amenities
+            const am = document.getElementById('dt-amenities'); 
+            am.innerHTML = '';
             if(p.amenities) p.amenities.forEach(a => am.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
 
+            // Map logic
             if(detailMap) detailMap.remove();
-            detailMap = L.map('detail-map').setView([p.lat, p.lng], 15);
+            detailMap = L.map('detail-map').setView([p.lat || 13.0827, p.lng || 80.2707], 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
-            L.marker([p.lat, p.lng]).addTo(detailMap);
-            
-            // *** ADDED FIX ***
-            // The map is in a hidden container, so we must invalidate its size after it becomes visible.
-            setTimeout(() => {
-                if (detailMap) detailMap.invalidateSize();
-            }, 150);
+            if(p.lat && p.lng) L.marker([p.lat, p.lng]).addTo(detailMap);
+
+            setTimeout(() => { if (detailMap) detailMap.invalidateSize(); }, 150);
         }
 
         // --- HOME PAGE LOGIC ---
