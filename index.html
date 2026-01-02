@@ -1058,55 +1058,80 @@
         }
 
         // --- REPLACE YOUR EXISTING showAuth FUNCTION WITH THIS ---
-        function showAuth(type) {
-            currentUserType = type; // 'owner' or 'tenant'
-
-            // 1. Hide ALL Sections first
-            const sections = ['home-page', 'property-page', 'app-section', 'owner-section', 'tenant-section', 'auth-section', 'admin-dashboard'];
-            sections.forEach(id => document.getElementById(id).classList.add('hidden'));
-
-            // 2. Decide what to show
-            const token = localStorage.getItem('token');
-            const savedType = localStorage.getItem('type'); // <--- GET THE SAVED USER TYPE ('owner' or 'tenant')
+        // REPLACE your existing handleAuth function with this one
+        async function handleAuth() {
+            // 1. Get Inputs
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('pass-input').value;
             
-            // Always show the App Container
-            const appSection = document.getElementById('app-section');
-            appSection.classList.remove('hidden');
-            appSection.classList.add('animate-view'); 
+            // 2. Validate
+            if(!email || !email.includes('@')) return alert("Please enter a valid email");
+            if(!password) return alert("Please enter password");
 
-            // 3. CRITICAL FIX: Only auto-login if Token exists AND Types match
-            // (e.g., If I am a Tenant, but 'type' is 'owner', this will be false)
-            if (token && savedType === type) {
-                
-                // --- LOGGED IN & CORRECT ROLE ---
-                if (type === 'owner') {
-                    document.getElementById('owner-section').classList.remove('hidden');
-                    document.getElementById('owner-section').classList.add('animate-view');
-                    initOwnerMap();
-                    loadMyListings();
-                } else { // Tenant
-                    document.getElementById('tenant-section').classList.remove('hidden');
-                    document.getElementById('tenant-section').classList.add('animate-view');
-                    initTenantMap();
-                }
-
-            } else {
-                // --- WRONG ROLE (or Logged Out) -> SHOW LOGIN FORM ---
-                // This forces a Tenant to see the Login Screen if they try to access Owner pages
-                const authSection = document.getElementById('auth-section');
-                authSection.classList.remove('hidden');
-                authSection.classList.add('animate-view');
-                
-                // Custom Title to explain why they are here
-                const title = document.getElementById('auth-title');
-                if(type === 'owner') {
-                    title.innerText = "Owner Login / List Property";
-                    title.style.color = "#e67e22"; // Orange for Owner
-                } else {
-                    title.innerText = "Tenant Login";
-                    title.style.color = "#6C63FF"; // Purple for Tenant
-                }
+            const endpoint = isLoginMode ? '/login' : '/register';
+            
+            // 3. Build Payload
+            let payload = { email, password, userType: currentUserType };
+            
+            if(!isLoginMode) { 
+                payload.firstName = document.getElementById('reg-name').value;
+                payload.phone = document.getElementById('reg-phone').value;
+                if(!payload.firstName) return alert("Enter Name");
             }
+
+            try {
+                showLoading(isLoginMode ? "Logging in..." : "Creating Account...");
+                
+                const res = await fetch(`${API_URL}${endpoint}`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                const data = await res.json();
+                
+                if(data.success) { 
+                    // --- 🛑 NEW VALIDATION LOGIC HERE 🛑 ---
+                    
+                    // Normalize types to lowercase to avoid case issues (e.g. "Tenant" vs "tenant")
+                    const accountType = (data.userType || '').toLowerCase(); // Type from Database
+                    const pageType = (currentUserType || '').toLowerCase();  // Page we are on
+
+                    // CHECK 1: If I am on Owner Login, but account is Tenant
+                    if (pageType === 'owner' && accountType === 'tenant') {
+                        alert("⚠️ This account is registered as a Tenant.\n\nKindly go to the Tenant Login page.");
+                        return; // Stop! Do not save token.
+                    }
+
+                    // CHECK 2: If I am on Tenant Login, but account is Owner
+                    if (pageType === 'tenant' && accountType === 'owner') {
+                        alert("⚠️ This account is an Owner account.\n\nKindly use the 'List Property' login.");
+                        return; // Stop! Do not save token.
+                    }
+
+                    // --- VALIDATION PASSED ---
+
+                    // SUCCESS: Save credentials
+                    localStorage.setItem('token', data.token); 
+                    localStorage.setItem('role', data.role || 'user');
+                    localStorage.setItem('email', email);
+                    
+                    // Save the REAL type from the database
+                    if(data.userType) {
+                        localStorage.setItem('type', data.userType); 
+                    }
+                    
+                    // Redirect
+                    checkSession(); 
+                } else { 
+                    // FAILURE
+                    alert(data.message); 
+                }
+            } catch(e) { 
+                console.error(e); 
+                alert("Connection Error. Check console."); 
+            } 
+            finally { hideLoading(); }
         }
 
         function triggerTenantSearch() {
