@@ -1069,18 +1069,28 @@
 
         // --- LOAD FAVORITES PAGE ---
         async function loadFavoritesPage() {
-            // 1. Show the section
+            // 1. SECURITY CHECK (Do this FIRST)
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast("🔒 Please Login to view your favorites", "error");
+                showAuth('tenant'); // Force user to Login Screen
+                return; // Stop here! Do not show the page.
+            }
+
+            // 2. NOW it is safe to show the section
             document.querySelectorAll('.container, #home-page, #tenant-section').forEach(el => el.classList.add('hidden'));
+            
+            // Hide Property Page explicitly just in case
+            document.getElementById('property-page').classList.add('hidden');
+
             const section = document.getElementById('favorites-section');
             section.classList.remove('hidden');
             section.classList.add('animate-view');
 
-            // 2. Fetch Data
+            // 3. Fetch Data
             const email = localStorage.getItem('email');
-            if(!email) return showToast("Please login first", "error");
-
             const container = document.getElementById('fav-list-container');
-            container.innerHTML = '<p style="text-align:center;">Loading...</p>';
+            container.innerHTML = '<p style="text-align:center; margin-top:20px;">Loading your favorites...</p>';
 
             try {
                 const res = await fetch(`${API_URL}/get-favorites-details`, {
@@ -1090,27 +1100,25 @@
                 });
                 const data = await res.json();
 
-                if (data.properties.length === 0) {
+                if (!data.properties || data.properties.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align:center; width:100%; grid-column: 1/-1;">
-                            <h3>No favorites yet 💔</h3>
-                            <p>Go back and heart some properties!</p>
+                        <div style="text-align:center; width:100%; grid-column: 1/-1; margin-top: 30px;">
+                            <h3 style="color:#ccc;">No favorites yet 💔</h3>
+                            <p style="color:#888;">Go back and heart some properties!</p>
                         </div>`;
                     return;
                 }
 
-                // 3. Render Cards
+                // 4. Render Cards
                 container.innerHTML = data.properties.map(p => {
                     const img = (p.images && p.images.outer) ? p.images.outer : 'https://via.placeholder.com/300x200';
                     const safeProp = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
 
                     return `
                     <div class="prop-card" style="position:relative;">
-                        
                         <div class="fav-btn active" onclick="toggleFav(this, '${p._id}', event); setTimeout(loadFavoritesPage, 500);" data-id="${p._id}">
                             <i class="fa-solid fa-heart"></i>
                         </div>
-
                         <div style="cursor:pointer;" onclick='openPropertyPage(${safeProp})'>
                             <img src="${img}" class="prop-img">
                             <div class="prop-info">
@@ -1944,6 +1952,13 @@
         }
         // --- UPDATE THIS FUNCTION ---
         function openPropertyPage(p) {
+            // 1. SECURITY CHECK
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast("🔒 Please Login to view property details", "error");
+                showAuth('tenant'); // Force Login
+                return; // Stop!
+            }
             // 1. Hide ALL view sections (Home, App, Favorites, etc.)
             const views = ['app-section', 'favorites-section', 'home-page', 'tenant-section', 'owner-section'];
             views.forEach(id => {
