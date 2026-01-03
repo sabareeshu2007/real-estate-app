@@ -1067,32 +1067,36 @@
             parking: ''
         };
 
-        // --- LOAD FAVORITES PAGE ---
+        // Global variable to store favorites safely
+        window.currentFavs = [];
+
         async function loadFavoritesPage() {
-            // 1. SECURITY CHECK (Do this FIRST)
+            // 1. SECURITY CHECK
             const token = localStorage.getItem('token');
             if (!token) {
-                showToast("🔒 Please Login to view your favorites", "error");
-                showAuth('tenant'); // Force user to Login Screen
-                return; // Stop here! Do not show the page.
+                showToast("🔒 Please Login to view favorites", "error");
+                showAuth('tenant'); 
+                return;
             }
 
-            // 2. NOW it is safe to show the section
-            document.querySelectorAll('.container, #home-page, #tenant-section').forEach(el => el.classList.add('hidden'));
+            // 2. Show Section
+            document.querySelectorAll('.container, #home-page, #tenant-section, #property-page, #owner-section').forEach(el => el.classList.add('hidden'));
             
-            // Hide Property Page explicitly just in case
-            document.getElementById('property-page').classList.add('hidden');
-
             const section = document.getElementById('favorites-section');
-            section.classList.remove('hidden');
-            section.classList.add('animate-view');
+            if(section) {
+                section.classList.remove('hidden');
+                section.classList.add('animate-view');
+            } else {
+                console.error("Critical: #favorites-section HTML is missing!");
+                return;
+            }
 
             // 3. Fetch Data
-            const email = localStorage.getItem('email');
             const container = document.getElementById('fav-list-container');
-            container.innerHTML = '<p style="text-align:center; margin-top:20px;">Loading your favorites...</p>';
+            container.innerHTML = '<p style="text-align:center; margin-top:20px;">Loading...</p>';
 
             try {
+                const email = localStorage.getItem('email');
                 const res = await fetch(`${API_URL}/get-favorites-details`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -1101,25 +1105,25 @@
                 const data = await res.json();
 
                 if (!data.properties || data.properties.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align:center; width:100%; grid-column: 1/-1; margin-top: 30px;">
-                            <h3 style="color:#ccc;">No favorites yet 💔</h3>
-                            <p style="color:#888;">Go back and heart some properties!</p>
-                        </div>`;
+                    container.innerHTML = `<div style="text-align:center; width:100%; margin-top:30px; color:#888;"><h3>No favorites yet 💔</h3></div>`;
                     return;
                 }
 
-                // 4. Render Cards
+                // --- SAVE DATA GLOBALLY ---
+                window.currentFavs = data.properties;
+
+                // 4. Render Cards (Pass ID only!)
                 container.innerHTML = data.properties.map(p => {
                     const img = (p.images && p.images.outer) ? p.images.outer : 'https://via.placeholder.com/300x200';
-                    const safeProp = JSON.stringify(p).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-
+                    
                     return `
                     <div class="prop-card" style="position:relative;">
+                        
                         <div class="fav-btn active" onclick="toggleFav(this, '${p._id}', event); setTimeout(loadFavoritesPage, 500);" data-id="${p._id}">
                             <i class="fa-solid fa-heart"></i>
                         </div>
-                        <div style="cursor:pointer;" onclick='openPropertyPage(${safeProp})'>
+
+                        <div style="cursor:pointer;" onclick="openFavDetails('${p._id}')">
                             <img src="${img}" class="prop-img">
                             <div class="prop-info">
                                 <h3 style="margin:0; color:var(--primary);">₹ ${Number(p.price).toLocaleString()}</h3>
@@ -1144,6 +1148,19 @@
                 }
             } catch (e) { console.error("Fav Error", e); }
         }
+        // --- NEW HELPER FUNCTION ---
+        function openFavDetails(id) {
+            // 1. Find the property data in our global list
+            const property = window.currentFavs.find(p => p._id === id);
+            
+            if (property) {
+                openPropertyPage(property);
+            } else {
+                console.error("Error: Property data not found for ID:", id);
+                showToast("Error loading details", "error");
+            }
+        }
+
         async function toggleFav(btn, propId, event) {
             event.stopPropagation(); // Stop the card click (which opens details)
             
