@@ -1968,27 +1968,34 @@
             finally { if(typeof hideLoading === 'function') hideLoading(); }
         }
         // --- UPDATE THIS FUNCTION ---
+        // --- REPLACE THIS FUNCTION ENTIRELY ---
         function openPropertyPage(p) {
-            // 1. SECURITY CHECK
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showToast("🔒 Please Login to view property details", "error");
-                showAuth('tenant'); // Force Login
-                return; // Stop!
-            }
-            // 1. Hide ALL view sections (Home, App, Favorites, etc.)
-            const views = ['app-section', 'favorites-section', 'home-page', 'tenant-section', 'owner-section'];
-            views.forEach(id => {
+            console.log("Opening details for:", p._id); // Debug check
+
+            // 1. HIDE EVERYTHING (Crucial Step)
+            // We list EVERY section ID here to make sure nothing stays on top
+            const allSections = [
+                'home-page', 
+                'app-section', 
+                'owner-section', 
+                'tenant-section', 
+                'favorites-section', // <--- THIS WAS MISSING
+                'auth-section',
+                'admin-dashboard'
+            ];
+            
+            allSections.forEach(id => {
                 const el = document.getElementById(id);
                 if(el) el.classList.add('hidden');
             });
 
-            // 2. Show the Property Page
-            const page = document.getElementById('property-page');
-            page.classList.remove('hidden');
+            // 2. SHOW PROPERTY PAGE
+            const propPage = document.getElementById('property-page');
+            propPage.classList.remove('hidden');
             window.scrollTo(0,0);
 
-            // 3. Fill Data
+            // 3. FILL DATA
+            // Text Data
             document.getElementById('dt-title').innerText = `${p.bedrooms || 2} BHK in ${p.area}`;
             document.getElementById('dt-addr').innerText = `📍 ${p.houseNo || ''}, ${p.area}, ${p.city}`;
             document.getElementById('dt-price').innerText = Number(p.price).toLocaleString();
@@ -2001,37 +2008,46 @@
             
             // Links
             document.getElementById('dt-call').href = `tel:${p.phone}`;
-            const msg = `Hi ${p.firstName}, I saw your ${p.bedrooms} BHK in ${p.area} on EstatePro. Is it available?`;
+            const msg = `Hi ${p.firstName}, I saw your property in ${p.area}. Is it still available?`;
             document.getElementById('dt-wa').href = `https://wa.me/91${p.phone}?text=${encodeURIComponent(msg)}`;
             
             // Images
             const i = p.images || {};
             const def = 'https://via.placeholder.com/800x600?text=No+Image';
-            document.getElementById('dt-img-1').src = i.outer || (p.imageUrl || def);
-            document.getElementById('dt-img-2').src = i.hall || def;
-            document.getElementById('dt-img-3').src = i.bedroom || def;
-            document.getElementById('dt-img-4').src = i.kitchen || def;
-            document.getElementById('dt-img-5').src = i.bathroom || def;
             
+            // Desktop Images
+            if(document.getElementById('dt-img-1')) document.getElementById('dt-img-1').src = i.outer || (p.imageUrl || def);
+            if(document.getElementById('dt-img-2')) document.getElementById('dt-img-2').src = i.hall || def;
+            if(document.getElementById('dt-img-3')) document.getElementById('dt-img-3').src = i.bedroom || def;
+            if(document.getElementById('dt-img-4')) document.getElementById('dt-img-4').src = i.kitchen || def;
+            if(document.getElementById('dt-img-5')) document.getElementById('dt-img-5').src = i.bathroom || def;
+
             // Mobile Images
-            document.getElementById('m-img-1').src = i.outer || (p.imageUrl || def);
-            document.getElementById('m-img-2').src = i.hall || def;
-            document.getElementById('m-img-3').src = i.bedroom || def;
-            document.getElementById('m-img-4').src = i.kitchen || def;
-            document.getElementById('m-img-5').src = i.bathroom || def;
+            if(document.getElementById('m-img-1')) document.getElementById('m-img-1').src = i.outer || (p.imageUrl || def);
+            if(document.getElementById('m-img-2')) document.getElementById('m-img-2').src = i.hall || def;
+            if(document.getElementById('m-img-3')) document.getElementById('m-img-3').src = i.bedroom || def;
+            if(document.getElementById('m-img-4')) document.getElementById('m-img-4').src = i.kitchen || def;
+            if(document.getElementById('m-img-5')) document.getElementById('m-img-5').src = i.bathroom || def;
 
             // Amenities
             const am = document.getElementById('dt-amenities'); 
-            am.innerHTML = '';
-            if(p.amenities) p.amenities.forEach(a => am.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
+            if(am) {
+                am.innerHTML = '';
+                if(p.amenities) p.amenities.forEach(a => am.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
+            }
 
-            // Map logic
-            if(detailMap) detailMap.remove();
-            detailMap = L.map('detail-map').setView([p.lat || 13.0827, p.lng || 80.2707], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
-            if(p.lat && p.lng) L.marker([p.lat, p.lng]).addTo(detailMap);
-
-            setTimeout(() => { if (detailMap) detailMap.invalidateSize(); }, 150);
+            // Map
+            if(detailMap) detailMap.remove(); // Remove old map
+            // Wait for the div to be visible before drawing map
+            setTimeout(() => {
+                const mapContainer = document.getElementById('detail-map');
+                if(mapContainer) {
+                    detailMap = L.map('detail-map').setView([p.lat || 13.08, p.lng || 80.27], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
+                    if(p.lat && p.lng) L.marker([p.lat, p.lng]).addTo(detailMap);
+                    detailMap.invalidateSize();
+                }
+            }, 200);
         }
 
         // --- HOME PAGE LOGIC ---
