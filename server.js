@@ -38,7 +38,7 @@ const otpSchema = new mongoose.Schema({
 });
 const Otp = mongoose.model('Otp', otpSchema);
 
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', userSchema);
 
 const PropertySchema = new mongoose.Schema({
     ownerEmail: String,
