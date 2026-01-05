@@ -1969,85 +1969,122 @@
         }
         // --- UPDATE THIS FUNCTION ---
         // --- REPLACE THIS FUNCTION ENTIRELY ---
+        // --- SAFE PROPERTY PAGE FUNCTION (Prevents White Screen) ---
         function openPropertyPage(p) {
-            console.log("Opening details for:", p._id); // Debug check
+            try {
+                console.log("Attempting to open property:", p);
 
-            // 1. HIDE EVERYTHING (Crucial Step)
-            // We list EVERY section ID here to make sure nothing stays on top
-            const allSections = [
-                'home-page', 
-                'app-section', 
-                'owner-section', 
-                'tenant-section', 
-                'favorites-section', // <--- THIS WAS MISSING
-                'auth-section',
-                'admin-dashboard'
-            ];
-            
-            allSections.forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.classList.add('hidden');
-            });
+                // 1. Hide ALL other sections explicitly
+                // We include every possible section ID to be safe
+                const allSections = [
+                    'home-page', 
+                    'app-section', 
+                    'owner-section', 
+                    'tenant-section', 
+                    'favorites-section', 
+                    'auth-section', 
+                    'admin-dashboard'
+                ];
+                
+                allSections.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.classList.add('hidden');
+                });
 
-            // 2. SHOW PROPERTY PAGE
-            const propPage = document.getElementById('property-page');
-            propPage.classList.remove('hidden');
-            window.scrollTo(0,0);
-
-            // 3. FILL DATA
-            // Text Data
-            document.getElementById('dt-title').innerText = `${p.bedrooms || 2} BHK in ${p.area}`;
-            document.getElementById('dt-addr').innerText = `📍 ${p.houseNo || ''}, ${p.area}, ${p.city}`;
-            document.getElementById('dt-price').innerText = Number(p.price).toLocaleString();
-            document.getElementById('dt-owner').innerText = p.firstName;
-            document.getElementById('dt-sqft').innerText = p.sqft || '-';
-            document.getElementById('dt-beds').innerText = p.bedrooms || '-';
-            document.getElementById('dt-baths').innerText = p.bathrooms || '-';
-            document.getElementById('dt-furnish').innerText = p.furnishing || '-';
-            document.getElementById('dt-desc').innerText = p.description || "";
-            
-            // Links
-            document.getElementById('dt-call').href = `tel:${p.phone}`;
-            const msg = `Hi ${p.firstName}, I saw your property in ${p.area}. Is it still available?`;
-            document.getElementById('dt-wa').href = `https://wa.me/91${p.phone}?text=${encodeURIComponent(msg)}`;
-            
-            // Images
-            const i = p.images || {};
-            const def = 'https://via.placeholder.com/800x600?text=No+Image';
-            
-            // Desktop Images
-            if(document.getElementById('dt-img-1')) document.getElementById('dt-img-1').src = i.outer || (p.imageUrl || def);
-            if(document.getElementById('dt-img-2')) document.getElementById('dt-img-2').src = i.hall || def;
-            if(document.getElementById('dt-img-3')) document.getElementById('dt-img-3').src = i.bedroom || def;
-            if(document.getElementById('dt-img-4')) document.getElementById('dt-img-4').src = i.kitchen || def;
-            if(document.getElementById('dt-img-5')) document.getElementById('dt-img-5').src = i.bathroom || def;
-
-            // Mobile Images
-            if(document.getElementById('m-img-1')) document.getElementById('m-img-1').src = i.outer || (p.imageUrl || def);
-            if(document.getElementById('m-img-2')) document.getElementById('m-img-2').src = i.hall || def;
-            if(document.getElementById('m-img-3')) document.getElementById('m-img-3').src = i.bedroom || def;
-            if(document.getElementById('m-img-4')) document.getElementById('m-img-4').src = i.kitchen || def;
-            if(document.getElementById('m-img-5')) document.getElementById('m-img-5').src = i.bathroom || def;
-
-            // Amenities
-            const am = document.getElementById('dt-amenities'); 
-            if(am) {
-                am.innerHTML = '';
-                if(p.amenities) p.amenities.forEach(a => am.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
-            }
-
-            // Map
-            if(detailMap) detailMap.remove(); // Remove old map
-            // Wait for the div to be visible before drawing map
-            setTimeout(() => {
-                const mapContainer = document.getElementById('detail-map');
-                if(mapContainer) {
-                    detailMap = L.map('detail-map').setView([p.lat || 13.08, p.lng || 80.27], 15);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
-                    if(p.lat && p.lng) L.marker([p.lat, p.lng]).addTo(detailMap);
-                    detailMap.invalidateSize();
+                // 2. Show the Property Page
+                const page = document.getElementById('property-page');
+                if (!page) {
+                    alert("Critical Error: The HTML element <div id='property-page'> is missing!");
+                    return;
                 }
-            }, 200);
+                page.classList.remove('hidden');
+                window.scrollTo(0, 0);
+
+                // 3. Helper function to safely set text (Prevents crashes)
+                const setText = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerText = val || '-';
+                };
+
+                // 4. Fill Data using the helper
+                setText('dt-title', `${p.bedrooms || 2} BHK in ${p.area}`);
+                setText('dt-addr', `📍 ${p.houseNo || ''}, ${p.area}, ${p.city}`);
+                setText('dt-price', Number(p.price).toLocaleString());
+                setText('dt-owner', p.firstName);
+                setText('dt-sqft', p.sqft);
+                setText('dt-beds', p.bedrooms);
+                setText('dt-baths', p.bathrooms);
+                setText('dt-furnish', p.furnishing);
+                setText('dt-desc', p.description);
+
+                // 5. Safe Image Loading
+                const i = p.images || {};
+                const def = 'https://via.placeholder.com/800x600?text=No+Image';
+                
+                const setImg = (id, src) => {
+                    const el = document.getElementById(id);
+                    if(el) el.src = src || def;
+                };
+
+                setImg('dt-img-1', i.outer || p.imageUrl);
+                setImg('dt-img-2', i.hall);
+                setImg('dt-img-3', i.bedroom);
+                setImg('dt-img-4', i.kitchen);
+                setImg('dt-img-5', i.bathroom);
+
+                // Mobile Images
+                setImg('m-img-1', i.outer || p.imageUrl);
+                setImg('m-img-2', i.hall);
+                setImg('m-img-3', i.bedroom);
+
+                // 6. Links (Call/WhatsApp)
+                const callBtn = document.getElementById('dt-call');
+                if (callBtn) callBtn.href = `tel:${p.phone}`;
+                
+                const waBtn = document.getElementById('dt-wa');
+                if (waBtn) {
+                    const msg = `Hi ${p.firstName}, I saw your property in ${p.area}. Is it still available?`;
+                    waBtn.href = `https://wa.me/91${p.phone}?text=${encodeURIComponent(msg)}`;
+                }
+
+                // 7. Amenities
+                const amBox = document.getElementById('dt-amenities');
+                if (amBox) {
+                    amBox.innerHTML = '';
+                    if (p.amenities && Array.isArray(p.amenities)) {
+                        p.amenities.forEach(a => amBox.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
+                    }
+                }
+
+                // 8. Map (Wrapped in try-catch to prevent map errors killing the page)
+                setTimeout(() => {
+                    try {
+                        const mapBox = document.getElementById('detail-map');
+                        if (mapBox && typeof L !== 'undefined') {
+                            // Remove old map instance if it exists
+                            if (window.detailMap) {
+                                window.detailMap.remove();
+                                window.detailMap = null;
+                            }
+                            
+                            // Create new map
+                            window.detailMap = L.map('detail-map').setView([p.lat || 13.08, p.lng || 80.27], 15);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.detailMap);
+                            
+                            if (p.lat && p.lng) {
+                                L.marker([p.lat, p.lng]).addTo(window.detailMap);
+                            }
+                            window.detailMap.invalidateSize();
+                        }
+                    } catch (mapErr) {
+                        console.warn("Map failed to load (ignoring):", mapErr);
+                    }
+                }, 300);
+
+            } catch (err) {
+                console.error("PAGE CRASHED:", err);
+                alert("Something went wrong opening the page. See console for details.");
+            }
         }
 
         // --- HOME PAGE LOGIC ---
