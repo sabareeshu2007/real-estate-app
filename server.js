@@ -11,7 +11,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // --- CONFIGURATION ---
-const JWT_SECRET = 'secret_key_123';
+const SECRET_KEY = process.env.SECRET_KEY || 'my-secret-key-123';
 // ⚠️ PASTE YOUR MONGODB CONNECTION STRING HERE
 const dbURL = process.env.MONGO_URL; // Read the secret key
 
