@@ -1135,6 +1135,29 @@
 
             } catch (e) { console.error(e); }
         }
+
+        // --- PASTE THIS MISSING FUNCTION ---
+        function openFavDetails(id) {
+            console.log("Clicked saved property:", id); // Debug check
+
+            // 1. Check if we have the list of favorites loaded
+            if (!window.currentFavs || window.currentFavs.length === 0) {
+                alert("Error: Favorites data not loaded. Please refresh.");
+                return;
+            }
+
+            // 2. Find the specific property object using the ID
+            const property = window.currentFavs.find(p => p._id === id);
+
+            // 3. Open the page
+            if (property) {
+                openPropertyPage(property);
+            } else {
+                alert("Error: Could not find details for this property.");
+                console.error("Looking for ID:", id, "In list:", window.currentFavs);
+            }
+        }
+
         async function refreshFavorites() {
             const email = localStorage.getItem('email');
             if (!email) return;
@@ -1970,12 +1993,12 @@
         // --- UPDATE THIS FUNCTION ---
         // --- REPLACE THIS FUNCTION ENTIRELY ---
         // --- SAFE PROPERTY PAGE FUNCTION (Prevents White Screen) ---
+        // --- FIXED OPEN PROPERTY PAGE FUNCTION ---
         function openPropertyPage(p) {
             try {
-                console.log("Attempting to open property:", p);
+                console.log("Opening property:", p._id);
 
-                // 1. Hide ALL other sections explicitly
-                // We include every possible section ID to be safe
+                // 1. Hide ALL other main sections
                 const allSections = [
                     'home-page', 
                     'app-section', 
@@ -1985,28 +2008,30 @@
                     'auth-section', 
                     'admin-dashboard'
                 ];
-                
                 allSections.forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.classList.add('hidden');
                 });
 
-                // 2. Show the Property Page
-                const page = document.getElementById('property-page');
-                if (!page) {
-                    alert("Critical Error: The HTML element <div id='property-page'> is missing!");
-                    return;
-                }
-                page.classList.remove('hidden');
+                // 2. Show the Property Page Wrapper
+                const propPage = document.getElementById('property-page');
+                if (!propPage) return alert("Error: #property-page missing");
+                
+                propPage.classList.remove('hidden');
+
+                // 🛑 CRITICAL FIX: Unhide the container INSIDE the property page
+                // (It might have been hidden by loadFavoritesPage)
+                const innerContainer = propPage.querySelector('.container');
+                if(innerContainer) innerContainer.classList.remove('hidden');
+
                 window.scrollTo(0, 0);
 
-                // 3. Helper function to safely set text (Prevents crashes)
+                // 3. Fill Data
                 const setText = (id, val) => {
                     const el = document.getElementById(id);
                     if (el) el.innerText = val || '-';
                 };
 
-                // 4. Fill Data using the helper
                 setText('dt-title', `${p.bedrooms || 2} BHK in ${p.area}`);
                 setText('dt-addr', `📍 ${p.houseNo || ''}, ${p.area}, ${p.city}`);
                 setText('dt-price', Number(p.price).toLocaleString());
@@ -2017,7 +2042,7 @@
                 setText('dt-furnish', p.furnishing);
                 setText('dt-desc', p.description);
 
-                // 5. Safe Image Loading
+                // 4. Images
                 const i = p.images || {};
                 const def = 'https://via.placeholder.com/800x600?text=No+Image';
                 
@@ -2031,13 +2056,13 @@
                 setImg('dt-img-3', i.bedroom);
                 setImg('dt-img-4', i.kitchen);
                 setImg('dt-img-5', i.bathroom);
-
+                
                 // Mobile Images
                 setImg('m-img-1', i.outer || p.imageUrl);
                 setImg('m-img-2', i.hall);
                 setImg('m-img-3', i.bedroom);
 
-                // 6. Links (Call/WhatsApp)
+                // 5. Links
                 const callBtn = document.getElementById('dt-call');
                 if (callBtn) callBtn.href = `tel:${p.phone}`;
                 
@@ -2047,7 +2072,7 @@
                     waBtn.href = `https://wa.me/91${p.phone}?text=${encodeURIComponent(msg)}`;
                 }
 
-                // 7. Amenities
+                // 6. Amenities
                 const amBox = document.getElementById('dt-amenities');
                 if (amBox) {
                     amBox.innerHTML = '';
@@ -2056,34 +2081,28 @@
                     }
                 }
 
-                // 8. Map (Wrapped in try-catch to prevent map errors killing the page)
+                // 7. Map
                 setTimeout(() => {
                     try {
+                        if (window.detailMap) {
+                            window.detailMap.remove();
+                            window.detailMap = null;
+                        }
                         const mapBox = document.getElementById('detail-map');
                         if (mapBox && typeof L !== 'undefined') {
-                            // Remove old map instance if it exists
-                            if (window.detailMap) {
-                                window.detailMap.remove();
-                                window.detailMap = null;
-                            }
-                            
-                            // Create new map
                             window.detailMap = L.map('detail-map').setView([p.lat || 13.08, p.lng || 80.27], 15);
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.detailMap);
-                            
                             if (p.lat && p.lng) {
                                 L.marker([p.lat, p.lng]).addTo(window.detailMap);
                             }
                             window.detailMap.invalidateSize();
                         }
-                    } catch (mapErr) {
-                        console.warn("Map failed to load (ignoring):", mapErr);
-                    }
+                    } catch (e) { console.log("Map error", e); }
                 }, 300);
 
             } catch (err) {
                 console.error("PAGE CRASHED:", err);
-                alert("Something went wrong opening the page. See console for details.");
+                alert("Error opening page. See console.");
             }
         }
 
