@@ -738,13 +738,14 @@
             <h2 id="auth-title">Welcome Back</h2>
             
             <div id="signup-fields" class="hidden">
-                <input type="text" id="reg-name" placeholder="Full Name">
-                <input type="tel" id="reg-phone" placeholder="Phone Number">
+                <input type="text" id="reg-name" placeholder="Full Name" minlength="3" required>
+                
+                <input type="tel" id="reg-phone" placeholder="Phone Number (10 digits)" 
+                    pattern="[6-9][0-9]{9}" title="Please enter valid 10 digit mobile number" maxlength="10" 
+                    oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
             </div>
 
-            <input type="email" id="email-input" placeholder="Email Address">
-            <input type="password" id="pass-input" placeholder="Password">
-            
+            <input type="email" id="email-input" placeholder="Email Address" required>
             <button id="auth-btn" class="btn btn-primary">Login</button>
             
             <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:13px;">
@@ -1513,21 +1514,42 @@
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pass-input').value;
             
-            // 2. Validate
-            if(!email || !email.includes('@')) return alert("Please enter a valid email");
-            if(!password) return alert("Please enter password");
+            // --- 2. VALIDATION (PASTE NEW CODE HERE) ---
+            
+            // Check Password first
+            if(!password) return showToast("⚠️ Please enter password", "error");
+
+            // NEW: Strict Phone & Name Check (Only for Signup)
+            if (!isLoginMode) {
+                const phone = document.getElementById('reg-phone').value;
+                const name = document.getElementById('reg-name').value;
+
+                // Name Check
+                if (!name || name.length < 3) {
+                    return showToast("⚠️ Please enter a full name (min 3 chars)", "error");
+                }
+
+                // Strict Phone Check: Must be 10 digits
+                if (!/^\d{10}$/.test(phone)) {
+                    return showToast("⚠️ Please enter a valid 10-digit phone number", "error");
+                }
+            }
+
+            // NEW: Strict Email Check
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return showToast("⚠️ Please enter a valid email address", "error");
+            }
+            // -------------------------------------------
 
             const endpoint = isLoginMode ? '/login' : '/register';
             
             // 3. Build Payload
-            // CRITICAL: We must send the currentUserType ('owner' or 'tenant') 
-            // so the backend knows what role to assign/check.
             let payload = { email, password, userType: currentUserType };
             
             if(!isLoginMode) { 
                 payload.firstName = document.getElementById('reg-name').value;
                 payload.phone = document.getElementById('reg-phone').value;
-                if(!payload.firstName) return alert("Enter Name");
             }
 
             try {
@@ -1543,26 +1565,25 @@
                 
                 if(data.success) { 
                     showToast("✅ Successfully Logged In!", "success");
+                    
                     // SUCCESS: Save credentials
                     localStorage.setItem('token', data.token); 
-                    
-                    // IMPORTANT: Save the role and type correctly
                     localStorage.setItem('role', data.role || 'user');
-                    localStorage.setItem('type', currentUserType); // Force save the type we just used
                     localStorage.setItem('email', email);
+                    localStorage.setItem('type', currentUserType); // Default
+                    
                     if(data.userType) {
                         localStorage.setItem('type', data.userType); 
                     }
+                    
                     // Redirect
                     checkSession(); 
                 } else { 
-                    showToast("❌ " + data.message, "error"); // <--- REPLACE
-                    // FAILURE: Show error and STOP 
-                    // Do NOT call checkSession() here
+                    showToast("❌ " + data.message, "error"); 
                 }
             } catch(e) { 
-                console.error(e); // See exact error in console
-                alert("Connection Error. Check console for details."); 
+                console.error(e); 
+                showToast("Connection Error. Check console.", "error"); 
             } 
             finally { hideLoading(); }
         }
