@@ -734,16 +734,33 @@
 
     <div id="app-section" class="container hidden">
         
-        <div id="auth-section" class="card auth-card">
-            <h2 id="auth-title">Welcome Back</h2>
+        <div id="auth-section" class="card auth-card hidden">
+            <h2 id="auth-title">Welcome</h2>
             
-            <div id="signup-fields" class="hidden">
-                <input type="text" id="reg-name" placeholder="Full Name" minlength="3" required>
-                
-                <input type="tel" id="reg-phone" placeholder="Phone Number (10 digits)" 
-                    pattern="[6-9][0-9]{9}" title="Please enter valid 10 digit mobile number" maxlength="10" 
-                    oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
+            <div style="position:relative;">
+                <span style="position:absolute; top:13px; left:15px; color:#888; font-size:14px;">+91</span>
+                <input type="tel" id="auth-phone" placeholder="Phone Number" maxlength="10" style="padding-left:50px;">
             </div>
+
+            <div id="otp-section" class="hidden">
+                <input type="text" id="auth-otp" placeholder="Enter 4-digit OTP" maxlength="4" style="text-align:center; letter-spacing:5px; font-weight:bold;">
+            </div>
+
+            <div id="signup-fields" class="hidden">
+                <input type="text" id="reg-name" placeholder="Full Name">
+                <input type="email" id="reg-email" placeholder="Email (Optional)">
+            </div>
+
+            <input type="password" id="pass-input" placeholder="Password">
+            
+            <button id="otp-btn" class="btn btn-outline" onclick="requestOtp()" style="margin-bottom:10px;">Get OTP</button>
+            <button id="auth-btn" class="btn btn-primary hidden" onclick="finalizeAuth()">Login</button>
+            
+            <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:13px;">
+                <span id="switch-text" style="color:var(--primary); cursor:pointer; font-weight:600;" onclick="toggleAuthMode()">New here? Create Account</span>
+                <span id="auth-back-home" style="color:#666; cursor:pointer;" onclick="goHome()">← Back to Home</span>
+            </div>
+        </div>
 
             <input type="email" id="email-input" placeholder="Email Address" required>
             <button id="auth-btn" class="btn btn-primary">Login</button>
@@ -1502,90 +1519,118 @@
         }
 
         // --- AUTH & TOGGLE ---
+        // --- NEW PHONE AUTH LOGIC ---
+        let isOtpSent = false;
+
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
-            document.getElementById('auth-title').innerText = isLoginMode ? "Welcome Back" : "Create Account";
-            document.getElementById('signup-fields').classList.toggle('hidden');
+            isOtpSent = false;
+            
+            // Reset UI
+            document.getElementById('auth-title').innerText = isLoginMode ? "Login" : "Create Account";
             document.getElementById('switch-text').innerText = isLoginMode ? "New here? Create Account" : "Already have an account? Login";
+            
+            // Reset Fields
+            document.getElementById('otp-section').classList.add('hidden');
+            document.getElementById('signup-fields').classList.add('hidden');
+            
+            // Button Logic
+            if (isLoginMode) {
+                document.getElementById('otp-btn').classList.add('hidden'); // No OTP for login
+                document.getElementById('auth-btn').classList.remove('hidden'); // Show Login Button
+                document.getElementById('auth-btn').innerText = "Login";
+            } else {
+                document.getElementById('otp-btn').classList.remove('hidden'); // Show OTP Button for Signup
+                document.getElementById('otp-btn').innerText = "Get OTP";
+                document.getElementById('auth-btn').classList.add('hidden'); // Hide Register Button until OTP
+            }
         }
 
-        async function handleAuth() {
-            // 1. Get Inputs
-            const email = document.getElementById('email-input').value;
-            const password = document.getElementById('pass-input').value;
+        async function requestOtp() {
+            const phone = document.getElementById('auth-phone').value;
             
-            // --- 2. VALIDATION (PASTE NEW CODE HERE) ---
-            
-            // Check Password first
-            if(!password) return showToast("⚠️ Please enter password", "error");
-
-            // NEW: Strict Phone & Name Check (Only for Signup)
-            if (!isLoginMode) {
-                const phone = document.getElementById('reg-phone').value;
-                const name = document.getElementById('reg-name').value;
-
-                // Name Check
-                if (!name || name.length < 3) {
-                    return showToast("⚠️ Please enter a full name (min 3 chars)", "error");
-                }
-
-                // Strict Phone Check: Must be 10 digits
-                if (!/^\d{10}$/.test(phone)) {
-                    return showToast("⚠️ Please enter a valid 10-digit phone number", "error");
-                }
-            }
-
-            // NEW: Strict Email Check
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                return showToast("⚠️ Please enter a valid email address", "error");
-            }
-            // -------------------------------------------
-
-            const endpoint = isLoginMode ? '/login' : '/register';
-            
-            // 3. Build Payload
-            let payload = { email, password, userType: currentUserType };
-            
-            if(!isLoginMode) { 
-                payload.firstName = document.getElementById('reg-name').value;
-                payload.phone = document.getElementById('reg-phone').value;
-            }
+            // Validate Phone
+            if (!/^\d{10}$/.test(phone)) return showToast("⚠️ Enter valid 10-digit phone", "error");
 
             try {
-                showLoading(isLoginMode ? "Logging in..." : "Creating Account...");
-                
-                const res = await fetch(`${API_URL}${endpoint}`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(payload) 
+                const btn = document.getElementById('otp-btn');
+                btn.innerText = "Sending...";
+                btn.disabled = true;
+
+                const res = await fetch(`${API_URL}/send-otp`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone, isLogin: isLoginMode })
                 });
-                
                 const data = await res.json();
-                
-                if(data.success) { 
-                    showToast("✅ Successfully Logged In!", "success");
+
+                if (data.success) {
+                    showToast("✅ OTP Sent! Check Console.", "success");
+                    isOtpSent = true;
                     
-                    // SUCCESS: Save credentials
-                    localStorage.setItem('token', data.token); 
-                    localStorage.setItem('role', data.role || 'user');
-                    localStorage.setItem('email', email);
-                    localStorage.setItem('type', currentUserType); // Default
+                    // Show OTP Field & Rest of Form
+                    document.getElementById('otp-section').classList.remove('hidden');
+                    document.getElementById('signup-fields').classList.remove('hidden');
                     
-                    if(data.userType) {
-                        localStorage.setItem('type', data.userType); 
-                    }
-                    
-                    // Redirect
-                    checkSession(); 
-                } else { 
-                    showToast("❌ " + data.message, "error"); 
+                    // Swap Buttons
+                    btn.classList.add('hidden'); // Hide "Get OTP"
+                    const finalBtn = document.getElementById('auth-btn');
+                    finalBtn.classList.remove('hidden');
+                    finalBtn.innerText = "Verify & Register";
+                } else {
+                    showToast("❌ " + data.message, "error");
                 }
-            } catch(e) { 
-                console.error(e); 
-                showToast("Connection Error. Check console.", "error"); 
-            } 
-            finally { hideLoading(); }
+            } catch (e) { console.error(e); }
+            finally { 
+                document.getElementById('otp-btn').innerText = "Get OTP";
+                document.getElementById('otp-btn').disabled = false;
+            }
+        }
+
+        async function finalizeAuth() {
+            const phone = document.getElementById('auth-phone').value;
+            const password = document.getElementById('pass-input').value;
+
+            if (!phone || !password) return showToast("⚠️ Fill all fields", "error");
+
+            let endpoint = '/login';
+            let payload = { phone, password };
+
+            // --- SIGNUP LOGIC ---
+            if (!isLoginMode) {
+                const otp = document.getElementById('auth-otp').value;
+                const name = document.getElementById('reg-name').value;
+                const email = document.getElementById('reg-email').value;
+
+                if (otp.length !== 4) return showToast("⚠️ Enter 4-digit OTP", "error");
+                if (!name) return showToast("⚠️ Enter Name", "error");
+
+                endpoint = '/register';
+                payload = { 
+                    phone, password, otp, firstName: name, email, 
+                    userType: currentUserType // 'owner' or 'tenant'
+                };
+            }
+
+            // --- API CALL ---
+            try {
+                const res = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast("✅ Success!", "success");
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('type', data.userType || currentUserType);
+                    if(data.email) localStorage.setItem('email', data.email); // Save email if login returns it
+                    checkSession();
+                } else {
+                    showToast("❌ " + data.message, "error");
+                }
+            } catch (e) { console.error(e); }
         }
 
         function checkSession() {
@@ -2253,13 +2298,6 @@
             document.getElementById('lightbox').style.display = 'none';
         }
 
-        function updateAuthUI() {
-            document.getElementById('auth-title').innerText = isLoginMode ? "Welcome Back" : "Create Account";
-            document.getElementById('signup-fields').classList.toggle('hidden', isLoginMode);
-            document.getElementById('switch-text').innerText = isLoginMode ? "New here? Create Account" : "Already have an account? Login";
-            document.getElementById('auth-btn').innerText = isLoginMode ? "Login" : "Create Account";
-        }
-
         function setupEventListeners() {
             // --- Navigation ---
             document.getElementById('logo').addEventListener('click', goHome);
@@ -2289,8 +2327,8 @@
             });
 
             // --- Auth Page ---
-            document.getElementById('auth-btn').addEventListener('click', handleAuth);
-            document.getElementById('switch-text').addEventListener('click', toggleAuthMode);
+            // document.getElementById('auth-btn').addEventListener('click', handleAuth);
+            // document.getElementById('switch-text').addEventListener('click', toggleAuthMode);
             document.getElementById('auth-back-home').addEventListener('click', goHome);
 
             // --- Owner Dashboard ---

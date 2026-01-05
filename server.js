@@ -19,15 +19,25 @@ mongoose.connect(dbURL)
 .then(() => console.log("✅ Database Connected"))
 .catch(err => console.log("❌ DB Error: ", err));
 
-// --- SCHEMAS ---
-const UserSchema = new mongoose.Schema({
-    firstName: String, lastName: String, phone: String,
-    email: { type: String, required: true, unique: true },
+// --- UPDATED USER SCHEMA (Phone is Primary) ---
+const userSchema = new mongoose.Schema({
+    phone: { type: String, required: true, unique: true }, // Primary ID
+    email: { type: String }, // Optional/Secondary
     password: { type: String, required: true },
-    userType: { type: String, required: true },
-    role: { type: String, default: 'user' },
-    favorites: [String] // <--- ADD THIS LINE (Stores Property IDs)
+    userType: { type: String, enum: ['owner', 'tenant', 'admin'], default: 'tenant' },
+    firstName: String,
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Property' }],
+    createdAt: { type: Date, default: Date.now }
 });
+
+// --- OTP SCHEMA (Phone Based) ---
+const otpSchema = new mongoose.Schema({
+    phone: { type: String, required: true },
+    otp: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now, expires: 300 } // Expires in 5 mins
+});
+const Otp = mongoose.model('Otp', otpSchema);
+
 const User = mongoose.model('User', UserSchema);
 
 const PropertySchema = new mongoose.Schema({
@@ -312,6 +322,90 @@ app.post('/api/get-favorites-details', async (req, res) => {
         // Find all properties whose ID is IN the user's favorite list
         const favProps = await Property.find({ _id: { $in: user.favorites } });
         res.json({ success: true, properties: favProps });
+
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- PHONE AUTH ROUTES ---
+
+// 1. Send OTP (Simulation Mode)
+app.post('/api/send-otp', async (req, res) => {
+    try {
+        const { phone, isLogin } = req.body;
+
+        // Check user existence based on flow
+        const existingUser = await User.findOne({ phone });
+        
+        if (!isLogin && existingUser) {
+            return res.json({ success: false, message: "Phone already registered. Please Login." });
+        }
+        if (isLogin && !existingUser) {
+            return res.json({ success: false, message: "Phone not found. Please Register first." });
+        }
+
+        // Generate 4-digit Code
+        const code = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // Save to DB
+        await Otp.deleteMany({ phone }); // Clear old OTPs
+        await new Otp({ phone, otp: code }).save();
+
+        // --- SIMULATION: LOG TO CONSOLE ---
+        console.log(`=========================================`);
+        console.log(`🔐 OTP for ${phone} is: ${code}`);
+        console.log(`=========================================`);
+        // ----------------------------------
+
+        // NOTE: Later, replace the console.log above with a real SMS API call (e.g., Twilio/Fast2SMS)
+        
+        res.json({ success: true, message: "OTP sent! Check Server Console." });
+
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 2. Register with Phone + OTP
+app.post('/api/register', async (req, res) => {
+    try {
+        const { phone, otp, password, firstName, email, userType } = req.body;
+
+        // Verify OTP
+        const validOtp = await Otp.findOne({ phone, otp });
+        if (!validOtp) return res.json({ success: false, message: "Invalid or Expired OTP" });
+
+        // Create User
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = new User({ 
+            phone, 
+            email, 
+            firstName, 
+            password: hashedPassword, 
+            userType 
+        });
+        await user.save();
+        
+        // Delete used OTP
+        await Otp.deleteMany({ phone });
+
+        // Generate Token
+        const token = jwt.sign({ userId: user._id, role: user.userType }, SECRET_KEY);
+        res.json({ success: true, token, role: 'user', userType: user.userType });
+
+    } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+});
+
+// 3. Login with Phone + Password
+app.post('/api/login', async (req, res) => {
+    try {
+        const { phone, password } = req.body;
+        const user = await User.findOne({ phone });
+
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.json({ success: false, message: "Invalid Phone or Password" });
+        }
+
+        const token = jwt.sign({ userId: user._id, role: user.userType }, SECRET_KEY);
+        // Include email in response so frontend can save it if needed
+        res.json({ success: true, token, role: 'user', userType: user.userType, email: user.email });
 
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
