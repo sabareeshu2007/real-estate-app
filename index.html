@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -512,6 +514,49 @@
                 color: #e74c3c !important; /* Force Red */
                 font-weight: 900 !important; /* Solid Heart */
             }
+
+            /* --- SWIPER SLIDER STYLES --- */
+            .swiper {
+                width: 100%;
+                height: 300px; /* Height of the slider */
+                border-radius: 15px;
+                margin-bottom: 20px;
+            }
+
+            .swiper-slide {
+                text-align: center;
+                font-size: 18px;
+                background: #fff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .swiper-slide img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 15px;
+            }
+
+            /* Customizing the arrows */
+            .swiper-button-next, .swiper-button-prev {
+                color: white !important;
+                text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            }
+            .swiper-pagination-bullet-active {
+                background: white !important;
+            }
+
+            /* Hide Swiper on Desktop (Use your Grid instead), Show on Mobile */
+            .mobile-swiper-container { display: none; }
+
+            @media (max-width: 768px) {
+                .gallery-desktop { display: none !important; } /* Hide Grid */
+                .mobile-swiper-container { display: block; }   /* Show Slider */
+            }
+
     </style>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -979,12 +1024,14 @@
                 </div>
             </div>
             
-            <div class="gallery-mobile">
-                <img id="m-img-1" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
-                <img id="m-img-2" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                <img id="m-img-3" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                <img id="m-img-4" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                <img id="m-img-5" onclick="openLightbox(this.src)" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+            <div class="mobile-swiper-container">
+                <div class="swiper mySwiper">
+                    <div class="swiper-wrapper" id="swiper-wrapper">
+                        </div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-pagination"></div>
+                </div>
             </div>
             
             <div class="details-layout">
@@ -1990,48 +2037,37 @@
             } catch(e) { console.error(e); } 
             finally { if(typeof hideLoading === 'function') hideLoading(); }
         }
-        // --- UPDATE THIS FUNCTION ---
-        // --- REPLACE THIS FUNCTION ENTIRELY ---
-        // --- SAFE PROPERTY PAGE FUNCTION (Prevents White Screen) ---
-        // --- FIXED OPEN PROPERTY PAGE FUNCTION ---
+        // Global variable to track the slider instance
+        let propertySwiper = null;
+
         function openPropertyPage(p) {
             try {
                 console.log("Opening property:", p._id);
 
-                // 1. Hide ALL other main sections
-                const allSections = [
-                    'home-page', 
-                    'app-section', 
-                    'owner-section', 
-                    'tenant-section', 
-                    'favorites-section', 
-                    'auth-section', 
-                    'admin-dashboard'
-                ];
+                // 1. Hide Other Sections
+                const allSections = ['home-page', 'app-section', 'owner-section', 'tenant-section', 'favorites-section', 'auth-section', 'admin-dashboard'];
                 allSections.forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.classList.add('hidden');
                 });
 
-                // 2. Show the Property Page Wrapper
+                // 2. Show Property Page
                 const propPage = document.getElementById('property-page');
                 if (!propPage) return alert("Error: #property-page missing");
                 
                 propPage.classList.remove('hidden');
-
-                // 🛑 CRITICAL FIX: Unhide the container INSIDE the property page
-                // (It might have been hidden by loadFavoritesPage)
+                
+                // Unhide inner container if hidden
                 const innerContainer = propPage.querySelector('.container');
                 if(innerContainer) innerContainer.classList.remove('hidden');
 
                 window.scrollTo(0, 0);
 
-                // 3. Fill Data
+                // 3. Fill Text Data
                 const setText = (id, val) => {
                     const el = document.getElementById(id);
                     if (el) el.innerText = val || '-';
                 };
-
                 setText('dt-title', `${p.bedrooms || 2} BHK in ${p.area}`);
                 setText('dt-addr', `📍 ${p.houseNo || ''}, ${p.area}, ${p.city}`);
                 setText('dt-price', Number(p.price).toLocaleString());
@@ -2042,59 +2078,88 @@
                 setText('dt-furnish', p.furnishing);
                 setText('dt-desc', p.description);
 
-                // 4. Images
+                // 4. PREPARE IMAGES ARRAY
                 const i = p.images || {};
                 const def = 'https://via.placeholder.com/800x600?text=No+Image';
                 
-                const setImg = (id, src) => {
-                    const el = document.getElementById(id);
-                    if(el) el.src = src || def;
-                };
-
-                setImg('dt-img-1', i.outer || p.imageUrl);
-                setImg('dt-img-2', i.hall);
-                setImg('dt-img-3', i.bedroom);
-                setImg('dt-img-4', i.kitchen);
-                setImg('dt-img-5', i.bathroom);
+                // Collect all available images into a clean list
+                let imageList = [];
+                if(i.outer) imageList.push(i.outer);
+                if(i.hall) imageList.push(i.hall);
+                if(i.bedroom) imageList.push(i.bedroom);
+                if(i.kitchen) imageList.push(i.kitchen);
+                if(i.bathroom) imageList.push(i.bathroom);
                 
-                // Mobile Images
-                setImg('m-img-1', i.outer || p.imageUrl);
-                setImg('m-img-2', i.hall);
-                setImg('m-img-3', i.bedroom);
+                // If no images, add default
+                if(imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
+                if(imageList.length === 0) imageList.push(def);
 
-                // 5. Links
+                // 5. UPDATE DESKTOP GRID (Static)
+                const setGridImg = (id, src) => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.src = src || def;
+                        el.onclick = () => openLightbox(src || def); // Keep simple lightbox for desktop
+                    }
+                };
+                setGridImg('dt-img-1', imageList[0]);
+                setGridImg('dt-img-2', imageList[1]);
+                setGridImg('dt-img-3', imageList[2]);
+                setGridImg('dt-img-4', imageList[3]);
+                setGridImg('dt-img-5', imageList[4]);
+
+                // 6. INITIALIZE SWIPER (Mobile Slider) 🚀
+                const swiperWrapper = document.getElementById('swiper-wrapper');
+                if(swiperWrapper) {
+                    // A. clear old slides
+                    swiperWrapper.innerHTML = ''; 
+                    
+                    // B. Add new slides
+                    imageList.forEach(imgUrl => {
+                        swiperWrapper.innerHTML += `
+                            <div class="swiper-slide">
+                                <img src="${imgUrl}" onclick="openLightbox('${imgUrl}')" />
+                            </div>`;
+                    });
+
+                    // C. Destroy old instance if it exists (prevents bugs)
+                    if (propertySwiper) {
+                        propertySwiper.destroy(true, true);
+                    }
+
+                    // D. Start new Swiper
+                    propertySwiper = new Swiper(".mySwiper", {
+                        loop: true, // Infinite loop
+                        pagination: {
+                            el: ".swiper-pagination",
+                            clickable: true,
+                        },
+                        navigation: {
+                            nextEl: ".swiper-button-next",
+                            prevEl: ".swiper-button-prev",
+                        },
+                        autoplay: {
+                            delay: 3000, // Auto slide every 3 seconds
+                            disableOnInteraction: false,
+                        },
+                    });
+                }
+
+                // 7. Links & Map (Standard Logic)
                 const callBtn = document.getElementById('dt-call');
                 if (callBtn) callBtn.href = `tel:${p.phone}`;
-                
                 const waBtn = document.getElementById('dt-wa');
-                if (waBtn) {
-                    const msg = `Hi ${p.firstName}, I saw your property in ${p.area}. Is it still available?`;
-                    waBtn.href = `https://wa.me/91${p.phone}?text=${encodeURIComponent(msg)}`;
-                }
+                if (waBtn) waBtn.href = `https://wa.me/91${p.phone}?text=Hi, is this available?`;
 
-                // 6. Amenities
-                const amBox = document.getElementById('dt-amenities');
-                if (amBox) {
-                    amBox.innerHTML = '';
-                    if (p.amenities && Array.isArray(p.amenities)) {
-                        p.amenities.forEach(a => amBox.innerHTML += `<span class="amenity-tag">✅ ${a}</span>`);
-                    }
-                }
-
-                // 7. Map
+                // Map
                 setTimeout(() => {
                     try {
-                        if (window.detailMap) {
-                            window.detailMap.remove();
-                            window.detailMap = null;
-                        }
+                        if (window.detailMap) { window.detailMap.remove(); window.detailMap = null; }
                         const mapBox = document.getElementById('detail-map');
                         if (mapBox && typeof L !== 'undefined') {
                             window.detailMap = L.map('detail-map').setView([p.lat || 13.08, p.lng || 80.27], 15);
                             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.detailMap);
-                            if (p.lat && p.lng) {
-                                L.marker([p.lat, p.lng]).addTo(window.detailMap);
-                            }
+                            if (p.lat && p.lng) L.marker([p.lat, p.lng]).addTo(window.detailMap);
                             window.detailMap.invalidateSize();
                         }
                     } catch (e) { console.log("Map error", e); }
