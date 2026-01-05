@@ -81,76 +81,86 @@ const Property = mongoose.model('Property', PropertySchema);
 
 // --- ROUTES ---
 
-// 1. REGISTER
-// 1. REGISTER (Updated with Admin Rule)
+// 1. Register with Phone + OTP
 app.post('/api/register', async (req, res) => {
-    const { firstName, lastName, phone, email, password, userType } = req.body;
     try {
-        let user = await User.findOne({ email });
-        if (user) return res.json({ success: false, message: "User already exists." });
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // --- PASTE STARTS HERE ---
-        // MAGIC ADMIN RULE: Check if email matches, assign 'admin' role
-        const role = (email === 'admin@estatepro.com') ? 'admin' : 'user';
-
-        // Create User WITH role
-        user = new User({ 
-            firstName, 
-            lastName, 
-            phone, 
-            email, 
-            password: hashedPassword, 
-            userType, 
-            role // <--- Added here
-        });
-        await user.save();
-
-        // Add role to Token
-        const token = jwt.sign({ id: user._id, email: user.email, role: role }, JWT_SECRET);
+        let { phone, otp, password, firstName, email, userType } = req.body;
         
-        // Send role back to frontend
-        res.json({ success: true, message: "Account Created!", token, role });
-        // --- PASTE ENDS HERE ---
+        // 1. CLEAN THE PHONE NUMBER (Remove spaces)
+        phone = phone.trim();
 
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
+        console.log(`📝 Registering: ${phone}`); // Debug Log
 
-// 2. LOGIN
-// SEARCH FOR THIS IN SERVER.JS
-// 2. LOGIN (CORRECTED)
-app.post('/api/login', async (req, res) => {
-    try {
-        const { email, password, userType } = req.body;
-
-        // 1. Find user
-        const user = await User.findOne({ email });
-        if (!user) return res.json({ success: false, message: "User not found" });
-
-        // 2. Check Password using BCRYPT
-        // We compare the typed password with the hashed password in the DB
-        const isMatch = await bcrypt.compare(password, user.password);
-        
-        if (!isMatch) { 
-            return res.json({ success: false, message: "Wrong password" });
+        // Verify OTP
+        const validOtp = await Otp.findOne({ phone, otp });
+        if (!validOtp) {
+            console.log("❌ Register Failed: Invalid OTP");
+            return res.json({ success: false, message: "Invalid or Expired OTP" });
         }
 
-        // 3. Generate Token
-        const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET);
+        // Check if user already exists
+        const existing = await User.findOne({ phone });
+        if(existing) {
+             console.log("❌ Register Failed: User already exists");
+             return res.json({ success: false, message: "Phone number already registered" });
+        }
 
-        // 4. Send Response
-        res.json({ 
-            success: true, 
-            token: token, 
-            role: user.role,       // Admin or User
-            userType: user.userType, // <--- ADD THIS LINE (Owner or Tenant)
-            name: user.firstName 
+        // Create User
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = new User({ 
+            phone, 
+            email, 
+            firstName, 
+            password: hashedPassword, 
+            userType 
         });
+        await user.save();
+        
+        // Delete used OTP
+        await Otp.deleteMany({ phone });
 
-    } catch (e) {
-        console.log(e);
-        res.status(500).json({ success: false, error: "Server Error" });
+        console.log(`✅ User Created: ${phone}`);
+
+        const token = jwt.sign({ userId: user._id, role: user.userType }, SECRET_KEY);
+        res.json({ success: true, token, role: 'user', userType: user.userType });
+
+    } catch (e) { 
+        console.error("Server Error:", e);
+        res.status(500).json({ success: false, message: e.message }); 
+    }
+});
+
+// 3. Login with Phone + Password
+app.post('/api/login', async (req, res) => {
+    try {
+        let { phone, password } = req.body;
+        
+        // 1. CLEAN THE PHONE NUMBER (Remove spaces)
+        phone = phone.trim();
+
+        console.log(`🔐 Login Attempt: ${phone}`); // Debug Log
+
+        const user = await User.findOne({ phone });
+
+        if (!user) {
+            console.log("❌ Login Failed: User Not Found in DB");
+            return res.json({ success: false, message: "User not found. Please Register." });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            console.log("❌ Login Failed: Wrong Password");
+            return res.json({ success: false, message: "Wrong Password" });
+        }
+
+        console.log(`✅ Login Success: ${phone}`);
+
+        const token = jwt.sign({ userId: user._id, role: user.userType }, SECRET_KEY);
+        res.json({ success: true, token, role: 'user', userType: user.userType, email: user.email });
+
+    } catch (e) { 
+        console.error("Server Error:", e);
+        res.status(500).json({ error: e.message }); 
     }
 });
 

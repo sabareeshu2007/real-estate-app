@@ -753,8 +753,8 @@
 
             <input type="password" id="pass-input" placeholder="Password">
             
-            <button id="otp-btn" class="btn btn-outline" onclick="requestOtp()" style="margin-bottom:10px;">Get OTP</button>
-            <button id="auth-btn" class="btn btn-primary hidden" onclick="finalizeAuth()">Login</button>
+            <button id="otp-btn" class="btn btn-outline hidden" onclick="requestOtp()" style="margin-bottom:10px;">Get OTP</button>
+            <button id="auth-btn" class="btn btn-primary" onclick="finalizeAuth()">Login</button>
             
             <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:13px;">
                 <span id="switch-text" style="color:var(--primary); cursor:pointer; font-weight:600;" onclick="toggleAuthMode()">New here? Create Account</span>
