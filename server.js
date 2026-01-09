@@ -19,6 +19,31 @@ mongoose.connect(dbURL)
 .then(() => console.log("✅ Database Connected"))
 .catch(err => console.log("❌ DB Error: ", err));
 
+// --- AUTO-CREATE DEFAULT ADMIN ---
+async function createDefaultAdmin() {
+    try {
+        const adminPhone = "0000000000"; // 10 Zeros
+        const exists = await User.findOne({ phone: adminPhone });
+        
+        if (!exists) {
+            const hashedPassword = await bcrypt.hash("admin123", 10);
+            const admin = new User({
+                phone: adminPhone,
+                password: hashedPassword,
+                firstName: "Super Admin",
+                userType: "admin" // <--- Important!
+            });
+            await admin.save();
+            console.log("👑 Default Admin Created: Phone: 0000000000 | Pass: admin123");
+        }
+    } catch (e) {
+        console.error("Admin setup failed:", e);
+    }
+}
+
+// Call the function immediately
+createDefaultAdmin();
+
 // --- UPDATED USER SCHEMA (Phone is Primary) ---
 const userSchema = new mongoose.Schema({
     phone: { type: String, required: true, unique: true }, // Primary ID
