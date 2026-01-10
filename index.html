@@ -2206,12 +2206,30 @@
                     });
                 }
 
-                // 7. Links & Map (Standard Logic)
+                // 7. Links & Map & Street View
                 const callBtn = document.getElementById('dt-call');
                 if (callBtn) callBtn.href = `tel:${p.phone}`;
-                const waBtn = document.getElementById('dt-wa');
-                if (waBtn) waBtn.href = `https://wa.me/91${p.phone}?text=Hi, is this available?`;
 
+                const waBtn = document.getElementById('dt-wa');
+                if (waBtn) waBtn.href = `https://wa.me/91${p.phone}?text=Hi, I am interested in your property in ${p.area}`;
+
+                // --- NEW CODE: FIX STREET VIEW BUTTON ---
+                const svBtn = document.getElementById('dt-sv');
+                if (svBtn) {
+                    if (p.lat && p.lng) {
+                        // Default to 0 if heading/pitch aren't set
+                        const h = p.heading || 0;
+                        const pt = p.pitch || 0;
+                        
+                        // This Google Maps URL forces Street View mode
+                        svBtn.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}&heading=${h}&pitch=${pt}`;
+                        
+                        svBtn.classList.remove('hidden'); // Show button
+                    } else {
+                        svBtn.classList.add('hidden'); // Hide if no location data
+                    }
+                }
+                // ----------------------------------------
                 // Map
                 setTimeout(() => {
                     try {
