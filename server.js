@@ -15,34 +15,13 @@ const SECRET_KEY = process.env.SECRET_KEY || 'my-secret-key-123';
 // ⚠️ PASTE YOUR MONGODB CONNECTION STRING HERE
 const dbURL = process.env.MONGO_URL; // Read the secret key
 
+// --- UPDATE YOUR CONNECTION BLOCK ---
 mongoose.connect(dbURL)
-.then(() => console.log("✅ Database Connected"))
+.then(() => {
+    console.log("✅ Database Connected");
+    createDefaultAdmin(); // <--- ADD THIS LINE HERE
+})
 .catch(err => console.log("❌ DB Error: ", err));
-
-// --- AUTO-CREATE DEFAULT ADMIN ---
-async function createDefaultAdmin() {
-    try {
-        const adminPhone = "0000000000"; // 10 Zeros
-        const exists = await User.findOne({ phone: adminPhone });
-        
-        if (!exists) {
-            const hashedPassword = await bcrypt.hash("admin123", 10);
-            const admin = new User({
-                phone: adminPhone,
-                password: hashedPassword,
-                firstName: "Super Admin",
-                userType: "admin" // <--- Important!
-            });
-            await admin.save();
-            console.log("👑 Default Admin Created: Phone: 0000000000 | Pass: admin123");
-        }
-    } catch (e) {
-        console.error("Admin setup failed:", e);
-    }
-}
-
-// Call the function immediately
-createDefaultAdmin();
 
 // --- UPDATED USER SCHEMA (Phone is Primary) ---
 const userSchema = new mongoose.Schema({
@@ -64,6 +43,28 @@ const otpSchema = new mongoose.Schema({
 const Otp = mongoose.model('Otp', otpSchema);
 
 const User = mongoose.model('User', userSchema);
+
+// --- PASTE THIS AFTER 'const User = ...' ---
+async function createDefaultAdmin() {
+    try {
+        const adminPhone = "0000000000"; // 10 Zeros
+        const exists = await User.findOne({ phone: adminPhone });
+        
+        if (!exists) {
+            const hashedPassword = await bcrypt.hash("admin123", 10);
+            const admin = new User({
+                phone: adminPhone,
+                password: hashedPassword,
+                firstName: "Super Admin",
+                userType: "admin"
+            });
+            await admin.save();
+            console.log("👑 Default Admin Created: Phone: 0000000000 | Pass: admin123");
+        }
+    } catch (e) {
+        console.error("Admin setup failed:", e);
+    }
+}
 
 const PropertySchema = new mongoose.Schema({
     ownerEmail: String,
