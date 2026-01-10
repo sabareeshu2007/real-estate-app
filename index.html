@@ -1626,44 +1626,48 @@
 
         function checkSession() {
             const token = localStorage.getItem('token');
-            const role = localStorage.getItem('role'); // 'admin' or 'user'
-            const type = localStorage.getItem('type'); // 'owner' or 'tenant' (from DB)
+            const role = localStorage.getItem('role'); // Old way
+            const type = localStorage.getItem('type'); // New way (from DB userType)
             
             if(token) {
-                // Hide Home/Auth
+                // Hide Home/Auth/Landing
                 document.getElementById('home-page').classList.add('hidden');
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('logout-btn').classList.remove('hidden');
-                 
-                // 1. ADMIN CHECK
-                if (role === 'admin') {
+                    
+                // 1. ADMIN CHECK (Updated to check 'type' as well)
+                if (role === 'admin' || type === 'admin') {
                     document.getElementById('admin-dashboard').classList.remove('hidden');
-                    document.getElementById('app-section').classList.add('hidden');
+                    
+                    // Ensure other app sections are hidden
+                    document.getElementById('app-section').classList.add('hidden'); 
+                    document.getElementById('owner-section').classList.add('hidden');
+                    document.getElementById('tenant-section').classList.add('hidden');
+                    
                     loadAdminData();
                     return;
                 } 
                 
-                // 2. SHOW APP SECTION
+                // 2. SHOW APP SECTION (For Owners/Tenants)
                 document.getElementById('app-section').classList.remove('hidden');
+                document.getElementById('admin-dashboard').classList.add('hidden');
 
-                // 3. OWNER VS TENANT CHECK (Based on DB data)
-                // Note: The value saved in DB is usually "Owner" or "Tenant" (capitalized) 
-                // or whatever you typed in the dropdown during registration.
-                // Let's handle case-insensitivity just to be safe.
-                
+                // 3. OWNER VS TENANT CHECK
                 if(type && type.toLowerCase() === 'owner') {
                     // Force Owner View
                     document.getElementById('owner-section').classList.remove('hidden');
-                    document.getElementById('tenant-section').classList.add('hidden'); // Ensure Tenant is hidden
-                    initOwnerMap();
-                    loadMyListings();
+                    document.getElementById('tenant-section').classList.add('hidden'); 
+                    if(typeof initOwnerMap === 'function') initOwnerMap();
+                    if(typeof loadMyListings === 'function') loadMyListings();
                 } else {
                     // Default to Tenant View
                     document.getElementById('tenant-section').classList.remove('hidden');
-                    document.getElementById('owner-section').classList.add('hidden'); // Ensure Owner is hidden
-                    initTenantMap();
+                    document.getElementById('owner-section').classList.add('hidden'); 
+                    if(typeof initTenantMap === 'function') initTenantMap();
                 }
-                refreshFavorites();
+                
+                if(typeof refreshFavorites === 'function') refreshFavorites();
+
             } else { 
                 goHome(); 
             }
