@@ -2217,13 +2217,16 @@
                 const svBtn = document.getElementById('dt-sv');
                 if (svBtn) {
                     if (p.lat && p.lng) {
-                        // This URL opens Google Maps and DROPS A RED PIN at the exact spot
-                        svBtn.href = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+                        // Default to 0 if heading/pitch aren't set
+                        const h = p.heading || 0;
+                        const pt = p.pitch || 0;
                         
-                        svBtn.innerText = "📍 Open Location in Maps"; // Update text to match behavior
-                        svBtn.classList.remove('hidden');
+                        // This Google Maps URL forces Street View mode
+                        svBtn.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}&heading=${h}&pitch=${pt}`;
+                        
+                        svBtn.classList.remove('hidden'); // Show button
                     } else {
-                        svBtn.classList.add('hidden');
+                        svBtn.classList.add('hidden'); // Hide if no location data
                     }
                 }
                 // ----------------------------------------
