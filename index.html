@@ -65,6 +65,38 @@
             --shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
+        /* --- CUSTOM SCROLLBAR (Professional Look) --- */
+        
+        /* 1. The Width */
+        ::-webkit-scrollbar {
+            width: 8px;              /* Thin and sleek */
+            height: 8px;             /* For horizontal scrolling */
+        }
+
+        /* 2. The Track (Background) */
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;     /* Very light grey, subtle */
+            border-radius: 10px;
+        }
+        
+        /* 3. The Thumb (The moving part) */
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1e0;     /* Light purple (default state) */
+            border-radius: 10px;     /* Rounded edges look friendlier */
+            transition: background 0.3s;
+        }
+
+        /* 4. The Hover Effect */
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary); /* Turns bright purple when grabbed */
+        }
+
+        /* 5. Firefox Support (Optional but good) */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) #f1f1f1;
+        }
+
         /* --- NEW UTILITY CLASSES --- */
         .text-center { text-align: center; }
         .w-auto { width: auto !important; }
@@ -571,6 +603,16 @@
     </style>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2111/2111320.png" type="image/png">
+
+    <meta property="og:title" content="EstatePro - Find Your Dream Home">
+    <meta property="og:description" content="Browse verified apartments, villas, and office spaces. Contact owners directly with zero brokerage.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80">
+    <meta property="og:url" content="https://your-website-url.com">
+    <meta property="og:type" content="website">
+    
+    <meta name="theme-color" content="#6C63FF">
 </head>
 <body>
     <div id="filter-modal" class="hidden">
