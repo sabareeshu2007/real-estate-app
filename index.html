@@ -212,38 +212,38 @@
         #lightbox img { max-width: 95%; max-height: 80vh; border-radius: 5px; }
         .close-lb { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
 
-        /* 2. Gallery Layouts */
-        /* --- FIXED GALLERY CSS --- */
+/* --- FIXED GALLERY CSS (Professional 1+4 Layout) --- */
         .gallery-desktop { 
             display: grid; 
-            grid-template-columns: 2fr 1fr; /* Main image takes 2 parts, side images take 1 part */
-            gap: 10px; 
-            height: 400px; /* FORCE FIXED HEIGHT */
+            /* Give the right side more space (3 parts Left, 2 parts Right) */
+            grid-template-columns: 3fr 2fr; 
+            gap: 12px; 
+            height: 450px; /* Taller for better visibility */
             width: 100%;
             margin-bottom: 20px;
-            overflow: hidden; /* Cut off anything that sticks out */
+            overflow: hidden; 
+            border-radius: 15px; /* Smooth corners for the whole gallery */
         }
         
         .gallery-right { 
             display: grid; 
-            grid-template-columns: 1fr 1fr; /* 2 columns */
-            grid-template-rows: 1fr 1fr;    /* 2 rows */
-            gap: 10px; 
+            grid-template-columns: 1fr 1fr; /* Force 2 Columns */
+            grid-template-rows: 1fr 1fr;    /* Force 2 Rows */
+            gap: 12px; 
             height: 100%;
         }
         
         .gal-img { 
             width: 100%; 
-            height: 100%; /* Force image to match the box height */
-            object-fit: cover; /* CRITICAL: Crops the image so it doesn't stretch */
-            border-radius: 10px; 
+            height: 100%; 
+            object-fit: cover; 
             cursor: pointer; 
             transition: 0.3s; 
-            background-color: #eee; /* Light gray background if image loads slow */
+            background-color: #f0f0f0; 
             display: block;
         }
         
-        .gal-img:hover { opacity: 0.9; }
+        .gal-img:hover { opacity: 0.9; transform: scale(1.02); }
 
         .gallery-mobile { display: none; } /* Hidden on Desktop */
 
@@ -2207,11 +2207,11 @@
                 setText('dt-furnish', p.furnishing);
                 setText('dt-desc', p.description);
 
-                // 4. PREPARE IMAGES ARRAY
+                // 4. PREPARE IMAGES ARRAY (Smart Fill)
                 const i = p.images || {};
-                const def = 'https://via.placeholder.com/800x600?text=No+Image';
+                const def = 'https://via.placeholder.com/800x600?text=EstatePro+Image';
                 
-                // Collect all available images into a clean list
+                // Collect existing images
                 let imageList = [];
                 if(i.outer) imageList.push(i.outer);
                 if(i.hall) imageList.push(i.hall);
@@ -2219,23 +2219,29 @@
                 if(i.kitchen) imageList.push(i.kitchen);
                 if(i.bathroom) imageList.push(i.bathroom);
                 
-                // If no images, add default
+                // If the property has an old-style single image, add it
                 if(imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
-                if(imageList.length === 0) imageList.push(def);
 
-                // 5. UPDATE DESKTOP GRID (Static)
-                const setGridImg = (id, src) => {
+                // IMPORTANT: Pad with placeholders until we have exactly 5 images
+                // This ensures the Desktop Grid never breaks!
+                while (imageList.length < 5) {
+                    imageList.push(def);
+                }
+
+                // 5. UPDATE DESKTOP GRID
+                const setGridImg = (id, index) => {
                     const el = document.getElementById(id);
                     if(el) {
-                        el.src = src || def;
-                        el.onclick = () => openLightbox(src || def); // Keep simple lightbox for desktop
+                        el.src = imageList[index];
+                        el.onclick = () => openLightbox(imageList[index]);
                     }
                 };
-                setGridImg('dt-img-1', imageList[0]);
-                setGridImg('dt-img-2', imageList[1]);
-                setGridImg('dt-img-3', imageList[2]);
-                setGridImg('dt-img-4', imageList[3]);
-                setGridImg('dt-img-5', imageList[4]);
+                
+                setGridImg('dt-img-1', 0); // Main Large Image
+                setGridImg('dt-img-2', 1); // Top Left Small
+                setGridImg('dt-img-3', 2); // Top Right Small
+                setGridImg('dt-img-4', 3); // Bottom Left Small
+                setGridImg('dt-img-5', 4); // Bottom Right Small
 
                 // 6. INITIALIZE SWIPER (Mobile Slider) 🚀
                 const swiperWrapper = document.getElementById('swiper-wrapper');
