@@ -2184,18 +2184,18 @@
                 const allSections = ['home-page', 'app-section', 'owner-section', 'tenant-section', 'favorites-section', 'auth-section', 'admin-dashboard'];
                 allSections.forEach(id => {
                     const el = document.getElementById(id);
-                    if(el) el.classList.add('hidden');
+                    if (el) el.classList.add('hidden');
                 });
 
                 // 2. Show Property Page
                 const propPage = document.getElementById('property-page');
                 if (!propPage) return alert("Error: #property-page missing");
-                
+
                 propPage.classList.remove('hidden');
-                
+
                 // Unhide inner container if hidden
                 const innerContainer = propPage.querySelector('.container');
-                if(innerContainer) innerContainer.classList.remove('hidden');
+                if (innerContainer) innerContainer.classList.remove('hidden');
 
                 window.scrollTo(0, 0);
 
@@ -2217,17 +2217,17 @@
                 // --- IMAGE HANDLING START (Fixed for Navigation) ---
                 const i = p.images || {};
                 const def = 'https://via.placeholder.com/800x600?text=No+Image';
-                
+
                 // 1. Create a clean list of YOUR images
                 let imageList = [];
-                if(i.outer) imageList.push(i.outer);
-                if(i.hall) imageList.push(i.hall);
-                if(i.bedroom) imageList.push(i.bedroom);
-                if(i.kitchen) imageList.push(i.kitchen);
-                if(i.bathroom) imageList.push(i.bathroom);
-                
+                if (i.outer) imageList.push(i.outer);
+                if (i.hall) imageList.push(i.hall);
+                if (i.bedroom) imageList.push(i.bedroom);
+                if (i.kitchen) imageList.push(i.kitchen);
+                if (i.bathroom) imageList.push(i.bathroom);
+
                 // 2. Fallback for old single-image properties
-                if(imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
+                if (imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
 
                 // 3. Fill missing spots to ensure Grid & Gallery always work
                 while (imageList.length < 5) {
@@ -2240,25 +2240,25 @@
                 // 5. Assign images to the Desktop Grid
                 const assignImg = (id, idx) => {
                     const el = document.getElementById(id);
-                    if(el) {
+                    if (el) {
                         el.src = imageList[idx];
                         // FIX: Pass the Number (idx), NOT the URL string
                         // This ensures the lightbox knows which photo is next
-                        el.onclick = () => openLightbox(idx); 
+                        el.onclick = () => openLightbox(idx);
                     }
                 };
 
-                assignImg('dt-img-1', 0); 
-                assignImg('dt-img-2', 1); 
-                assignImg('dt-img-3', 2); 
-                assignImg('dt-img-4', 3); 
-                assignImg('dt-img-5', 4); 
+                assignImg('dt-img-1', 0);
+                assignImg('dt-img-2', 1);
+                assignImg('dt-img-3', 2);
+                assignImg('dt-img-4', 3);
+                assignImg('dt-img-5', 4);
 
                 // 6. Initialize Mobile Swiper
                 const swiperWrapper = document.getElementById('swiper-wrapper');
-                if(swiperWrapper) {
+                if (swiperWrapper) {
                     swiperWrapper.innerHTML = ''; // Clear old slides
-                    
+
                     // FIX: We use (imgUrl, index) to pass the number
                     imageList.forEach((imgUrl, index) => {
                         swiperWrapper.innerHTML += `
@@ -2289,21 +2289,11 @@
                 const waBtn = document.getElementById('dt-wa');
                 if (waBtn) waBtn.href = `https://wa.me/91${p.phone}?text=Hi, I am interested in your property in ${p.area}`;
 
-                // --- NEW CODE: FIX STREET VIEW BUTTON ---
+                // --- STREET VIEW BUTTON LOGIC ---
                 const svBtn = document.getElementById('dt-sv');
                 if (svBtn) {
-                    if (p.lat && p.lng) {
-                        // Default to 0 if heading/pitch aren't set
-                        const h = p.heading || 0;
-                        const pt = p.pitch || 0;
-                    
-                        // This Google Maps URL forces Street View mode
-                        svBtn.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}&heading=${h}&pitch=${pt}`;
-                        
-                        svBtn.classList.remove('hidden'); // Show button
-                    } else {
-                        svBtn.classList.add('hidden'); // Hide if no location data
-                    }
+                    // Force hide until you add the Google API Key later
+                    svBtn.classList.add('hidden');
                 }
                 // ----------------------------------------
                 // Map
@@ -2315,7 +2305,7 @@
                             window.detailMap = L.map('detail-map').setView([p.lat || 13.08, p.lng || 80.27], 15);
                             // Voyager Theme
                             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
                                 subdomains: 'abcd',
                                 maxZoom: 20
                             }).addTo(window.detailMap);
@@ -2463,14 +2453,10 @@
             document.getElementById('nav-home').addEventListener('click', goHome);
             document.getElementById('nav-list-property').addEventListener('click', () => showAuth('owner'));
             document.getElementById('nav-login').addEventListener('click', () => {
-                // Check if user is already logged in
                 const token = localStorage.getItem('token');
-                
                 if (token) {
-                    // If logged in, let checkSession() decide where to go (Admin, Owner, or Tenant)
                     checkSession();
                 } else {
-                    // If NOT logged in, show the standard login form
                     showAuth('tenant');
                 }
             });
@@ -2486,8 +2472,6 @@
             });
 
             // --- Auth Page ---
-            // document.getElementById('auth-btn').addEventListener('click', handleAuth);
-            // document.getElementById('switch-text').addEventListener('click', toggleAuthMode);
             document.getElementById('auth-back-home').addEventListener('click', goHome);
 
             // --- Owner Dashboard ---
@@ -2498,9 +2482,8 @@
 
             // Event Delegation for "My Listings" table
             document.getElementById('my-listings-body').addEventListener('click', (e) => {
-                const target = e.target.closest('button'); // Find the button that was clicked
+                const target = e.target.closest('button');
                 if (!target) return;
-
                 const id = target.dataset.id;
                 if (target.classList.contains('btn-edit')) {
                     editProp(id);
@@ -2531,11 +2514,13 @@
             // --- Property Detail Page ---
             document.getElementById('property-page-back-btn').addEventListener('click', closePropertyPage);
 
-            // --- Modals (Lightbox & Filter) ---
-            document.getElementById('lightbox').addEventListener('click', closeLightbox);
-            document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+            // --- Modals ---
             document.getElementById('filter-modal-close').addEventListener('click', toggleFilter);
             document.getElementById('apply-filters-btn').addEventListener('click', applyFilters);
+
+            // --- REMOVED LIGHTBOX LISTENERS ---
+            // We removed the addEventListener for 'lightbox' and 'lightbox-close'
+            // because the new HTML uses onclick="..." attributes directly.
         }
 
         function deleteSpecificImage(type) {
