@@ -557,57 +557,11 @@
                 .mobile-swiper-container { display: block; }   /* Show Slider */
             }
 
-            /* --- LOADING SPINNER STYLES --- */
-            #pano {
-            /* Make map invisible initially so it fades in nicely */
-            opacity: 0; 
-            transition: opacity 0.5s ease;
-            }
-
-            #loader-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #f3f3f3;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 30000; /* Keeps loader on top */
-            flex-direction: column;
-            }
-
-            .spinner {
-            border: 8px solid #e0e0e0;
-            border-top: 8px solid #3498db; /* Blue color */
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-            }
-
-            .loading-text {
-            color: #555;
-            font-size: 18px;
-            font-weight: bold;
-            }
-
-            @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-            }
-
     </style>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 <body>
-    <div id="loader-container" class="hidden"> <div class="spinner"></div>
-        <div class="loading-text">Loading Street View...</div>
-    </div>
-    
     <div id="filter-modal" class="hidden">
         <div class="filter-box">
             <div class="modal-header">
@@ -1140,15 +1094,6 @@
             </div>
         </div>
     </div>
-
-    <div id="street-view-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:20000; background:black;">
-        <button onclick="closeStreetView()" style="position:absolute; top:20px; left:20px; z-index:20001; padding:12px 25px; background:white; border:none; border-radius:30px; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-            ← Back to Details
-        </button>
-        <div id="pano" style="width:100%; height:100%;"></div>
-    </div>
-
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
 
     <script>
         // --- CONFIG ---
@@ -2268,23 +2213,21 @@
                 const waBtn = document.getElementById('dt-wa');
                 if (waBtn) waBtn.href = `https://wa.me/91${p.phone}?text=Hi, I am interested in your property in ${p.area}`;
 
-               // --- STREET VIEW BUTTON LOGIC ---
+                // --- NEW CODE: FIX STREET VIEW BUTTON ---
                 const svBtn = document.getElementById('dt-sv');
                 if (svBtn) {
-                    // TEMPORARY: Hide button until API Key is added
-                    svBtn.classList.add('hidden'); 
-                    
-                    /* --- UNCOMMENT THIS LATER WHEN YOU HAVE THE KEY ---
                     if (p.lat && p.lng) {
-                        svBtn.classList.remove('hidden');
-                        svBtn.onclick = (e) => {
-                            e.preventDefault();
-                            openStreetView(p.lat, p.lng);
-                        };
+                        // Default to 0 if heading/pitch aren't set
+                        const h = p.heading || 0;
+                        const pt = p.pitch || 0;
+                    
+                        // This Google Maps URL forces Street View mode
+                        svBtn.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${p.lat},${p.lng}&heading=${h}&pitch=${pt}`;
+                        
+                        svBtn.classList.remove('hidden'); // Show button
                     } else {
-                        svBtn.classList.add('hidden');
+                        svBtn.classList.add('hidden'); // Hide if no location data
                     }
-                    */
                 }
                 // ----------------------------------------
                 // Map
@@ -2564,52 +2507,6 @@
         }
         function checkPendingSearch() { 
             console.log("Search checked"); 
-        }
-
-        // --- NEW STREET VIEW FUNCTIONS ---
-        function openStreetView(lat, lng) {
-            // 1. Show the overlay
-            document.getElementById('street-view-modal').classList.remove('hidden');
-            
-            // 2. Reuse your existing Loading Spinner
-            const loader = document.getElementById('loader-container');
-            loader.style.display = 'flex'; // Show spinner
-            
-            // 3. Initialize Google Street View Service
-            const svService = new google.maps.StreetViewService();
-            const targetLoc = { lat: parseFloat(lat), lng: parseFloat(lng) };
-
-            svService.getPanorama({ location: targetLoc, radius: 50 }, (data, status) => {
-                // Hide spinner once Google responds
-                loader.style.display = 'none';
-
-                if (status === 'OK') {
-                    const panorama = new google.maps.StreetViewPanorama(
-                        document.getElementById('pano'), 
-                        {
-                            position: data.location.latLng,
-                            pov: { heading: 34, pitch: 10 },
-                            zoom: 1,
-                            visible: true
-                        }
-                    );
-                    
-                    // Add the Red Marker inside the 3D View
-                    new google.maps.Marker({
-                        position: targetLoc,
-                        map: panorama,
-                        title: "Property Location"
-                    });
-
-                } else {
-                    alert("Street View is not available for this location.");
-                    closeStreetView();
-                }
-            });
-        }
-
-        function closeStreetView() {
-            document.getElementById('street-view-modal').classList.add('hidden');
         }
         // Re-using your existing deleteProp function, make sure it calls loadAdminData() if admin
         // (You can just use the delete button to call deleteProp, it works for both)
