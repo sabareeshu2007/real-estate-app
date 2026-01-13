@@ -2214,7 +2214,7 @@
                 setText('dt-furnish', p.furnishing);
                 setText('dt-desc', p.description);
 
-                // --- IMAGE HANDLING START ---
+                // --- IMAGE HANDLING START (Fixed for Navigation) ---
                 const i = p.images || {};
                 const def = 'https://via.placeholder.com/800x600?text=No+Image';
                 
@@ -2229,68 +2229,58 @@
                 // 2. Fallback for old single-image properties
                 if(imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
 
-                // 3. CRITICAL: Fill missing spots with placeholders until we have 5
-                // This ensures the Desktop Grid always has 5 items to display cleanly
+                // 3. Fill missing spots to ensure Grid & Gallery always work
                 while (imageList.length < 5) {
                     imageList.push(def);
                 }
 
-                // --- NEW LINE: SAVE IMAGES GLOBALLY FOR LIGHTBOX ---
+                // 4. CRITICAL: Save this list globally so the Lightbox "Next" button knows them
                 window.lbImages = imageList;
 
-                // 4. Assign images to the HTML tags by ID
-                // We use indices 0,1,2,3,4 because we GUARANTEED we have 5 items above
+                // 5. Assign images to the Desktop Grid
                 const assignImg = (id, idx) => {
                     const el = document.getElementById(id);
                     if(el) {
                         el.src = imageList[idx];
-                        el.onclick = () => openLightbox(imageList[idx]);
+                        // FIX: Pass the Number (idx), NOT the URL string
+                        // This ensures the lightbox knows which photo is next
+                        el.onclick = () => openLightbox(idx); 
                     }
                 };
 
-                assignImg('dt-img-1', 0); // Big Left
-                assignImg('dt-img-2', 1); // Top Left Small
-                assignImg('dt-img-3', 2); // Top Right Small
-                assignImg('dt-img-4', 3); // Bottom Left Small
-                assignImg('dt-img-5', 4); // Bottom Right Small
-                // --- IMAGE HANDLING END ---
+                assignImg('dt-img-1', 0); 
+                assignImg('dt-img-2', 1); 
+                assignImg('dt-img-3', 2); 
+                assignImg('dt-img-4', 3); 
+                assignImg('dt-img-5', 4); 
 
-                // 6. INITIALIZE SWIPER (Mobile Slider) 🚀
+                // 6. Initialize Mobile Swiper
                 const swiperWrapper = document.getElementById('swiper-wrapper');
                 if(swiperWrapper) {
-                    // A. clear old slides
-                    swiperWrapper.innerHTML = ''; 
+                    swiperWrapper.innerHTML = ''; // Clear old slides
                     
-                    // B. Add new slides
-                    imageList.forEach(imgUrl => {
+                    // FIX: We use (imgUrl, index) to pass the number
+                    imageList.forEach((imgUrl, index) => {
                         swiperWrapper.innerHTML += `
                             <div class="swiper-slide">
-                                <img src="${imgUrl}" onclick="openLightbox('${imgUrl}')" />
+                                <img src="${imgUrl}" onclick="openLightbox(${index})" />
                             </div>`;
                     });
 
-                    // C. Destroy old instance if it exists (prevents bugs)
+                    // Destroy old instance to prevent bugs
                     if (propertySwiper) {
                         propertySwiper.destroy(true, true);
                     }
 
-                    // D. Start new Swiper
+                    // Start Swiper
                     propertySwiper = new Swiper(".mySwiper", {
-                        loop: true, // Infinite loop
-                        pagination: {
-                            el: ".swiper-pagination",
-                            clickable: true,
-                        },
-                        navigation: {
-                            nextEl: ".swiper-button-next",
-                            prevEl: ".swiper-button-prev",
-                        },
-                        autoplay: {
-                            delay: 3000, // Auto slide every 3 seconds
-                            disableOnInteraction: false,
-                        },
+                        loop: true,
+                        pagination: { el: ".swiper-pagination", clickable: true },
+                        navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+                        autoplay: { delay: 3000, disableOnInteraction: false },
                     });
                 }
+                // --- IMAGE HANDLING END ---
 
                 // 7. Links & Map & Street View
                 const callBtn = document.getElementById('dt-call');
