@@ -557,6 +557,17 @@
                 .mobile-swiper-container { display: block; }   /* Show Slider */
             }
 
+            /* --- CUSTOM MAP PIN --- */
+            .custom-pin {
+                background-color: #e74c3c; /* Brand Red */
+                border: 2px solid white;
+                border-radius: 50%; /* Make it round */
+                box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+                display: flex !important;
+                justify-content: center;
+                align-items: center;
+            }
+
     </style>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -1102,6 +1113,13 @@
         const API_URL = 'https://real-estate-app-925m.onrender.com/api'; // REPLACE
         const CLOUD_NAME = 'dfsotxfxg';      // REPLACE
         const UPLOAD_PRESET = 'estate'; // REPLACE 
+        // --- CUSTOM PIN DEFINITION ---
+        const redIcon = L.divIcon({
+            className: 'custom-pin', // Matches the CSS class above
+            html: '<i class="fa-solid fa-house" style="color: white; font-size: 14px;"></i>',
+            iconSize: [35, 35], // Width, Height
+            iconAnchor: [17, 17] // Center the icon on the map point
+        });
 
         let currentUserType = 'owner';
         let ownerMap, tenantMap, detailMap; 
@@ -1701,7 +1719,7 @@
             ownerMap.on('click', e => {
                 selectedLat = e.latlng.lat; selectedLng = e.latlng.lng;
                 if(ownerMarker) ownerMap.removeLayer(ownerMarker);
-                ownerMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(ownerMap);
+                ownerMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon: redIcon }).addTo(ownerMap);
                 document.getElementById('coords-display').style.display = 'block';
             });
             setTimeout(() => ownerMap.invalidateSize(), 500);
@@ -1900,7 +1918,7 @@
             selectedLng = p.lng;
             if(ownerMarker) ownerMap.removeLayer(ownerMarker);
             if(p.lat && p.lng) {
-                ownerMarker = L.marker([p.lat, p.lng]).addTo(ownerMap);
+                ownerMarker = L.marker([p.lat, p.lng], { icon: redIcon }).addTo(ownerMap);
                 ownerMap.setView([p.lat, p.lng], 14);
             }
 
@@ -2093,7 +2111,7 @@
                      
                      data.properties.forEach(p => { 
                          if(tenantMap && p.lat) {
-                             const m = L.marker([p.lat, p.lng]).addTo(tenantMap);
+                             const m = L.marker([p.lat, p.lng], { icon: redIcon }).addTo(tenantMap);
                              m.on('click', () => openPropertyPage(p)); 
                          }
                      });
@@ -2251,7 +2269,7 @@
                                 subdomains: 'abcd',
                                 maxZoom: 20
                             }).addTo(window.detailMap);
-                            if (p.lat && p.lng) L.marker([p.lat, p.lng]).addTo(window.detailMap);
+                            if (p.lat && p.lng) L.marker([p.lat, p.lng], { icon: redIcon }).addTo(window.detailMap);
                             window.detailMap.invalidateSize();
                         }
                     } catch (e) { console.log("Map error", e); }
