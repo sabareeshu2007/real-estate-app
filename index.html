@@ -1692,7 +1692,12 @@
         function initOwnerMap() {
             if(ownerMap) return;
             ownerMap = L.map('owner-map').setView([13.0827, 80.2707], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(ownerMap);
+            // Voyager Theme (Clean & Professional)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
+            }).addTo(ownerMap);
             ownerMap.on('click', e => {
                 selectedLat = e.latlng.lat; selectedLng = e.latlng.lng;
                 if(ownerMarker) ownerMap.removeLayer(ownerMarker);
@@ -2021,8 +2026,11 @@
 
             // If it's the first time, create the map.
             tenantMap = L.map(mapContainer).setView([13.0827, 80.2707], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
+            // Voyager Theme
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
             }).addTo(tenantMap);
 
             // After creating the map, we still need to resize it because its container was likely hidden.
@@ -2237,7 +2245,12 @@
                         const mapBox = document.getElementById('detail-map');
                         if (mapBox && typeof L !== 'undefined') {
                             window.detailMap = L.map('detail-map').setView([p.lat || 13.08, p.lng || 80.27], 15);
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(window.detailMap);
+                            // Voyager Theme
+                            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                                subdomains: 'abcd',
+                                maxZoom: 20
+                            }).addTo(window.detailMap);
                             if (p.lat && p.lng) L.marker([p.lat, p.lng]).addTo(window.detailMap);
                             window.detailMap.invalidateSize();
                         }
