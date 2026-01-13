@@ -212,31 +212,33 @@
         #lightbox img { max-width: 95%; max-height: 80vh; border-radius: 5px; }
         .close-lb { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
 
-/* --- FIXED GALLERY CSS (Professional 1+4 Layout) --- */
+        /* --- FIXED GALLERY CSS (Corrected Layout) --- */
         .gallery-desktop { 
             display: grid; 
-            /* Give the right side more space (3 parts Left, 2 parts Right) */
+            /* 1. WIDER RIGHT COLUMN (3 parts left, 2 parts right) */
             grid-template-columns: 3fr 2fr; 
-            gap: 12px; 
-            height: 450px; /* Taller for better visibility */
+            gap: 10px; 
+            height: 450px; /* Taller for better look */
             width: 100%;
             margin-bottom: 20px;
             overflow: hidden; 
-            border-radius: 15px; /* Smooth corners for the whole gallery */
+            border-radius: 15px;
         }
         
         .gallery-right { 
             display: grid; 
-            grid-template-columns: 1fr 1fr; /* Force 2 Columns */
-            grid-template-rows: 1fr 1fr;    /* Force 2 Rows */
-            gap: 12px; 
+            grid-template-columns: 1fr 1fr; /* 2 Columns Side-by-Side */
+            /* 2. FORCE EXACT 50% HEIGHT FOR ROWS */
+            grid-template-rows: 50% 50%;    
+            gap: 10px; 
             height: 100%;
+            overflow: hidden; /* Ensures nothing spills out */
         }
         
         .gal-img { 
             width: 100%; 
             height: 100%; 
-            object-fit: cover; 
+            object-fit: cover; /* Ensures images fill the box perfectly */
             cursor: pointer; 
             transition: 0.3s; 
             background-color: #f0f0f0; 
@@ -2222,8 +2224,8 @@
                 // If the property has an old-style single image, add it
                 if(imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
 
-                // IMPORTANT: Pad with placeholders until we have exactly 5 images
-                // This ensures the Desktop Grid never breaks!
+                // --- NEW PART: FILL EMPTY SPOTS ---
+                // This ensures the grid always has 5 items to display
                 while (imageList.length < 5) {
                     imageList.push(def);
                 }
@@ -2237,11 +2239,12 @@
                     }
                 };
                 
-                setGridImg('dt-img-1', 0); // Main Large Image
-                setGridImg('dt-img-2', 1); // Top Left Small
-                setGridImg('dt-img-3', 2); // Top Right Small
-                setGridImg('dt-img-4', 3); // Bottom Left Small
-                setGridImg('dt-img-5', 4); // Bottom Right Small
+                // Pass the INDEX (0,1,2,3,4) instead of the image url directly
+                setGridImg('dt-img-1', 0); 
+                setGridImg('dt-img-2', 1); 
+                setGridImg('dt-img-3', 2); 
+                setGridImg('dt-img-4', 3); 
+                setGridImg('dt-img-5', 4);
 
                 // 6. INITIALIZE SWIPER (Mobile Slider) 🚀
                 const swiperWrapper = document.getElementById('swiper-wrapper');
