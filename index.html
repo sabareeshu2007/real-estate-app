@@ -212,48 +212,42 @@
         #lightbox img { max-width: 95%; max-height: 80vh; border-radius: 5px; }
         .close-lb { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
 
-        /* --- FIXED HERO GALLERY (1 Left + 2 Right) --- */
+        /* --- HERO GALLERY LAYOUT (1 Big Left + 2 Stacked Right) --- */
         .gallery-desktop { 
-            display: grid !important; 
-            /* FORCE 2 Columns: Left (65%) and Right (35%) */
-            grid-template-columns: 65% 35% !important; 
+            display: grid; 
+            /* 2 Columns: Left is 65% width, Right is 35% width */
+            grid-template-columns: 65% 35%; 
             gap: 10px; 
-            height: 450px; 
+            height: 450px; /* Fixed height is critical */
             width: 100%;
             margin-bottom: 20px;
             overflow: hidden; 
             border-radius: 12px;
         }
         
-        /* The Left Main Image */
-        #dt-img-main {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            cursor: pointer;
-            display: block;
-        }
-
-        /* The Right Column Wrapper (Holds 2 images stacked) */
+        /* The Container for the Right Side (Stacked Images) */
         .gallery-right { 
-            display: grid !important; 
-            grid-template-columns: 1fr !important; /* Single column */
-            grid-template-rows: 1fr 1fr !important; /* 2 Equal Rows */
+            display: grid; 
+            grid-template-columns: 1fr;      /* 1 Column */
+            grid-template-rows: 1fr 1fr;     /* 2 Equal Rows (50% each) */
             gap: 10px; 
             height: 100%;
             width: 100%;
         }
 
-        /* Top Right Image */
-        #dt-img-top-right {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        /* Common Image Styling */
+        .gal-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; /* Ensures images fill the box without stretching */
             cursor: pointer;
+            transition: 0.3s;
             display: block;
+            background-color: #eee;
         }
+        .gal-img:hover { opacity: 0.95; }
 
-        /* The "+X More" Container */
+        /* The "+X Photos" Block Overlay */
         .more-photos-container {
             position: relative;
             width: 100%;
@@ -261,23 +255,14 @@
             cursor: pointer;
             overflow: hidden;
         }
-
-        /* The Image inside the "+X" container */
-        #dt-img-more-bg {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: 0.3s;
-        }
-
-        /* The Black Overlay with Text */
+        
         .more-photos-overlay {
             position: absolute;
-            top: 0;
+            top: 0; 
             left: 0;
-            width: 100%;
+            width: 100%; 
             height: 100%;
-            background: rgba(0, 0, 0, 0.5); /* Darken the image */
+            background: rgba(0, 0, 0, 0.5); /* Dark transparent layer */
             color: white;
             display: flex;
             justify-content: center;
@@ -285,10 +270,12 @@
             font-size: 28px;
             font-weight: 700;
             transition: 0.3s;
-            pointer-events: none; /* CRITICAL: Lets clicks pass through to the container */
+            pointer-events: none; /* KEY FIX: Lets clicks pass through to the container */
         }
-
-        .more-photos-container:hover #dt-img-more-bg { transform: scale(1.05); }
+        
+        .more-photos-container:hover .more-photos-overlay {
+            background: rgba(0, 0, 0, 0.3);
+        }
 
         .gallery-mobile { display: none; } /* Hidden on Desktop */
 
@@ -1116,13 +1103,13 @@
             <button id="property-page-back-btn" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
             
             <div class="gallery-desktop">
-                <img id="dt-img-main" class="gal-img" src="" alt="Property" onclick="openLightbox(0)">
+                <img id="dt-img-main" class="gal-img" src="" alt="Main" onclick="openLightbox(0)">
                 
                 <div class="gallery-right">
-                    <img id="dt-img-top-right" class="gal-img" src="" alt="Property" onclick="openLightbox(1)">
+                    <img id="dt-img-top-right" class="gal-img" src="" alt="Second" onclick="openLightbox(1)">
                     
                     <div id="dt-more-container" class="more-photos-container" onclick="openLightbox(2)">
-                         <img id="dt-img-more-bg" src="" alt="More">
+                         <img id="dt-img-more-bg" class="gal-img" src="" alt="More">
                          <div class="more-photos-overlay">
                               <span id="dt-more-count">+0</span>
                          </div>
@@ -2246,28 +2233,31 @@
                 setText('dt-furnish', p.furnishing);
                 setText('dt-desc', p.description);
 
-                // --- IMAGE HANDLING START (Fixed Layout) ---
+                // --- IMAGE LOGIC (Hero Layout 1+2) ---
                 const i = p.images || {};
                 const def = 'https://via.placeholder.com/800x600?text=No+Image';
 
-                // 1. Build list of ALL valid images
+                // A. Collect All Valid Images
                 let allImages = [];
                 if(i.outer) allImages.push(i.outer);
                 if(i.hall) allImages.push(i.hall);
                 if(i.bedroom) allImages.push(i.bedroom);
                 if(i.kitchen) allImages.push(i.kitchen);
                 if(i.bathroom) allImages.push(i.bathroom);
+                
+                // Fallback
                 if(allImages.length === 0 && p.imageUrl) allImages.push(p.imageUrl);
                 
-                // Ensure we have at least placeholders so layout doesn't break
+                // Ensure we have at least 3 items (use placeholders if needed)
+                // This prevents the grid from breaking if there are only 1 or 2 photos
                 while(allImages.length < 3) {
                     allImages.push(def);
                 }
 
-                // 2. SAVE GLOBALLY (So lightbox knows what next/prev is)
+                // B. SAVE GLOBALLY (Fixes the "Click not opening" issue)
                 window.lbImages = allImages;
 
-                // 3. Assign Images to the Grid
+                // C. Assign to Grid Elements
                 const mainImg = document.getElementById('dt-img-main');
                 const topRight = document.getElementById('dt-img-top-right');
                 const moreBg = document.getElementById('dt-img-more-bg');
@@ -2278,35 +2268,32 @@
                     mainImg.src = allImages[0];
                     mainImg.onclick = () => openLightbox(0);
                 }
-                
                 if(topRight) {
                     topRight.src = allImages[1];
                     topRight.onclick = () => openLightbox(1);
                 }
-
-                // 4. Handle the "+X More" Block
-                // We use the 3rd image as the background
-                if(moreBg) moreBg.src = allImages[2];
                 
-                // Calculate how many are hidden (Total - 3 visible slots? Actually we show 3 slots)
-                // If we have 5 images, we show img 0, 1, and 2. 
-                // The text should be "+" (Total - 2) because the 3rd box represents the rest.
+                // D. Handle the "+X" Block
+                if(moreBg) {
+                    moreBg.src = allImages[2]; // Use 3rd image as background
+                }
+                
+                // Calculate remaining hidden photos (Total - 3 displayed slots? No, actually index 2 covers the rest)
+                // We display index 0 and 1. Index 2 is the "More" block.
+                // So if we have 5 images, hidden count is (5 - 2) = 3.
                 const remaining = Math.max(0, allImages.length - 2);
 
-                if (remaining > 1) {
-                    // If there are actually extra photos hidden
+                if(remaining > 1) {
+                    // Show "+3" etc.
                     moreCount.innerText = `+${remaining}`;
-                    moreContainer.style.display = 'block';
-                    // Clicking this opens lightbox at index 2 (the 3rd image)
-                    moreContainer.onclick = () => openLightbox(2);
+                    moreContainer.onclick = () => openLightbox(2); 
                 } else {
-                    // If we have exactly 3 or fewer images, just show the image without text overlay
-                    // or treat it as a normal image
-                    moreCount.innerText = ""; 
+                    // If no extra photos, just show the 3rd image normally
+                    moreCount.innerText = "";
                     moreContainer.onclick = () => openLightbox(2);
                 }
 
-                // 5. Initialize Mobile Swiper (Keep existing logic)
+                // E. Initialize Mobile Swiper
                 const swiperWrapper = document.getElementById('swiper-wrapper');
                 if(swiperWrapper) {
                     swiperWrapper.innerHTML = '';
@@ -2323,7 +2310,7 @@
                         navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
                     });
                 }
-                // --- IMAGE HANDLING END ---
+                // --- IMAGE LOGIC END ---
 
                 // 7. Links
                 const callBtn = document.getElementById('dt-call');
@@ -2331,13 +2318,12 @@
                 const waBtn = document.getElementById('dt-wa');
                 if (waBtn) waBtn.href = `https://wa.me/91${p.phone}?text=Hi, I am interested in your property in ${p.area}`;
 
-                // --- STREET VIEW BUTTON (RESTORED) ---
+                // --- STREET VIEW BUTTON RESTORED ---
                 const svBtn = document.getElementById('dt-sv');
                 if (svBtn) {
                     if (p.lat && p.lng) {
                         svBtn.classList.remove('hidden');
                         svBtn.style.display = 'inline-block';
-                        // Open in new tab (Free Google Maps)
                         svBtn.href = `https://www.google.com/maps?layer=c&cbll=${p.lat},${p.lng}`;
                     } else {
                         svBtn.classList.add('hidden');
