@@ -212,47 +212,83 @@
         #lightbox img { max-width: 95%; max-height: 80vh; border-radius: 5px; }
         .close-lb { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
 
-        /* --- NEW STYLES FOR THE "+X MORE" BLOCK --- */
-        .gallery-right {
-            /* Ensure the right side is 1 column, 2 equal rows */
-            grid-template-columns: 1fr !important;
-            grid-template-rows: 1fr 1fr !important;
+        /* --- FIXED HERO GALLERY (1 Left + 2 Right) --- */
+        .gallery-desktop { 
+            display: grid !important; 
+            /* FORCE 2 Columns: Left (65%) and Right (35%) */
+            grid-template-columns: 65% 35% !important; 
+            gap: 10px; 
+            height: 450px; 
+            width: 100%;
+            margin-bottom: 20px;
+            overflow: hidden; 
+            border-radius: 12px;
+        }
+        
+        /* The Left Main Image */
+        #dt-img-main {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            display: block;
         }
 
+        /* The Right Column Wrapper (Holds 2 images stacked) */
+        .gallery-right { 
+            display: grid !important; 
+            grid-template-columns: 1fr !important; /* Single column */
+            grid-template-rows: 1fr 1fr !important; /* 2 Equal Rows */
+            gap: 10px; 
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Top Right Image */
+        #dt-img-top-right {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            display: block;
+        }
+
+        /* The "+X More" Container */
         .more-photos-container {
             position: relative;
             width: 100%;
             height: 100%;
-            border-radius: 10px;
-            overflow: hidden;
             cursor: pointer;
+            overflow: hidden;
         }
 
-        /* The background image inside the "more" block */
+        /* The Image inside the "+X" container */
         #dt-img-more-bg {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: 0.3s;
         }
 
-        /* The dark overlay with the "+X" text */
+        /* The Black Overlay with Text */
         .more-photos-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5); /* Dark semi-transparent overlay */
+            background: rgba(0, 0, 0, 0.5); /* Darken the image */
             color: white;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-size: 28px;
+            font-weight: 700;
             transition: 0.3s;
+            pointer-events: none; /* CRITICAL: Lets clicks pass through to the container */
         }
-        
-        .more-photos-container:hover .more-photos-overlay {
-             background: rgba(0, 0, 0, 0.3); /* Lighter on hover */
-        }
+
+        .more-photos-container:hover #dt-img-more-bg { transform: scale(1.05); }
 
         .gallery-mobile { display: none; } /* Hidden on Desktop */
 
@@ -1080,15 +1116,15 @@
             <button id="property-page-back-btn" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
             
             <div class="gallery-desktop">
-                <img id="dt-img-main" class="gal-img" src="" alt="Main Property Image">
+                <img id="dt-img-main" class="gal-img" src="" alt="Property" onclick="openLightbox(0)">
                 
                 <div class="gallery-right">
-                    <img id="dt-img-top-right" class="gal-img" src="" alt="Secondary Property Image">
+                    <img id="dt-img-top-right" class="gal-img" src="" alt="Property" onclick="openLightbox(1)">
                     
-                    <div id="dt-more-container" class="more-photos-container">
-                         <img id="dt-img-more-bg" class="gal-img" src="">
+                    <div id="dt-more-container" class="more-photos-container" onclick="openLightbox(2)">
+                         <img id="dt-img-more-bg" src="" alt="More">
                          <div class="more-photos-overlay">
-                              <span id="dt-more-count" style="font-size: 24px; font-weight: bold;">+0</span>
+                              <span id="dt-more-count">+0</span>
                          </div>
                     </div>
                 </div>
@@ -2210,80 +2246,71 @@
                 setText('dt-furnish', p.furnishing);
                 setText('dt-desc', p.description);
 
-                // --- IMAGE HANDLING START (NEW 1+1+X LAYOUT) ---
+                // --- IMAGE HANDLING START (Fixed Layout) ---
                 const i = p.images || {};
                 const def = 'https://via.placeholder.com/800x600?text=No+Image';
 
-                // 1. Identify Key Images
-                // Priority: Outer -> Hall -> Bedroom -> Kitchen -> Bathroom -> Generic imageUrl
-                const mainImgSrc = i.outer || i.hall || i.bedroom || p.imageUrl || def;
+                // 1. Build list of ALL valid images
+                let allImages = [];
+                if(i.outer) allImages.push(i.outer);
+                if(i.hall) allImages.push(i.hall);
+                if(i.bedroom) allImages.push(i.bedroom);
+                if(i.kitchen) allImages.push(i.kitchen);
+                if(i.bathroom) allImages.push(i.bathroom);
+                if(allImages.length === 0 && p.imageUrl) allImages.push(p.imageUrl);
                 
-                // Find the first available image that ISN'T the main image for the top-right slot
-                let topRightImgSrc = def;
-                const potentialSeconds = [i.hall, i.bedroom, i.kitchen, i.bathroom, i.outer].filter(src => src && src !== mainImgSrc);
-                if (potentialSeconds.length > 0) topRightImgSrc = potentialSeconds[0];
-
-                // 2. Build complete list for Lightbox/Swiper (All valid images)
-                let allImagesList = [];
-                if(i.outer) allImagesList.push(i.outer);
-                if(i.hall) allImagesList.push(i.hall);
-                if(i.bedroom) allImagesList.push(i.bedroom);
-                if(i.kitchen) allImagesList.push(i.kitchen);
-                if(i.bathroom) allImagesList.push(i.bathroom);
-                
-                if(allImagesList.length === 0 && p.imageUrl) allImagesList.push(p.imageUrl);
-                if(allImagesList.length === 0) allImagesList.push(def); // Ensure at least 1 exists
-                
-                // SAVE GLOBALLY for lightbox arrows
-                window.lbImages = allImagesList; 
-
-                // 3. Assign to Desktop Grid Elements
-                const mainEl = document.getElementById('dt-img-main');
-                if(mainEl) {
-                    mainEl.src = mainImgSrc;
-                    const idx = allImagesList.indexOf(mainImgSrc);
-                    mainEl.onclick = () => openLightbox(idx >= 0 ? idx : 0);
+                // Ensure we have at least placeholders so layout doesn't break
+                while(allImages.length < 3) {
+                    allImages.push(def);
                 }
 
-                const topRightEl = document.getElementById('dt-img-top-right');
-                if(topRightEl) {
-                    topRightEl.src = topRightImgSrc;
-                    const idx = allImagesList.indexOf(topRightImgSrc);
-                    topRightEl.onclick = () => openLightbox(idx >= 0 ? idx : 0);
+                // 2. SAVE GLOBALLY (So lightbox knows what next/prev is)
+                window.lbImages = allImages;
+
+                // 3. Assign Images to the Grid
+                const mainImg = document.getElementById('dt-img-main');
+                const topRight = document.getElementById('dt-img-top-right');
+                const moreBg = document.getElementById('dt-img-more-bg');
+                const moreCount = document.getElementById('dt-more-count');
+                const moreContainer = document.getElementById('dt-more-container');
+
+                if(mainImg) {
+                    mainImg.src = allImages[0];
+                    mainImg.onclick = () => openLightbox(0);
+                }
+                
+                if(topRight) {
+                    topRight.src = allImages[1];
+                    topRight.onclick = () => openLightbox(1);
                 }
 
                 // 4. Handle the "+X More" Block
-                const moreContainer = document.getElementById('dt-more-container');
-                const moreBg = document.getElementById('dt-img-more-bg');
-                const moreCountEl = document.getElementById('dt-more-count');
+                // We use the 3rd image as the background
+                if(moreBg) moreBg.src = allImages[2];
+                
+                // Calculate how many are hidden (Total - 3 visible slots? Actually we show 3 slots)
+                // If we have 5 images, we show img 0, 1, and 2. 
+                // The text should be "+" (Total - 2) because the 3rd box represents the rest.
+                const remaining = Math.max(0, allImages.length - 2);
 
-                // Count how many images are essentially "hidden" or available in the gallery
-                // Logic: Total images minus the 2 we are showing (Main + TopRight)
-                // We use Math.max(0, ...) to avoid negative numbers
-                const remainingCount = Math.max(0, allImagesList.length - 2);
-
-                if (remainingCount > 0) {
-                    // Show the "+X" block
+                if (remaining > 1) {
+                    // If there are actually extra photos hidden
+                    moreCount.innerText = `+${remaining}`;
                     moreContainer.style.display = 'block';
-                    moreCountEl.innerText = `+${remainingCount}`;
-                    
-                    // Use the 3rd image (index 2) as the background if available, else re-use 2nd
-                    moreBg.src = allImagesList[2] || topRightImgSrc;
-                    
-                    // Clicking opens lightbox starting at the 3rd image
-                    moreContainer.onclick = () => openLightbox(2); 
+                    // Clicking this opens lightbox at index 2 (the 3rd image)
+                    moreContainer.onclick = () => openLightbox(2);
                 } else {
-                    // Hide the "+X" block if there are 2 or fewer images total
-                    moreContainer.style.display = 'none';
-                    // Optional: make top-right image take full height if bottom is hidden
-                    if(topRightEl) topRightEl.style.gridRow = "span 2";
+                    // If we have exactly 3 or fewer images, just show the image without text overlay
+                    // or treat it as a normal image
+                    moreCount.innerText = ""; 
+                    moreContainer.onclick = () => openLightbox(2);
                 }
 
-                // 5. Initialize Mobile Swiper (Unchanged)
+                // 5. Initialize Mobile Swiper (Keep existing logic)
                 const swiperWrapper = document.getElementById('swiper-wrapper');
                 if(swiperWrapper) {
                     swiperWrapper.innerHTML = '';
-                    allImagesList.forEach((imgUrl, index) => {
+                    allImages.forEach((imgUrl, index) => {
                         swiperWrapper.innerHTML += `
                             <div class="swiper-slide">
                                 <img src="${imgUrl}" onclick="openLightbox(${index})" />
