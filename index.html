@@ -2289,11 +2289,21 @@
                 const waBtn = document.getElementById('dt-wa');
                 if (waBtn) waBtn.href = `https://wa.me/91${p.phone}?text=Hi, I am interested in your property in ${p.area}`;
 
-                // --- STREET VIEW BUTTON LOGIC ---
+                // --- STREET VIEW BUTTON LOGIC (RESTORED) ---
                 const svBtn = document.getElementById('dt-sv');
                 if (svBtn) {
-                    // Force hide until you add the Google API Key later
-                    svBtn.classList.add('hidden');
+                    if (p.lat && p.lng) {
+                        // 1. Unhide the button
+                        svBtn.classList.remove('hidden');
+                        svBtn.style.display = 'inline-block'; // Force display if needed
+                        
+                        // 2. Set the link to open Google Street View in a NEW TAB
+                        // (This works for free without an API key)
+                        svBtn.href = `https://www.google.com/maps?layer=c&cbll=${p.lat},${p.lng}`;
+                    } else {
+                        // Hide only if the property has no location data
+                        svBtn.classList.add('hidden');
+                    }
                 }
                 // ----------------------------------------
                 // Map
