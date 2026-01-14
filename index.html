@@ -2538,6 +2538,10 @@
             
             const applyBtn = document.getElementById('apply-filters-btn');
             if(applyBtn) applyBtn.addEventListener('click', applyFilters);
+
+            // --- LIGHTBOX LISTENERS REMOVED ---
+            // The logic is now handled inline in the HTML (onclick="closeLightbox()")
+            // This prevents the "Cannot read properties of null" error.
         }
 
         function deleteSpecificImage(type) {
