@@ -2463,13 +2463,20 @@
             document.getElementById('logout-btn').addEventListener('click', handleLogout);
 
             // --- Home Page Search ---
-            document.getElementById('hero-filter-btn').addEventListener('click', toggleFilter);
-            document.getElementById('hero-search-btn').addEventListener('click', triggerTenantSearch);
-            document.querySelector('.search-tabs').addEventListener('click', (e) => {
-                if (e.target.classList.contains('tab-item')) {
-                    setSearchTab(e.target, e.target.dataset.value);
-                }
-            });
+            const filterBtn = document.getElementById('hero-filter-btn');
+            if(filterBtn) filterBtn.addEventListener('click', toggleFilter);
+            
+            const searchBtn = document.getElementById('hero-search-btn');
+            if(searchBtn) searchBtn.addEventListener('click', triggerTenantSearch);
+
+            const searchTabs = document.querySelector('.search-tabs');
+            if(searchTabs) {
+                searchTabs.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('tab-item')) {
+                        setSearchTab(e.target, e.target.dataset.value);
+                    }
+                });
+            }
 
             // --- Auth Page ---
             document.getElementById('auth-back-home').addEventListener('click', goHome);
@@ -2481,46 +2488,56 @@
             document.getElementById('owner-map-search-btn').addEventListener('click', searchOwnerMap);
 
             // Event Delegation for "My Listings" table
-            document.getElementById('my-listings-body').addEventListener('click', (e) => {
-                const target = e.target.closest('button');
-                if (!target) return;
-                const id = target.dataset.id;
-                if (target.classList.contains('btn-edit')) {
-                    editProp(id);
-                } else if (target.classList.contains('btn-delete')) {
-                    delProp(id);
-                }
-            });
+            const listingsBody = document.getElementById('my-listings-body');
+            if(listingsBody) {
+                listingsBody.addEventListener('click', (e) => {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+                    const id = target.dataset.id;
+                    if (target.classList.contains('btn-edit')) {
+                        editProp(id);
+                    } else if (target.classList.contains('btn-delete')) {
+                        delProp(id);
+                    }
+                });
+            }
 
             // Event Delegation for Image Removal
-            document.querySelector('.upload-grid').addEventListener('click', (e) => {
-                if (e.target.classList.contains('btn-remove-img')) {
-                    const previewBox = e.target.closest('.img-preview-box');
-                    if (previewBox && previewBox.dataset.type) {
-                        deleteSpecificImage(previewBox.dataset.type);
+            const uploadGrid = document.querySelector('.upload-grid');
+            if(uploadGrid) {
+                uploadGrid.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('btn-remove-img')) {
+                        const previewBox = e.target.closest('.img-preview-box');
+                        if (previewBox && previewBox.dataset.type) {
+                            deleteSpecificImage(previewBox.dataset.type);
+                        }
                     }
-                }
-            });
+                });
+            }
 
             // --- Tenant/Search Page ---
             document.getElementById('tenant-search-btn').addEventListener('click', searchProperties);
             document.getElementById('tenant-back-btn').addEventListener('click', goHome);
-            document.querySelector('.filter-tabs').addEventListener('click', (e) => {
-                if (e.target.classList.contains('ft-btn')) {
-                    setSearchTab(e.target, e.target.dataset.value);
-                }
-            });
+            
+            const filterTabs = document.querySelector('.filter-tabs');
+            if(filterTabs) {
+                filterTabs.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('ft-btn')) {
+                        setSearchTab(e.target, e.target.dataset.value);
+                    }
+                });
+            }
 
             // --- Property Detail Page ---
             document.getElementById('property-page-back-btn').addEventListener('click', closePropertyPage);
 
             // --- Modals ---
-            document.getElementById('filter-modal-close').addEventListener('click', toggleFilter);
-            document.getElementById('apply-filters-btn').addEventListener('click', applyFilters);
-
-            // --- REMOVED LIGHTBOX LISTENERS ---
-            // We removed the addEventListener for 'lightbox' and 'lightbox-close'
-            // because the new HTML uses onclick="..." attributes directly.
+            // SAFELY ADD LISTENERS (Checks if element exists first)
+            const filterClose = document.getElementById('filter-modal-close');
+            if(filterClose) filterClose.addEventListener('click', toggleFilter);
+            
+            const applyBtn = document.getElementById('apply-filters-btn');
+            if(applyBtn) applyBtn.addEventListener('click', applyFilters);
         }
 
         function deleteSpecificImage(type) {
