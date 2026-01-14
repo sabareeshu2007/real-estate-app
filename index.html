@@ -212,35 +212,36 @@
         #lightbox img { max-width: 95%; max-height: 80vh; border-radius: 5px; }
         .close-lb { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
 
-        /* 2. Gallery Layouts */
-        /* --- FIXED GALLERY CSS --- */
+        /* --- FIXED GALLERY CSS (Strict Layout) --- */
         .gallery-desktop { 
             display: grid; 
-            grid-template-columns: 2fr 1fr; /* Main image takes 2 parts, side images take 1 part */
+            /* Left takes 60%, Right takes 40% */
+            grid-template-columns: 60% 40%; 
             gap: 10px; 
-            height: 400px; /* FORCE FIXED HEIGHT */
+            height: 450px; /* Fixed height for the whole gallery */
             width: 100%;
             margin-bottom: 20px;
-            overflow: hidden; /* Cut off anything that sticks out */
+            overflow: hidden; 
+            border-radius: 15px;
         }
         
         .gallery-right { 
             display: grid; 
-            grid-template-columns: 1fr 1fr; /* 2 columns */
-            grid-template-rows: 1fr 1fr;    /* 2 rows */
+            grid-template-columns: 1fr 1fr; /* 2 Columns Side-by-Side */
+            grid-template-rows: 50% 50%;    /* FORCE rows to be exactly half height */
             gap: 10px; 
             height: 100%;
+            width: 100%;
         }
         
         .gal-img { 
             width: 100%; 
-            height: 100%; /* Force image to match the box height */
-            object-fit: cover; /* CRITICAL: Crops the image so it doesn't stretch */
-            border-radius: 10px; 
+            height: 100%; 
+            object-fit: cover; /* CRITICAL: Crops image to fit the box */
+            display: block;    
+            background-color: #f0f0f0; 
             cursor: pointer;
             transition: 0.3s; 
-            background-color: #eee; /* Light gray background if image loads slow */
-            display: block;
         }
         
         .gal-img:hover { opacity: 0.9; }
@@ -2177,19 +2178,14 @@
                 const allSections = ['home-page', 'app-section', 'owner-section', 'tenant-section', 'favorites-section', 'auth-section', 'admin-dashboard'];
                 allSections.forEach(id => {
                     const el = document.getElementById(id);
-                    if(el) el.classList.add('hidden');
+                    if (el) el.classList.add('hidden');
                 });
 
                 // 2. Show Property Page
                 const propPage = document.getElementById('property-page');
-                if (!propPage) return alert("Error: #property-page missing");
-
                 propPage.classList.remove('hidden');
-
-                // Unhide inner container if hidden
                 const innerContainer = propPage.querySelector('.container');
-                if(innerContainer) innerContainer.classList.remove('hidden');
-
+                if (innerContainer) innerContainer.classList.remove('hidden');
                 window.scrollTo(0, 0);
 
                 // 3. Fill Text Data
@@ -2207,109 +2203,90 @@
                 setText('dt-furnish', p.furnishing);
                 setText('dt-desc', p.description);
 
-                // 4. PREPARE IMAGES ARRAY
+                // --- IMAGE HANDLING START (Fixed) ---
                 const i = p.images || {};
                 const def = 'https://via.placeholder.com/800x600?text=No+Image';
-
-                // Collect all available images into a clean list
+                
+                // Create clean list
                 let imageList = [];
                 if(i.outer) imageList.push(i.outer);
                 if(i.hall) imageList.push(i.hall);
                 if(i.bedroom) imageList.push(i.bedroom);
                 if(i.kitchen) imageList.push(i.kitchen);
                 if(i.bathroom) imageList.push(i.bathroom);
-
-                // If no images, add default
+                
                 if(imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
-                if(imageList.length === 0) imageList.push(def);
 
-                // 5. UPDATE DESKTOP GRID (Static)
-                const setGridImg = (id, src) => {
-                    const el = document.getElementById(id);
-                    if(el) {
-                        el.src = src || def;
-                        el.onclick = () => openLightbox(src || def); // Keep simple lightbox for desktop
-                    }
-                };
-                setGridImg('dt-img-1', imageList[0]);
-                setGridImg('dt-img-2', imageList[1]);
-                setGridImg('dt-img-3', imageList[2]);
-                setGridImg('dt-img-4', imageList[3]);
-                setGridImg('dt-img-5', imageList[4]);
-
-                // 6. INITIALIZE SWIPER (Mobile Slider) 🚀
-                const swiperWrapper = document.getElementById('swiper-wrapper');
-                if(swiperWrapper) {
-                    // A. clear old slides
-                    swiperWrapper.innerHTML = ''; 
-
-                    // B. Add new slides
-                    imageList.forEach(imgUrl => {
-                        swiperWrapper.innerHTML += `
-                            <div class="swiper-slide">
-                                <img src="${imgUrl}" onclick="openLightbox('${imgUrl}')" />
-                            </div>`;
-                    });
-
-                    // C. Destroy old instance if it exists (prevents bugs)
-                    if (propertySwiper) {
-                        propertySwiper.destroy(true, true);
-                    }
-
-                    // D. Start new Swiper
-                    propertySwiper = new Swiper(".mySwiper", {
-                        loop: true, // Infinite loop
-                        pagination: {
-                            el: ".swiper-pagination",
-                            clickable: true,
-                        },
-                        navigation: {
-                            nextEl: ".swiper-button-next",
-                            prevEl: ".swiper-button-prev",
-                        },
-                        autoplay: {
-                            delay: 3000, // Auto slide every 3 seconds
-                            disableOnInteraction: false,
-                        },
-                    });
+                // FILL MISSING SPOTS to ensure grid works
+                while (imageList.length < 5) {
+                    imageList.push(def);
                 }
 
-                // 7. Links & Map & Street View
+                // SAVE LIST GLOBALLY (Fixes Swiping/Arrows)
+                window.lbImages = imageList;
+
+                // Assign to Desktop Grid
+                const assignImg = (id, idx) => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.src = imageList[idx];
+                        // Pass INDEX (Number), not URL
+                        el.onclick = () => openLightbox(idx); 
+                    }
+                };
+                assignImg('dt-img-1', 0); 
+                assignImg('dt-img-2', 1); 
+                assignImg('dt-img-3', 2); 
+                assignImg('dt-img-4', 3); 
+                assignImg('dt-img-5', 4); 
+
+                // Initialize Mobile Swiper
+                const swiperWrapper = document.getElementById('swiper-wrapper');
+                if(swiperWrapper) {
+                    swiperWrapper.innerHTML = ''; 
+                    imageList.forEach((imgUrl, index) => {
+                        swiperWrapper.innerHTML += `
+                            <div class="swiper-slide">
+                                <img src="${imgUrl}" onclick="openLightbox(${index})" />
+                            </div>`;
+                    });
+                    if (propertySwiper) propertySwiper.destroy(true, true);
+                    propertySwiper = new Swiper(".mySwiper", {
+                        loop: true,
+                        pagination: { el: ".swiper-pagination", clickable: true },
+                        navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
+                    });
+                }
+                // --- IMAGE HANDLING END ---
+
+                // 7. Links
                 const callBtn = document.getElementById('dt-call');
                 if (callBtn) callBtn.href = `tel:${p.phone}`;
-
                 const waBtn = document.getElementById('dt-wa');
                 if (waBtn) waBtn.href = `https://wa.me/91${p.phone}?text=Hi, I am interested in your property in ${p.area}`;
 
-                // --- STREET VIEW BUTTON LOGIC (RESTORED) ---
+                // --- STREET VIEW BUTTON (RESTORED) ---
                 const svBtn = document.getElementById('dt-sv');
                 if (svBtn) {
                     if (p.lat && p.lng) {
-                        // 1. Unhide the button
                         svBtn.classList.remove('hidden');
-                        svBtn.style.display = 'inline-block'; // Force display if needed
-                        
-                        // 2. Set the link to open Google Street View in a NEW TAB
-                        // (This works for free without an API key)
+                        svBtn.style.display = 'inline-block';
+                        // Open in new tab (Free Google Maps)
                         svBtn.href = `https://www.google.com/maps?layer=c&cbll=${p.lat},${p.lng}`;
                     } else {
-                        // Hide only if the property has no location data
                         svBtn.classList.add('hidden');
                     }
                 }
-                // ----------------------------------------
-                // Map
+
+                // Map Logic
                 setTimeout(() => {
                     try {
                         if (window.detailMap) { window.detailMap.remove(); window.detailMap = null; }
                         const mapBox = document.getElementById('detail-map');
                         if (mapBox && typeof L !== 'undefined') {
                             window.detailMap = L.map('detail-map').setView([p.lat || 13.08, p.lng || 80.27], 15);
-                            // Voyager Theme
                             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-                                subdomains: 'abcd',
-                                maxZoom: 20
+                                attribution: 'CARTO', subdomains: 'abcd', maxZoom: 20
                             }).addTo(window.detailMap);
                             if (p.lat && p.lng) L.marker([p.lat, p.lng], { icon: redIcon }).addTo(window.detailMap);
                             window.detailMap.invalidateSize();
@@ -2318,8 +2295,8 @@
                 }, 300);
 
             } catch (err) {
-                console.error("PAGE CRASHED:", err);
-                alert("Error opening page. See console.");
+                console.error(err);
+                alert("Error opening page.");
             }
         }
 
