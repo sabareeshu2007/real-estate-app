@@ -212,37 +212,35 @@
         #lightbox img { max-width: 95%; max-height: 80vh; border-radius: 5px; }
         .close-lb { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; }
 
-        /* --- FIXED GALLERY CSS (Corrected Layout) --- */
-        /* --- FIXED GALLERY CSS (Strict Layout) --- */
+        /* 2. Gallery Layouts */
+        /* --- FIXED GALLERY CSS --- */
         .gallery-desktop { 
             display: grid; 
-            /* Left takes 60%, Right takes 40% */
-            grid-template-columns: 60% 40%; 
+            grid-template-columns: 2fr 1fr; /* Main image takes 2 parts, side images take 1 part */
             gap: 10px; 
-            height: 450px; /* Fixed height for the whole gallery */
+            height: 400px; /* FORCE FIXED HEIGHT */
             width: 100%;
             margin-bottom: 20px;
-            overflow: hidden; /* Cut off any overflow */
-            border-radius: 15px;
+            overflow: hidden; /* Cut off anything that sticks out */
         }
         
         .gallery-right { 
             display: grid; 
-            grid-template-columns: 1fr 1fr; /* 2 Columns Side-by-Side */
-            grid-template-rows: 50% 50%;    /* FORCE rows to be exactly half height */
+            grid-template-columns: 1fr 1fr; /* 2 columns */
+            grid-template-rows: 1fr 1fr;    /* 2 rows */
             gap: 10px; 
             height: 100%;
-            width: 100%;
         }
         
         .gal-img { 
             width: 100%; 
-            height: 100%; 
-            object-fit: cover; /* CRITICAL: Crops image to fit the box */
-            display: block;    /* Removes bottom spacing */
-            background-color: #f0f0f0; 
+            height: 100%; /* Force image to match the box height */
+            object-fit: cover; /* CRITICAL: Crops the image so it doesn't stretch */
+            border-radius: 10px; 
             cursor: pointer;
             transition: 0.3s; 
+            background-color: #eee; /* Light gray background if image loads slow */
+            display: block;
         }
         
         .gal-img:hover { opacity: 0.9; }
@@ -659,16 +657,9 @@
         <div class="spinner"></div>
         <p id="loading-msg" style="margin-top:15px; font-weight:600; color:#666;">Processing...</p>
     </div>
-    <div id="lightbox" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column;">
-        <span onclick="closeLightbox()" style="position:absolute; top:20px; right:25px; color:white; font-size:40px; cursor:pointer; z-index:10001;">&times;</span>
-        
-        <div onclick="changeLbSlide(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:white; font-size:40px; padding:20px; cursor:pointer; z-index:10001; user-select:none;">&#10094;</div>
-        
-        <img id="lightbox-img" src="" style="max-width:95%; max-height:80vh; border-radius:5px; box-shadow:0 0 20px rgba(255,255,255,0.2); touch-action: pan-y;">
-        
-        <div onclick="changeLbSlide(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:white; font-size:40px; padding:20px; cursor:pointer; z-index:10001; user-select:none;">&#10095;</div>
-        
-        <p id="lb-counter" style="color:white; margin-top:15px; font-weight:500;">1 / 5</p>
+    <div id="lightbox" class="hidden" onclick="closeLightbox()" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column;">
+        <span id="lightbox-close" style="position:absolute; top:20px; right:30px; color:white; font-size:40px; cursor:pointer;">&times;</span>
+        <img id="lightbox-img" src="" style="max-width:90%; max-height:80vh; border-radius:5px; box-shadow:0 0 20px rgba(255,255,255,0.2);">
     </div>
 
     <nav>
@@ -1080,13 +1071,18 @@
             <button id="property-page-back-btn" style="background:none; border:none; cursor:pointer; margin-bottom:15px; font-size:16px;">← Back to Map</button>
             
             <div class="gallery-desktop">
-                <img id="dt-img-1" class="gal-img" onclick="openLightbox(this.src)" src="">
+                <img id="dt-img-1" class="gal-img" onclick="openLightbox(this.src)" 
+                     onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
                 
                 <div class="gallery-right">
-                    <img id="dt-img-2" class="gal-img" onclick="openLightbox(this.src)" src="">
-                    <img id="dt-img-3" class="gal-img" onclick="openLightbox(this.src)" src="">
-                    <img id="dt-img-4" class="gal-img" onclick="openLightbox(this.src)" src="">
-                    <img id="dt-img-5" class="gal-img" onclick="openLightbox(this.src)" src="">
+                    <img id="dt-img-2" class="gal-img" onclick="openLightbox(this.src)" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-3" class="gal-img" onclick="openLightbox(this.src)" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-4" class="gal-img" onclick="openLightbox(this.src)" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                    <img id="dt-img-5" class="gal-img" onclick="openLightbox(this.src)" 
+                         onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
                 </div>
             </div>
             
@@ -1186,9 +1182,6 @@
             buildingType: '',
             parking: ''
         };
-        // --- GLOBAL LIGHTBOX VARIABLES ---
-        let lbImages = []; // Stores the current list of photo URLs
-        let lbIndex = 0;   // Tracks which photo we are viewing
 
         // Global variable to store favorites safely
         window.currentFavs = [];
@@ -2184,7 +2177,7 @@
                 const allSections = ['home-page', 'app-section', 'owner-section', 'tenant-section', 'favorites-section', 'auth-section', 'admin-dashboard'];
                 allSections.forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) el.classList.add('hidden');
+                    if(el) el.classList.add('hidden');
                 });
 
                 // 2. Show Property Page
@@ -2195,7 +2188,7 @@
 
                 // Unhide inner container if hidden
                 const innerContainer = propPage.querySelector('.container');
-                if (innerContainer) innerContainer.classList.remove('hidden');
+                if(innerContainer) innerContainer.classList.remove('hidden');
 
                 window.scrollTo(0, 0);
 
@@ -2214,73 +2207,72 @@
                 setText('dt-furnish', p.furnishing);
                 setText('dt-desc', p.description);
 
-                // --- IMAGE HANDLING START (Fixed for Navigation) ---
+                // 4. PREPARE IMAGES ARRAY
                 const i = p.images || {};
                 const def = 'https://via.placeholder.com/800x600?text=No+Image';
 
-                // 1. Create a clean list of YOUR images
+                // Collect all available images into a clean list
                 let imageList = [];
-                if (i.outer) imageList.push(i.outer);
-                if (i.hall) imageList.push(i.hall);
-                if (i.bedroom) imageList.push(i.bedroom);
-                if (i.kitchen) imageList.push(i.kitchen);
-                if (i.bathroom) imageList.push(i.bathroom);
+                if(i.outer) imageList.push(i.outer);
+                if(i.hall) imageList.push(i.hall);
+                if(i.bedroom) imageList.push(i.bedroom);
+                if(i.kitchen) imageList.push(i.kitchen);
+                if(i.bathroom) imageList.push(i.bathroom);
 
-                // 2. Fallback for old single-image properties
-                if (imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
+                // If no images, add default
+                if(imageList.length === 0 && p.imageUrl) imageList.push(p.imageUrl);
+                if(imageList.length === 0) imageList.push(def);
 
-                // 3. Fill missing spots to ensure Grid & Gallery always work
-                while (imageList.length < 5) {
-                    imageList.push(def);
-                }
-
-                // 4. CRITICAL: Save this list globally so the Lightbox "Next" button knows them
-                window.lbImages = imageList;
-
-                // 5. Assign images to the Desktop Grid
-                const assignImg = (id, idx) => {
+                // 5. UPDATE DESKTOP GRID (Static)
+                const setGridImg = (id, src) => {
                     const el = document.getElementById(id);
-                    if (el) {
-                        el.src = imageList[idx];
-                        // FIX: Pass the Number (idx), NOT the URL string
-                        // This ensures the lightbox knows which photo is next
-                        el.onclick = () => openLightbox(idx);
+                    if(el) {
+                        el.src = src || def;
+                        el.onclick = () => openLightbox(src || def); // Keep simple lightbox for desktop
                     }
                 };
+                setGridImg('dt-img-1', imageList[0]);
+                setGridImg('dt-img-2', imageList[1]);
+                setGridImg('dt-img-3', imageList[2]);
+                setGridImg('dt-img-4', imageList[3]);
+                setGridImg('dt-img-5', imageList[4]);
 
-                assignImg('dt-img-1', 0);
-                assignImg('dt-img-2', 1);
-                assignImg('dt-img-3', 2);
-                assignImg('dt-img-4', 3);
-                assignImg('dt-img-5', 4);
-
-                // 6. Initialize Mobile Swiper
+                // 6. INITIALIZE SWIPER (Mobile Slider) 🚀
                 const swiperWrapper = document.getElementById('swiper-wrapper');
-                if (swiperWrapper) {
-                    swiperWrapper.innerHTML = ''; // Clear old slides
+                if(swiperWrapper) {
+                    // A. clear old slides
+                    swiperWrapper.innerHTML = ''; 
 
-                    // FIX: We use (imgUrl, index) to pass the number
-                    imageList.forEach((imgUrl, index) => {
+                    // B. Add new slides
+                    imageList.forEach(imgUrl => {
                         swiperWrapper.innerHTML += `
                             <div class="swiper-slide">
-                                <img src="${imgUrl}" onclick="openLightbox(${index})" />
+                                <img src="${imgUrl}" onclick="openLightbox('${imgUrl}')" />
                             </div>`;
                     });
 
-                    // Destroy old instance to prevent bugs
+                    // C. Destroy old instance if it exists (prevents bugs)
                     if (propertySwiper) {
                         propertySwiper.destroy(true, true);
                     }
 
-                    // Start Swiper
+                    // D. Start new Swiper
                     propertySwiper = new Swiper(".mySwiper", {
-                        loop: true,
-                        pagination: { el: ".swiper-pagination", clickable: true },
-                        navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
-                        autoplay: { delay: 3000, disableOnInteraction: false },
+                        loop: true, // Infinite loop
+                        pagination: {
+                            el: ".swiper-pagination",
+                            clickable: true,
+                        },
+                        navigation: {
+                            nextEl: ".swiper-button-next",
+                            prevEl: ".swiper-button-prev",
+                        },
+                        autoplay: {
+                            delay: 3000, // Auto slide every 3 seconds
+                            disableOnInteraction: false,
+                        },
                     });
                 }
-                // --- IMAGE HANDLING END ---
 
                 // 7. Links & Map & Street View
                 const callBtn = document.getElementById('dt-call');
@@ -2377,84 +2369,19 @@
             document.getElementById('emi-val').innerText = "₹ " + Math.round(emi).toLocaleString();
         }
         
-        // --- 1. OPEN LIGHTBOX (Updated) ---
-        function openLightbox(index) {
-            // "index" can be a URL (legacy string) or a Number
-            // If it's a URL string, we find its index in the list
-            if (typeof index === 'string') {
-                // If it's a URL, find where it is in our list, or default to 0
-                lbIndex = lbImages.indexOf(index);
-                if(lbIndex === -1) {
-                    // Fallback if URL isn't in list (e.g. placeholder)
-                    lbImages = [index];
-                    lbIndex = 0;
-                }
-            } else {
-                // It is a number
-                lbIndex = index;
+        function openLightbox(src) {
+            // Only open if it's a valid image link
+            if(src && src.includes('http')) {
+                document.getElementById('lightbox-img').src = src;
+                document.getElementById('lightbox').classList.remove('hidden');
+                // Ensure it's visible by forcing display style
+                document.getElementById('lightbox').style.display = 'flex';
             }
-
-            updateLightboxView();
-            
-            const lb = document.getElementById('lightbox');
-            lb.classList.remove('hidden');
-            lb.style.display = 'flex';
-        }
-
-        // --- 2. UPDATE VIEW ---
-        function updateLightboxView() {
-            const img = document.getElementById('lightbox-img');
-            const counter = document.getElementById('lb-counter');
-            
-            // Set Image
-            img.src = lbImages[lbIndex];
-            
-            // Set Counter Text (e.g., "1 / 5")
-            if(counter) counter.innerText = `${lbIndex + 1} / ${lbImages.length}`;
-        }
-
-        // --- 3. NEXT / PREV NAVIGATION ---
-        function changeLbSlide(n) {
-            lbIndex += n;
-            
-            // Loop around if at end or start
-            if (lbIndex >= lbImages.length) lbIndex = 0;
-            if (lbIndex < 0) lbIndex = lbImages.length - 1;
-            
-            updateLightboxView();
         }
 
         function closeLightbox() { 
             document.getElementById('lightbox').classList.add('hidden'); 
             document.getElementById('lightbox').style.display = 'none';
-        }
-
-        // --- 4. SWIPE DETECTION (Touch Events) ---
-        let touchStartX = 0;
-        let touchEndX = 0;
-        const lbContainer = document.getElementById('lightbox');
-
-        if(lbContainer) {
-            lbContainer.addEventListener('touchstart', e => {
-                touchStartX = e.changedTouches[0].screenX;
-            });
-
-            lbContainer.addEventListener('touchend', e => {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-            });
-        }
-
-        function handleSwipe() {
-            // Threshold: User must swipe at least 50px
-            if (touchEndX < touchStartX - 50) {
-                // Swiped Left -> Next Image
-                changeLbSlide(1);
-            }
-            if (touchEndX > touchStartX + 50) {
-                // Swiped Right -> Previous Image
-                changeLbSlide(-1);
-            }
         }
 
         function setupEventListeners() {
@@ -2463,10 +2390,14 @@
             document.getElementById('nav-home').addEventListener('click', goHome);
             document.getElementById('nav-list-property').addEventListener('click', () => showAuth('owner'));
             document.getElementById('nav-login').addEventListener('click', () => {
+                // Check if user is already logged in
                 const token = localStorage.getItem('token');
+                
                 if (token) {
+                    // If logged in, let checkSession() decide where to go (Admin, Owner, or Tenant)
                     checkSession();
                 } else {
+                    // If NOT logged in, show the standard login form
                     showAuth('tenant');
                 }
             });
